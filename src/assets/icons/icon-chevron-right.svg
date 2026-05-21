@@ -1,0 +1,10 @@
+<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_chevron)">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M11.7804 8.47013C12.0733 8.76301 12.0733 9.23791 11.7804 9.53078L7.53774 13.7735C7.24488 14.0663 6.77001 14.0663 6.47711 13.7735C6.18422 13.4805 6.18422 13.0057 6.47711 12.7127L10.1894 9.00046L6.47711 5.28814C6.18422 4.99525 6.18422 4.52038 6.47711 4.22749C6.77001 3.93459 7.24488 3.93459 7.53774 4.22749L11.7804 8.47013Z" fill="currentColor"/>
+</g>
+<defs>
+<clipPath id="clip0_chevron">
+<rect width="18" height="18" fill="white"/>
+</clipPath>
+</defs>
+</svg>
