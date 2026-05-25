@@ -1,11 +1,13 @@
 <template>
+  <Teleport to="body">
   <!-- Backdrop: click outside to close -->
   <div v-if="modelValue" class="fixed inset-0 z-40" @click="$emit('update:modelValue', false)" />
 
   <Transition name="account-menu">
     <div
       v-if="modelValue"
-      class="absolute bottom-[calc(100%+6px)] left-2 w-[280px] bg-white rounded-[8px] z-50 overflow-hidden"
+      class="fixed w-[280px] bg-white rounded-[8px] z-50 overflow-hidden"
+      :style="menuStyle"
       style="box-shadow: 0px 4px 6px -2px rgba(16,24,40,0.03), 0px 12px 16px -4px rgba(16,24,40,0.08), 0px 0px 0px 1px rgba(0,0,0,0.06);"
     >
       <!-- Section: Select business -->
@@ -81,17 +83,31 @@
       </div>
     </div>
   </Transition>
+  </Teleport>
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { ref, reactive, watch } from 'vue'
 import checkIcon from '../../assets/icons/icon-check.svg'
 import signOutIcon from '../../assets/icons/icon-sign-out.svg'
 
-defineProps({
+const props = defineProps({
   modelValue: { type: Boolean, default: false },
+  anchor: { type: Object, default: null },
 })
 defineEmits(['update:modelValue'])
+
+const menuStyle = ref({})
+
+watch(() => props.modelValue, (open) => {
+  if (open && props.anchor) {
+    const rect = props.anchor.getBoundingClientRect()
+    menuStyle.value = {
+      bottom: window.innerHeight - rect.top + 6 + 'px',
+      left: rect.left + 8 + 'px',
+    }
+  }
+})
 
 const businesses = reactive([
   {

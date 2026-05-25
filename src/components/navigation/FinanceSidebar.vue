@@ -1,12 +1,21 @@
 <template>
   <div class="flex flex-col flex-1 min-h-0 overflow-hidden">
     <!-- Title bar -->
-    <div class="flex items-center justify-between shrink-0" style="padding: 8px 16px; min-height: 48px; border-bottom: 1px solid #f0f1f5;">
-      <span class="text-[14px] font-medium text-[#03102f]">Finance</span>
+    <div
+      class="flex items-center shrink-0"
+      :class="sidebarExpanded ? 'justify-between' : 'justify-center'"
+      :style="{
+        minHeight: '48px',
+        borderBottom: '1px solid #f0f1f5',
+        padding: sidebarExpanded ? '8px 16px' : '0',
+      }"
+    >
+      <span v-if="sidebarExpanded" class="text-[14px] font-medium text-[#03102f]">Finance</span>
       <div class="relative">
         <button
-          class="flex items-center justify-center w-6 h-6 rounded transition-colors duration-150"
-          :class="plusOpen ? 'bg-[rgba(0,39,113,0.08)]' : 'hover:bg-gray-100'"
+          ref="plusBtnRef"
+          class="flex items-center justify-center w-6 h-6 rounded border border-[#e5e6ea] transition-colors duration-150"
+          :class="plusOpen ? 'bg-[rgba(0,39,113,0.08)]' : 'hover:bg-[#f0f1f5]'"
           @click="plusOpen = !plusOpen"
         >
           <img
@@ -17,16 +26,21 @@
             }"
           />
         </button>
-        <PlusMenu v-model="plusOpen" :items="plusItems" />
+        <PlusMenu v-model="plusOpen" :items="plusItems" :anchor="plusBtnRef" />
       </div>
     </div>
 
     <!-- Scrollable menu -->
     <div class="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
       <template v-for="section in sections" :key="section.header || 'main'">
-        <div v-if="section.header" class="pt-3 pb-1 px-2">
-          <span class="text-[10px] font-medium tracking-widest uppercase" :style="{ color: section.headerColor }">{{ section.header }}</span>
-        </div>
+        <template v-if="section.header">
+          <div v-if="sidebarExpanded" class="pt-3 pb-1 px-2">
+            <span class="text-[10px] font-medium tracking-widest uppercase" :style="{ color: section.headerColor }">{{ section.header }}</span>
+          </div>
+          <div v-else class="py-2">
+            <div class="h-px w-full bg-[#e5e6ea]" />
+          </div>
+        </template>
         <SidebarMenuItem
           v-for="item in section.items"
           :key="item.label"
@@ -44,10 +58,12 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, useTemplateRef } from 'vue'
 import SidebarMenuItem from './SidebarMenuItem.vue'
 import PlusMenu from './PlusMenu.vue'
 import { settingsOpen } from '../../composables/useSettingsPanel.js'
+import { sidebarExpanded, sidebarPinned } from '../../composables/useSidebarCollapsed.js'
+import { activeItems } from '../../composables/useSidebarActiveItem.js'
 
 import plusIcon from '../../assets/icons/icon-plus.svg'
 import gridIcon from '../../assets/icons/icon-grid.svg'
@@ -64,8 +80,12 @@ import paperRollIcon from '../../assets/icons/icon-paper-roll.svg'
 import document2Icon from '../../assets/icons/icon-document-2.svg'
 import refreshIcon from '../../assets/icons/icon-refresh.svg'
 import settingIcon from '../../assets/icons/icon-setting.svg'
-const activeItem = ref('Overview')
+
+const activeItem = activeItems.finance
 const plusOpen = ref(false)
+const plusBtnRef = useTemplateRef('plusBtnRef')
+
+watch(plusOpen, (open) => { sidebarPinned.value = open })
 
 watch(activeItem, (val) => {
   if (val === 'Settings') {
@@ -78,12 +98,6 @@ const plusItems = [
   { label: 'Bill',       shortcut: ['c', 'b'] },
   { label: 'Transfer',   shortcut: ['c', 't'] },
   { label: 'Payroll',    shortcut: ['c', 'p'] },
-]
-
-const genericSubmenu = [
-  { label: 'All menus', showBeta: true },
-  { label: 'All menus', showBeta: true },
-  { label: 'All menus', showBeta: true },
 ]
 
 const sections = [

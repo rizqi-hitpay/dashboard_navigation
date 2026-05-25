@@ -1,8 +1,29 @@
 <template>
   <div class="w-[81px] flex flex-col h-full bg-[#f8f9fc] shrink-0 py-2">
     <!-- Logo -->
-    <div style="padding: 12px 8px;" class="flex justify-center items-center">
-      <img :src="logoIcon" alt="HitPay" class="w-8 h-8" />
+    <div
+      class="relative flex justify-center items-center cursor-pointer h-[56px] px-2"
+      @mouseenter="logoHovered = true"
+      @mouseleave="logoHovered = false"
+      @click="sidebarCollapsed = !sidebarCollapsed"
+    >
+      <Transition name="logo-swap">
+        <img
+          v-if="!logoHovered"
+          key="logo"
+          :src="logoIcon"
+          alt="HitPay"
+          class="absolute w-8 h-8"
+        />
+        <img
+          v-else
+          key="icon"
+          :src="collapseIcon"
+          alt="HitPay"
+          class="absolute w-[18px] h-[18px]"
+          :style="{ transform: sidebarCollapsed ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 200ms ease' }"
+        />
+      </Transition>
     </div>
 
     <!-- Product nav items -->
@@ -39,6 +60,7 @@ import NavRailItem from './NavRailItem.vue'
 import { activeProduct } from '../../composables/useNav.js'
 
 import logoIcon from '../../assets/icons/logo-hitpay.svg'
+import collapseIcon from '../../assets/icons/icon-sidebar-collapse.svg'
 import moneyLineIcon from '../../assets/icons/icon-money-line.svg'
 import moneyBulkIcon from '../../assets/icons/icon-money.svg'
 import bag2LineIcon from '../../assets/icons/icon-bag-2.svg'
@@ -51,8 +73,10 @@ import questionIcon from '../../assets/icons/icon-question-mark.svg'
 
 import { ref } from 'vue'
 import { agentPanelOpen } from '../../composables/useAgentPanel.js'
+import { sidebarCollapsed } from '../../composables/useSidebarCollapsed.js'
 
 const activeBottom = ref(null)
+const logoHovered = ref(false)
 
 function handleBottomClick(i, item) {
   if (item.label === 'Ask Agent') {
@@ -74,3 +98,15 @@ const bottomItems = [
   { icon: questionIcon, label: 'Help' },
 ]
 </script>
+
+<style scoped>
+.logo-swap-enter-active,
+.logo-swap-leave-active {
+  transition: opacity 180ms ease;
+  position: absolute;
+}
+.logo-swap-enter-from,
+.logo-swap-leave-to {
+  opacity: 0;
+}
+</style>
