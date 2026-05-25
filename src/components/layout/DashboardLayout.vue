@@ -64,11 +64,16 @@
 
     </div>
   </div>
+
+  <!-- Intro modal -->
+  <VideoIntroModal v-model="introModalOpen" />
 </template>
 
 <script setup>
 import { computed, ref, watch } from 'vue'
 import NavRail from '../navigation/NavRail.vue'
+import VideoIntroModal from '../modals/VideoIntroModal.vue'
+import { introModalOpen } from '../../composables/useIntroModal.js'
 import Sidebar from '../navigation/Sidebar.vue'
 import CommerceSidebar from '../navigation/CommerceSidebar.vue'
 import FinanceSidebar from '../navigation/FinanceSidebar.vue'
