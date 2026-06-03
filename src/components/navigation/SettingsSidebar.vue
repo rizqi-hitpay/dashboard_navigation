@@ -18,7 +18,7 @@
     <!-- Scrollable menu -->
     <div class="flex-1 overflow-y-auto py-2" style="padding-left: 8px; padding-right: 8px;">
       <template v-for="section in sections" :key="section.header">
-        <div class="px-2 pb-1" style="padding-top: 12px;">
+        <div class="px-2 pb-1" :style="{ paddingTop: section === sections[0] ? '0' : '12px' }">
           <span class="text-[10px] font-medium tracking-widest uppercase" style="color: #8093b8;">{{ section.header }}</span>
         </div>
         <div
