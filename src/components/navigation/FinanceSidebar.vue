@@ -62,7 +62,7 @@ import { ref, watch, useTemplateRef } from 'vue'
 import SidebarMenuItem from './SidebarMenuItem.vue'
 import PlusMenu from './PlusMenu.vue'
 import { settingsOpen } from '../../composables/useSettingsPanel.js'
-import { sidebarExpanded, sidebarPinned } from '../../composables/useSidebarCollapsed.js'
+import { sidebarExpanded, sidebarPinned, sidebarCollapsed } from '../../composables/useSidebarCollapsed.js'
 import { activeItems } from '../../composables/useSidebarActiveItem.js'
 
 import plusIcon from '../../assets/icons/icon-plus.svg'
@@ -89,6 +89,7 @@ watch(plusOpen, (open) => { sidebarPinned.value = open })
 
 watch(activeItem, (val) => {
   if (val === 'Settings') {
+    if (sidebarCollapsed.value) sidebarCollapsed.value = false
     settingsOpen.value = true
     activeItem.value = null
   }
