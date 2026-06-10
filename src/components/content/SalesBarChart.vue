@@ -30,9 +30,9 @@
           </linearGradient>
         </defs>
 
-        <!-- Y-axis labels + horizontal grid lines -->
+        <!-- Y-axis labels + horizontal grid lines (empty state: baseline only) -->
         <g v-for="lvl in yLevels" :key="lvl.label">
-          <line :x1="BAR_X" :x2="chartWidth" :y1="lvl.y" :y2="lvl.y" stroke="#f2f2f4" stroke-width="1" />
+          <line v-if="!empty || lvl.y === BAR_AREA_H" :x1="BAR_X" :x2="chartWidth" :y1="lvl.y" :y2="lvl.y" stroke="#f2f2f4" stroke-width="1" />
           <text
             :x="40"
             :y="lvl.y + 4"
@@ -44,8 +44,46 @@
           >{{ lvl.label }}</text>
         </g>
 
+        <!-- ── Empty state: x-axis labels + centered message, no bars ── -->
+        <template v-if="empty">
+          <template v-if="activeTab === '30d'">
+            <text
+              v-for="(group, gi) in groups30d"
+              :key="'eg' + gi"
+              :x="groupX(gi) + groupContentW / 2"
+              :y="216"
+              text-anchor="middle"
+              font-size="10"
+              font-family="Inter, sans-serif"
+              font-weight="500"
+              fill="#9295a5"
+            >{{ group.label }}</text>
+          </template>
+          <template v-else>
+            <text
+              v-for="(bar, i) in bars7d"
+              :key="'ed' + i"
+              :x="dayX7d(i) + barW7d / 2"
+              :y="216"
+              text-anchor="middle"
+              font-size="10"
+              font-family="Inter, sans-serif"
+              font-weight="500"
+              fill="#9295a5"
+            >{{ bar.label }}</text>
+          </template>
+          <text
+            :x="BAR_X + (chartWidth - BAR_X) / 2"
+            :y="BAR_AREA_H / 2 + 4"
+            text-anchor="middle"
+            font-size="12"
+            font-family="Inter, sans-serif"
+            fill="#61667c"
+          >No data to display</text>
+        </template>
+
         <!-- ── 30d view ── -->
-        <template v-if="activeTab === '30d'">
+        <template v-else-if="activeTab === '30d'">
           <g v-for="(group, gi) in groups30d" :key="'g' + gi">
             <!-- Weekend background: 2 bars (Sat+Sun) shift right by 1 bar each group -->
             <rect
@@ -136,6 +174,10 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+
+defineProps({
+  empty: { type: Boolean, default: false },
+})
 
 const activeTab = ref('30d')
 

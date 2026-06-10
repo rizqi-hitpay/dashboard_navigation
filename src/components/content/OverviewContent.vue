@@ -6,6 +6,11 @@
       <h1 class="text-[18px] font-medium text-[#03102f]">Overview</h1>
     </div>
 
+    <!-- Product intro carousel (new users only, dismissible) -->
+    <div v-if="isNewUser && !productIntroDismissed" style="margin-bottom: 32px;">
+      <ProductIntroCarousel @close="productIntroDismissed = true" />
+    </div>
+
     <!-- Stat cards row -->
     <div class="grid grid-cols-4 gap-3 shrink-0 mb-5">
       <OverviewCard
@@ -24,7 +29,7 @@
       <RecentTransactionsTable :rows="recentTransactions" />
 
       <!-- Your Sales bar chart -->
-      <SalesBarChart />
+      <SalesBarChart :empty="isNewUser" />
     </div>
 
     <!-- Donut charts row -->
@@ -36,12 +41,14 @@
         center-label="Total"
         discover-text="Discover more methods"
         :tabs="[{ label: '7d' }, { label: '30d' }]"
+        :empty="isNewUser"
       />
       <DonutChartCard
         title="Sales by Channels"
         :segments="channelSegments"
         total="SGD 18,470"
         center-label="Total"
+        :empty="isNewUser"
       />
     </div>
 
@@ -129,8 +136,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import OverviewCard from './OverviewCard.vue'
+import ProductIntroCarousel from './ProductIntroCarousel.vue'
 import RecentTransactionsTable from './RecentTransactionsTable.vue'
 import SalesBarChart from './SalesBarChart.vue'
 import DonutChartCard from './DonutChartCard.vue'
@@ -138,19 +146,33 @@ import RecentPayoutsTable from './RecentPayoutsTable.vue'
 import paletteIcon from '../../assets/icons/icon-palette.svg'
 import promoPaymentLinksImg from '../../assets/images/promo-payment-links.webp'
 import promoInvoiceImg from '../../assets/images/promo-invoice.webp'
+import { useNewUser } from '../../composables/useNewUser'
 
 const smallBannerDismissed = ref(false)
 const largeBannerDismissed = ref(false)
+const productIntroDismissed = ref(false)
 
-const statCards = [
+// New-user activation flow: all dashboard data starts empty
+const { isNewUser } = useNewUser()
+
+// Empty state (Figma: Dashboard - Initial) — values zeroed, no trend badges
+const emptyStatCards = [
+  { label: 'Sales this month', value: 'SGD 0.00', trend: '' },
+  { label: 'Sales this week',  value: 'SGD 0.00', trend: '' },
+  { label: 'Sales today',      value: 'SGD 0.00', trend: '' },
+  { label: 'Wallet balance',   value: 'SGD 0.00', trend: '' },
+]
+
+const filledStatCards = [
   { label: 'Sales this month', value: 'SGD 398,152', trend: '+5%' },
   { label: 'Sales this week',  value: 'SGD 18,470',  trend: '+11%' },
   { label: 'Sales today',      value: 'SGD 2,760',   trend: '+39%' },
   { label: 'Wallet balance',   value: 'SGD 70,251',  trend: '+39%' },
 ]
 
+const statCards = computed(() => isNewUser.value ? emptyStatCards : filledStatCards)
 
-const recentTransactions = [
+const filledTransactions = [
   { date: 'MAY 20  09:14 AM', customer: 'james@wildadventures.com',    amount: 'SGD 1,200.00' },
   { date: 'MAY 20  02:30 PM', customer: 'sophia@urbanexplorers.net',   amount: 'SGD 2,345.67' },
   { date: 'MAY 19  06:45 PM', customer: 'michael@techinnovators.org',  amount: 'SGD 88.50'    },
@@ -158,13 +180,16 @@ const recentTransactions = [
   { date: 'MAY 18  02:30 PM', customer: 'jane.smith@example.com',      amount: 'SGD 3,456.78' },
 ]
 
-const recentPayouts = [
+const filledPayouts = [
   { date: 'MAY 20  09:00 AM', bank: 'DBS Bank',  bankSub: '•••• 4821', amount: 'SGD 12,400.00', status: 'Success'    },
   { date: 'MAY 19  02:15 PM', bank: 'OCBC Bank', bankSub: '•••• 7734', amount: 'SGD 8,760.00',  status: 'In-transit' },
   { date: 'MAY 18  11:30 AM', bank: 'UOB Bank',  bankSub: '•••• 2290', amount: 'SGD 5,200.00',  status: 'Success'    },
   { date: 'MAY 17  04:45 PM', bank: 'DBS Bank',  bankSub: '•••• 4821', amount: 'SGD 980.00',    status: 'Failed'     },
   { date: 'MAY 16  10:00 AM', bank: 'Citibank',  bankSub: '•••• 6603', amount: 'SGD 3,310.00',  status: 'Success'    },
 ]
+
+const recentTransactions = computed(() => isNewUser.value ? [] : filledTransactions)
+const recentPayouts      = computed(() => isNewUser.value ? [] : filledPayouts)
 
 const paymentMethodSegments = [
   { label: 'Cards',  pct: 68, color: '#346dff', value: 'SGD 7,595.60' },

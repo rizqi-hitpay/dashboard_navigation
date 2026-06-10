@@ -26,8 +26,17 @@
       </div>
     </div>
 
+    <!-- Empty state: full-height bordered box, centered message (Figma: 352px) -->
+    <div
+      v-if="empty"
+      class="flex items-center justify-center"
+      style="border: 1px solid #e5e6ea; border-radius: 8px; background: white; height: 352px;"
+    >
+      <span class="text-[12px] text-[#61667c]">No data to display</span>
+    </div>
+
     <!-- Chart card -->
-    <div style="border: 1px solid #e5e6ea; border-radius: 8px; padding: 24px; background: white;">
+    <div v-else style="border: 1px solid #e5e6ea; border-radius: 8px; padding: 24px; background: white;">
 
       <!-- Donut chart -->
       <div class="flex justify-center" style="margin-bottom: 24px;">
@@ -119,6 +128,7 @@ const props = defineProps({
   centerLabel:  { type: String, default: 'Total' },
   discoverText: { type: String, default: '' },
   tabs:         { type: Array,  default: () => [{ label: '7d' }, { label: '30d' }] },
+  empty:        { type: Boolean, default: false },
 })
 
 const activeTab    = ref('30d')

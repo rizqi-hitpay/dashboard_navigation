@@ -44,8 +44,19 @@
           </tr>
         </thead>
 
+        <!-- Empty state: 220px white area (5 rows tall), centered message -->
+        <tbody v-if="rows.length === 0">
+          <tr>
+            <td colspan="3" style="padding: 0;">
+              <div class="flex items-center justify-center bg-white" style="height: 220px;">
+                <span class="text-[12px] text-[#61667c]">No data to display</span>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+
         <!-- Rows -->
-        <tbody>
+        <tbody v-else>
           <tr
             v-for="(row, i) in rows"
             :key="i"

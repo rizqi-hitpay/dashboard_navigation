@@ -14,6 +14,7 @@
 
       <!-- UpDown trend badge -->
       <div
+        v-if="trend"
         class="shrink-0 flex items-center gap-0.5 rounded-[4px]"
         style="padding: 4px 8px; border: 1px solid #e5e6ea; height: 26px;"
       >
