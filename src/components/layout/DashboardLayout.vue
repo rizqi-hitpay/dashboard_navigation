@@ -3,8 +3,8 @@
     <!-- Left nav rail: 81px -->
     <NavRail />
 
-    <!-- Content area: 8px padding top/right/bottom, 4px gap between cards -->
-    <div class="flex flex-1 overflow-hidden min-w-0" style="padding: 8px 8px 8px 0; gap: 4px;">
+    <!-- Content area: 8px padding top/right/bottom -->
+    <div class="flex flex-1 overflow-hidden min-w-0" style="padding: 8px 8px 8px 0;">
 
       <!-- Main card: sidebar + content -->
       <div class="flex flex-1 rounded-[8px] overflow-hidden min-w-0 border border-[#E5E6EA] relative" style="box-shadow: 0px 3px 22px 0px rgba(37,41,49,0.08);">
@@ -67,6 +67,23 @@
 
   <!-- Intro modal -->
   <VideoIntroModal v-model="introModalOpen" />
+
+  <!-- New-user setup overlay + docked setup guide -->
+  <NewUserOverlay v-if="isNewUser" />
+
+  <!-- Account Verification full page -->
+  <Teleport to="body">
+    <Transition name="full-page">
+      <AccountVerificationPage v-if="verificationPageOpen" @close="verificationPageOpen = false" />
+    </Transition>
+  </Teleport>
+
+  <!-- Add Bank Account full page -->
+  <Teleport to="body">
+    <Transition name="full-page">
+      <AddBankAccountPage v-if="bankAccountPageOpen" @close="bankAccountPageOpen = false" />
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup>
@@ -85,6 +102,12 @@ import { sidebarCollapsed, sidebarHovered, sidebarPinned } from '../../composabl
 import { settingsOpen } from '../../composables/useSettingsPanel.js'
 import OverviewContent from '../content/OverviewContent.vue'
 import AskAgentPanel from '../content/AskAgentPanel.vue'
+import NewUserOverlay from '../onboarding/NewUserOverlay.vue'
+import AccountVerificationPage from '../onboarding/AccountVerificationPage.vue'
+import AddBankAccountPage from '../onboarding/AddBankAccountPage.vue'
+import { useNewUser } from '../../composables/useNewUser.js'
+
+const { isNewUser, verificationPageOpen, bankAccountPageOpen } = useNewUser()
 
 // Debounced hover to prevent flicker when mouse moves between collapsed strip and overlay
 let hoverTimer = null
@@ -158,4 +181,22 @@ const sidebarKey = computed(() => {
 .sidebar-hover-leave-active { transition: opacity 120ms ease; }
 .sidebar-hover-enter-from,
 .sidebar-hover-leave-to { opacity: 0; }
+
+/* Full-page takeovers (Account Verification, Add Bank Account): rise in as
+   one surface (ease-out), drop away faster on exit — transform + opacity only */
+.full-page-enter-active {
+  transition: opacity 400ms cubic-bezier(0.32, 0.72, 0, 1), transform 400ms cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: opacity, transform;
+}
+.full-page-leave-active {
+  transition: opacity 220ms ease, transform 220ms ease;
+  will-change: opacity, transform;
+}
+.full-page-enter-from { opacity: 0; transform: translateY(24px); }
+.full-page-leave-to   { opacity: 0; transform: translateY(12px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .full-page-enter-active,
+  .full-page-leave-active { transition: none; }
+}
 </style>
