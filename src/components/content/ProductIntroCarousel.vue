@@ -56,8 +56,8 @@
         class="flex items-center bg-white rounded-[8px] shrink-0"
         style="width: 500px; padding: 16px; gap: 16px; border: 1px solid #e5e6ea;"
       >
-        <!-- Illustration -->
-        <img :src="card.image" alt="" class="shrink-0 rounded-[16px]" style="width: 132px; height: 112px;" />
+        <!-- Illustration (CSS/SVG recreation — crisp at any DPI) -->
+        <component :is="card.tile" />
 
         <!-- Content -->
         <div class="flex flex-col flex-1 min-w-0" style="gap: 8px; min-height: 112px;">
@@ -86,11 +86,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import introInvoiceImg from '../../assets/images/intro-invoice.webp'
-import introPaymentLinkImg from '../../assets/images/intro-payment-link.webp'
-import introStaticQrImg from '../../assets/images/intro-static-qr.webp'
-import introPosImg from '../../assets/images/intro-pos.webp'
-import introSendMoneyImg from '../../assets/images/intro-send-money.webp'
+import TileInvoice from './intro/TileInvoice.vue'
+import TilePaymentLink from './intro/TilePaymentLink.vue'
+import TileStaticQr from './intro/TileStaticQr.vue'
+import TilePos from './intro/TilePos.vue'
+import TileCrossBorder from './intro/TileCrossBorder.vue'
 
 defineEmits(['close'])
 
@@ -103,31 +103,31 @@ const cards = [
   {
     title: 'Professional Invoicing',
     description: 'Send branded invoices with online payment options. Auto-reminders help you get paid faster.',
-    image: introInvoiceImg,
+    tile: TileInvoice,
     ...PAYMENT,
   },
   {
     title: 'Create Payment Links',
     description: 'Share a link and get paid instantly — no website or app needed. Works via WhatsApp, email, or SMS.',
-    image: introPaymentLinkImg,
+    tile: TilePaymentLink,
     ...PAYMENT,
   },
   {
     title: 'Static QR Payments',
     description: 'Print a QR code and place it anywhere. Customers scan and pay via PayNow or other methods.',
-    image: introStaticQrImg,
+    tile: TileStaticQr,
     ...PAYMENT,
   },
   {
     title: 'POS & Online Store Builder',
     description: 'Turn any device into a point-of-sale terminal, or launch a full online storefront in minutes.',
-    image: introPosImg,
+    tile: TilePos,
     ...COMMERCE,
   },
   {
     title: 'Send Money',
     description: 'Pay vendors, suppliers and staff directly from your HitPay balance with instant bank transfers.',
-    image: introSendMoneyImg,
+    tile: TileCrossBorder,
     ...FINANCE,
   },
 ]
