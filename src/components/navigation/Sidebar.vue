@@ -104,25 +104,29 @@ const plusItems = [
   { label: 'Subscription',  shortcut: ['c', 's'] },
 ]
 
-const overviewSubmenu = [
-  { label: 'All menus', showBeta: true },
-  { label: 'All menus', showBeta: true },
-  { label: 'All menus', showBeta: true },
+const invoicingSubmenu = [
+  { label: 'All Invoices' },
+  { label: 'Repeating', showBeta: true },
+  { label: 'Products' },
 ]
 
-const genericSubmenu = [
-  { label: 'All menus', showBeta: true },
-  { label: 'All menus', showBeta: true },
-  { label: 'All menus', showBeta: true },
+const recurringBillingSubmenu = [
+  { label: 'Plans' },
+  { label: 'Subscription' },
+]
+
+const payoutsSubmenu = [
+  { label: 'Payouts' },
+  { label: 'Wallet Balances' },
 ]
 
 const sections = [
   {
     items: [
-      { icon: gridIcon, label: 'Overview', defaultOpen: true, submenuItems: overviewSubmenu },
+      { icon: gridIcon, label: 'Overview' },
       { icon: transactionIcon, label: 'Transactions' },
       { icon: pieChartIcon, label: 'Reports' },
-      { icon: bankIcon, label: 'Payouts & Balances' },
+      { icon: bankIcon, label: 'Payouts & Balances', submenuItems: payoutsSubmenu },
       { icon: usersIcon, label: 'Customer' },
       { icon: productIcon, label: 'Products' },
       { icon: discountIcon, label: 'Discounts' },
@@ -133,8 +137,8 @@ const sections = [
     headerColor: '#8093b8',
     items: [
       { icon: linkIcon, label: 'Payment Links' },
-      { icon: receiptIcon, label: 'Invoicing' },
-      { icon: repeatIcon, label: 'Recurring Billing' },
+      { icon: receiptIcon, label: 'Invoicing', submenuItems: invoicingSubmenu },
+      { icon: repeatIcon, label: 'Recurring Billing', submenuItems: recurringBillingSubmenu },
       { icon: qrCodeIcon, label: 'Static QRs' },
     ],
   },

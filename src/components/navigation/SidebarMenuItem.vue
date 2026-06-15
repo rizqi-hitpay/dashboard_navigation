@@ -41,18 +41,39 @@
       </template>
     </div>
 
-    <div v-if="sidebarExpanded && expandable && isOpen && submenuItems.length" class="mt-0.5">
-      <div
-        v-for="item in submenuItems"
-        :key="item.label"
-        class="flex items-center gap-2 cursor-pointer rounded transition-colors duration-150 hover:bg-white/60"
-        style="padding: 4px 8px 4px 38px;"
-      >
-        <span class="flex-1 text-[14px] text-[#61667c] truncate">{{ item.label }}</span>
-        <div class="flex items-center gap-1 shrink-0">
-          <NavBadge v-if="item.showBeta" variant="beta" />
-          <NavBadge v-if="item.showCount" variant="count" :text="item.countText || '9+'" />
-          <NavBadge v-if="item.showWarning" variant="warning" />
+    <!-- Submenu — reveals when the parent is active (animated accordion) -->
+    <div
+      v-if="sidebarExpanded && submenuItems.length"
+      class="grid transition-[grid-template-rows] duration-200 ease-out"
+      :style="{ gridTemplateRows: submenuOpen ? '1fr' : '0fr' }"
+    >
+      <div class="overflow-hidden">
+        <div class="flex flex-col gap-0.5 pt-0.5">
+          <div
+            v-for="item in submenuItems"
+            :key="item.label"
+            class="group/sub relative flex items-center gap-4 pl-8 pr-2 py-1 rounded cursor-pointer transition-colors duration-150"
+            :class="activeSub === item.label ? '' : 'hover:bg-[rgba(0,39,113,0.04)]'"
+            @click.stop="selectSub(item)"
+          >
+            <span
+              v-if="activeSub === item.label"
+              class="absolute left-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-[18px] h-[18px]"
+            >
+              <span class="w-1.5 h-1.5 rounded-full bg-[#2364dd]" />
+            </span>
+            <span
+              class="flex-1 truncate text-[13px] transition-colors duration-150"
+              :class="activeSub === item.label
+                ? 'text-[#03102f] font-medium'
+                : 'text-[#61667c] group-hover/sub:text-[#03102f]'"
+            >{{ item.label }}</span>
+            <div class="flex items-center gap-1 shrink-0">
+              <NavBadge v-if="item.showBeta" variant="beta" />
+              <NavBadge v-if="item.showCount" variant="count" :text="item.countText || '9+'" />
+              <NavBadge v-if="item.showWarning" variant="warning" />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -81,8 +102,21 @@ const props = defineProps({
 })
 
 const isOpen = ref(props.defaultOpen)
+
+// Chevron items (e.g. Settings) toggle on click; submenu items reveal when active.
+const submenuOpen = computed(() => (props.expandable ? isOpen.value : props.active))
+
+// Track the active sub-item locally (defaults to the flagged item, else the first).
+const activeSub = ref(
+  props.submenuItems.find((i) => i.active)?.label || props.submenuItems[0]?.label || null
+)
+
 function toggle() {
   if (props.expandable) isOpen.value = !isOpen.value
+}
+
+function selectSub(item) {
+  activeSub.value = item.label
 }
 
 const iconSizeClass = computed(() => props.iconSize === 'md' ? 'w-[18px] h-[18px]' : 'w-[15px] h-[15px]')
