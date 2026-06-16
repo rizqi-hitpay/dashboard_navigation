@@ -9,7 +9,7 @@
         <div
           v-if="setupIntroVisible"
           class="absolute inset-0 overlay-gradient"
-          style="background: linear-gradient(168.95deg, rgba(255,255,255,0) 34.981%, rgba(251,249,234,0.5) 56.006%, #d6edf8 77.032%);"
+          style="background: linear-gradient(180deg, rgba(255,255,255,0) 11.983%, rgba(251,249,234,0.6) 33.398%, #d6edf8 82.653%);"
         ></div>
       </Transition>
 

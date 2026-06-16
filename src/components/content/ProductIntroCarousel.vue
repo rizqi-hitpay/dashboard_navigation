@@ -2,7 +2,11 @@
   <div>
     <!-- Head: title + prev/next + close (kept above the list so its overlapping
          shadow-room padding never blocks the buttons) -->
-    <div class="flex items-center justify-between relative z-10" style="height: 40px; margin-bottom: 4px;">
+    <div
+      class="intro-head flex items-center justify-between relative z-10"
+      :class="{ 'is-shown': shown, 'is-stagger': stagger }"
+      style="height: 40px; margin-bottom: 4px;"
+    >
       <div class="flex items-center" style="gap: 8px;">
         <span class="text-[16px] font-medium text-[#03102f]" style="line-height: 1.4;">Explore HitPay</span>
 
@@ -52,9 +56,11 @@
       @scroll.passive="updateScrollState"
     >
       <div
-        v-for="card in cards"
+        v-for="(card, i) in cards"
         :key="card.title"
-        class="group flex items-center bg-white rounded-[8px] shrink-0 transition-shadow duration-300 hover:shadow-[0px_3px_22px_0px_rgba(38,42,50,0.03)]"
+        class="intro-card group flex items-center bg-white rounded-[8px] shrink-0 transition-shadow duration-300 hover:shadow-[0px_3px_22px_0px_rgba(38,42,50,0.03)]"
+        :class="{ 'is-shown': shown, 'is-stagger': stagger }"
+        :style="{ animationDelay: stagger ? (i * 140 + 80) + 'ms' : '0ms' }"
         style="width: 500px; padding: 16px; gap: 16px; border: 1px solid #e5e6ea;"
       >
         <!-- Illustration (CSS/SVG recreation — crisp at any DPI) -->
@@ -86,14 +92,26 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import TileInvoice from './intro/TileInvoice.vue'
 import TilePaymentLink from './intro/TilePaymentLink.vue'
 import TileStaticQr from './intro/TileStaticQr.vue'
 import TilePos from './intro/TilePos.vue'
 import TileSendMoney from './intro/TileSendMoney.vue'
 
+const props = defineProps({
+  // false until the parent reveals the carousel on first load; flips true to stagger the cards in
+  play: { type: Boolean, default: true },
+})
 defineEmits(['close'])
+
+// One-time staggered reveal of header + cards, driven by `play` flipping true.
+const shown = ref(false)
+const stagger = ref(false)
+watch(() => props.play, (v) => {
+  if (v && !shown.value) { stagger.value = true; shown.value = true }
+})
+onMounted(() => { if (props.play) shown.value = true }) // already open (revisit) → instant, no stagger
 
 // Chip palettes (Figma: primary/purple/success 300 borders + 500/600 text)
 const PAYMENT  = { chip: 'Payment',  chipBorder: '#80acfe', chipColor: '#2465de' }
@@ -160,5 +178,29 @@ onMounted(updateScrollState)
 }
 .hide-scrollbar::-webkit-scrollbar {
   display: none;               /* Chrome / Safari */
+}
+
+/* One-time staggered entrance (head + cards). animation (not transition) so it
+   doesn't clash with the cards' hover box-shadow transition. Onboarding ease. */
+.intro-head,
+.intro-card { opacity: 0; }
+.intro-head.is-shown,
+.intro-card.is-shown { opacity: 1; }
+.intro-head.is-shown.is-stagger,
+.intro-card.is-shown.is-stagger {
+  opacity: 0;
+  animation: intro-rise 720ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes intro-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-head,
+  .intro-card { opacity: 1; }
+  .intro-head.is-shown.is-stagger,
+  .intro-card.is-shown.is-stagger { animation: none; opacity: 1; }
 }
 </style>

@@ -6,9 +6,17 @@
       <h1 class="text-[18px] font-medium text-[#03102f]">Overview</h1>
     </div>
 
-    <!-- Product intro carousel (new users only, dismissible) -->
-    <div v-if="isNewUser && !productIntroDismissed" style="margin-bottom: 32px;">
-      <ProductIntroCarousel @close="productIntroDismissed = true" />
+    <!-- Product intro carousel (new users only, dismissible) — reveals on first load -->
+    <div
+      v-if="isNewUser && !productIntroDismissed"
+      class="intro-reveal"
+      :class="{ 'intro-reveal--open': introOpen, 'intro-reveal--done': introDone }"
+    >
+      <div class="intro-reveal__inner">
+        <div style="padding-bottom: 32px;">
+          <ProductIntroCarousel :play="introOpen" @close="productIntroDismissed = true" />
+        </div>
+      </div>
     </div>
 
     <!-- Stat cards row -->
@@ -135,8 +143,13 @@
   </div>
 </template>
 
+<script>
+// Persists across remounts so the intro reveal plays only on the first load
+let introHasPlayed = false
+</script>
+
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import OverviewCard from './OverviewCard.vue'
 import ProductIntroCarousel from './ProductIntroCarousel.vue'
 import RecentTransactionsTable from './RecentTransactionsTable.vue'
@@ -154,6 +167,21 @@ const productIntroDismissed = ref(false)
 
 // New-user activation flow: all dashboard data starts empty
 const { isNewUser } = useNewUser()
+
+// One-time intro reveal: collapsed → expands (pushing the stat cards down) and
+// the carousel cards stagger in. `done` drops the grid clip so hover shadows
+// aren't cut once the reveal finishes.
+const introOpen = ref(introHasPlayed)
+const introDone = ref(introHasPlayed)
+onMounted(() => {
+  if (introHasPlayed) return
+  introHasPlayed = true
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (reduce) { introOpen.value = true; introDone.value = true; return }
+  // Hold until the overlay + setup-card entrance settles (~1.1s), then reveal
+  setTimeout(() => { introOpen.value = true }, 1100)
+  setTimeout(() => { introDone.value = true }, 3000)
+})
 
 // Empty state (Figma: Dashboard - Initial) — values zeroed, no trend badges
 const emptyStatCards = [
@@ -205,3 +233,31 @@ const channelSegments = [
 ]
 
 </script>
+
+<style scoped>
+/* One-time intro reveal — height via grid rows (transform-free push of the
+   stat cards), onboarding ease. After it settles, drop the grid so the
+   carousel renders normally (overflow visible → hover shadows aren't clipped). */
+.intro-reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 600ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.intro-reveal--open {
+  grid-template-rows: 1fr;
+}
+.intro-reveal__inner {
+  min-height: 0;
+  overflow: hidden;
+}
+.intro-reveal--done {
+  display: block;
+}
+.intro-reveal--done .intro-reveal__inner {
+  overflow: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-reveal { transition: none; }
+}
+</style>
