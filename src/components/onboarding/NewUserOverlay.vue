@@ -38,7 +38,12 @@
 
       <!-- Setup guide card: docked bottom-right; hides when minimized to the top banner -->
       <Transition name="setup-card">
-        <div v-if="!setupBannerVisible" class="absolute" :class="{ 'card-rise': firstReveal }" style="bottom: 16px; right: 16px; pointer-events: auto;">
+        <div
+          v-if="!setupBannerVisible"
+          class="absolute setup-dock"
+          :class="{ 'card-rise': firstReveal }"
+          :style="{ bottom: '16px', right: dockRight, pointerEvents: 'auto' }"
+        >
           <SetupGuideCard />
         </div>
       </Transition>
@@ -47,11 +52,15 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import SetupGuideCard from './SetupGuideCard.vue'
 import { useNewUser } from '../../composables/useNewUser'
+import { agentPanelOpen } from '../../composables/useAgentPanel.js'
 
 const { setupIntroVisible, setupBannerVisible } = useNewUser()
+
+// Dock the card left of the AI Agent panel (360px + 8px content gap + 16px) when open
+const dockRight = computed(() => (agentPanelOpen.value ? '384px' : '16px'))
 
 // card-rise is the one-time intro reveal. After the card first goes to the
 // banner, restores use the setup-card transition only — avoids a double anim.
@@ -150,6 +159,11 @@ watch(setupBannerVisible, (toBanner) => {
   transform-origin: bottom right;
   transition: opacity 200ms ease, transform 200ms ease;
 }
+
+/* Slide left to clear the AI Agent panel when it opens (matches panel timing) */
+.setup-dock {
+  transition: right 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
 .setup-card-leave-to {
   opacity: 0;
   transform: translateY(12px) scale(0.98);
@@ -163,6 +177,7 @@ watch(setupBannerVisible, (toBanner) => {
   }
   .setup-card-enter-active,
   .setup-card-leave-active { transition: none; }
+  .setup-dock { transition: none; }
   .overlay-fade-leave-active,
   .overlay-text-leave-active,
   .got-it-btn {
