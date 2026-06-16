@@ -1,7 +1,8 @@
 <template>
   <div>
-    <!-- Head: title + prev/next + close -->
-    <div class="flex items-center justify-between" style="height: 40px; margin-bottom: 4px;">
+    <!-- Head: title + prev/next + close (kept above the list so its overlapping
+         shadow-room padding never blocks the buttons) -->
+    <div class="flex items-center justify-between relative z-10" style="height: 40px; margin-bottom: 4px;">
       <div class="flex items-center" style="gap: 8px;">
         <span class="text-[16px] font-medium text-[#03102f]" style="line-height: 1.4;">Explore HitPay</span>
 
@@ -47,13 +48,13 @@
     <div
       ref="listEl"
       class="flex hide-scrollbar"
-      style="gap: 12px; overflow-x: auto; scroll-behavior: smooth; margin: 0 -28px; padding: 0 28px;"
+      style="gap: 12px; overflow-x: auto; scroll-behavior: smooth; margin: -28px; padding: 28px;"
       @scroll.passive="updateScrollState"
     >
       <div
         v-for="card in cards"
         :key="card.title"
-        class="flex items-center bg-white rounded-[8px] shrink-0"
+        class="group flex items-center bg-white rounded-[8px] shrink-0 transition-shadow duration-300 hover:shadow-[0px_3px_22px_0px_rgba(38,42,50,0.03)]"
         style="width: 500px; padding: 16px; gap: 16px; border: 1px solid #e5e6ea;"
       >
         <!-- Illustration (CSS/SVG recreation — crisp at any DPI) -->
@@ -90,7 +91,7 @@ import TileInvoice from './intro/TileInvoice.vue'
 import TilePaymentLink from './intro/TilePaymentLink.vue'
 import TileStaticQr from './intro/TileStaticQr.vue'
 import TilePos from './intro/TilePos.vue'
-import TileCrossBorder from './intro/TileCrossBorder.vue'
+import TileSendMoney from './intro/TileSendMoney.vue'
 
 defineEmits(['close'])
 
@@ -127,7 +128,7 @@ const cards = [
   {
     title: 'Send Money',
     description: 'Pay vendors, suppliers and staff directly from your HitPay balance with instant bank transfers.',
-    tile: TileCrossBorder,
+    tile: TileSendMoney,
     ...FINANCE,
   },
 ]

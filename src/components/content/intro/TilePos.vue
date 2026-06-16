@@ -1,57 +1,72 @@
 <template>
   <TileFrame>
-    <!-- POS panel -->
+    <!-- POS catalogue panel -->
     <div
       class="absolute overflow-hidden"
       style="
-        left: calc(11.29% - 0.54px); right: calc(11.29% - 0.54px);
-        top: calc(50% - 0.21px); transform: translateY(-50%);
-        height: 65.92px; border-radius: 5.12px;
-        background: linear-gradient(135.15deg, #ffffff 66.418%, rgba(255, 255, 255, 0.55) 96.323%);
-        box-shadow:
-          1.28px 19.84px 11.52px 0px rgba(151, 160, 180, 0.03),
-          0.64px 8.96px 8.96px 0px rgba(151, 160, 180, 0.06),
-          0px 1.92px 5.12px 0px rgba(151, 160, 180, 0.06);
+        left: calc(50% + 0.25px); top: 50%; transform: translate(-50%, -50%);
+        width: 116.505px; height: 80px; border-radius: 6.214px;
+        background: linear-gradient(135.15deg, #ffffff 66.418%, rgba(255,255,255,0.55) 96.323%);
       "
     >
       <!-- Header: bar + two dots -->
-      <div class="absolute flex items-center" style="left: 5.12px; top: 5.12px; width: 85.76px; gap: 1.92px;">
-        <div class="ph flex-1 min-w-0" style="height: 3.84px; border-radius: 5.12px;"></div>
-        <div class="ph shrink-0" style="width: 3.84px; height: 3.84px; border-radius: 5.12px;"></div>
-        <div class="ph shrink-0" style="width: 3.84px; height: 3.84px; border-radius: 5.12px;"></div>
+      <div class="absolute flex items-center" style="left: 6.21px; top: 6.21px; width: 104.078px; gap: 2.33px;">
+        <div class="flex-1 min-w-0" style="height: 4.66px; border-radius: 6.214px; background: #dde1e9;"></div>
+        <div class="shrink-0" style="width: 4.66px; height: 4.66px; border-radius: 6.214px; background: #dde1e9;"></div>
+        <div class="shrink-0" style="width: 4.66px; height: 4.66px; border-radius: 6.214px; background: #dde1e9;"></div>
       </div>
-      <!-- 3×3 product grid -->
-      <template v-for="left in [5.12, 23.04, 40.96]">
-        <div
-          v-for="top in [16.64, 32, 47.36]"
-          :key="left + '-' + top"
-          class="absolute ph"
-          :style="{ left: left + 'px', top: top + 'px', width: '15.36px', height: '12.8px', borderRadius: '3.2px' }"
-        ></div>
-      </template>
+
+      <!-- Product photo grid -->
+      <div
+        v-for="(cell, i) in cells"
+        :key="i"
+        class="absolute overflow-hidden"
+        :style="{ left: cell.l + 'px', top: cell.t + 'px', width: '18.641px', height: '15.534px', borderRadius: '3.883px', background: '#dde1e9' }"
+      >
+        <img v-for="(src, k) in cell.img" :key="k" :src="src" class="absolute inset-0 w-full h-full object-cover" alt="" />
+      </div>
+
       <!-- Receipt lines -->
       <div
-        v-for="top in [17.28, 23.04, 28.8]"
-        :key="'r' + top"
+        v-for="t in [20.97, 27.96, 34.95]"
+        :key="t"
         class="absolute flex items-center"
-        :style="{ left: '62.72px', top: top + 'px', width: '28.16px', gap: '1.28px' }"
+        :style="{ left: '76.12px', top: t + 'px', width: '34.175px', gap: '1.553px' }"
       >
-        <div class="ph shrink-0" style="width: 10.24px; height: 3.2px; border-radius: 5.12px;"></div>
-        <div class="ph flex-1 min-w-0" style="height: 3.2px; border-radius: 5.12px;"></div>
+        <div class="shrink-0" style="width: 12.427px; height: 3.883px; border-radius: 6.214px; background: #dde1e9;"></div>
+        <div class="flex-1 min-w-0" style="height: 3.883px; border-radius: 6.214px; background: #dde1e9;"></div>
       </div>
-      <div class="absolute flex items-center" style="left: 62.72px; top: 42.24px; width: 28.16px;">
-        <div class="ph flex-1 min-w-0" style="height: 3.2px; border-radius: 5.12px;"></div>
+      <div class="absolute flex items-center" style="left: 76.12px; top: 51.26px; width: 34.175px;">
+        <div class="flex-1 min-w-0" style="height: 3.883px; border-radius: 6.214px; background: #dde1e9;"></div>
       </div>
-      <!-- Pay button (blue) -->
-      <div class="absolute" style="left: 62.72px; top: 53.76px; width: 28.16px; height: 5.76px; border-radius: 5.12px; background: #4c8afd;"></div>
+
+      <!-- Pay button -->
+      <div class="absolute" style="left: 76.12px; top: 65.24px; width: 34.175px; height: 6.99px; border-radius: 6.214px; background: #5469f5;"></div>
     </div>
   </TileFrame>
 </template>
 
 <script setup>
 import TileFrame from './TileFrame.vue'
-</script>
+import p580 from '../../../assets/images/intro/pos-580.png'
+import p581 from '../../../assets/images/intro/pos-581.png'
+import p582 from '../../../assets/images/intro/pos-582.png'
+import p583 from '../../../assets/images/intro/pos-583.png'
+import p584 from '../../../assets/images/intro/pos-584.png'
+import p585 from '../../../assets/images/intro/pos-585.png'
+import p586 from '../../../assets/images/intro/pos-586.png'
+import p587 from '../../../assets/images/intro/pos-587.png'
+import p588 from '../../../assets/images/intro/pos-588.png'
 
-<style scoped>
-.ph { background: rgba(26, 63, 124, 0.07); }
-</style>
+const cells = [
+  { l: 6.21,  t: 20.19, img: [p580] },
+  { l: 6.21,  t: 38.83, img: [p583] },
+  { l: 6.21,  t: 57.48, img: [p586] },
+  { l: 27.96, t: 20.19, img: [p581] },
+  { l: 27.96, t: 38.83, img: [p584] },
+  { l: 27.96, t: 57.48, img: [p587] },
+  { l: 49.71, t: 20.19, img: [p582] },
+  { l: 49.71, t: 38.83, img: [p586, p585] },
+  { l: 49.71, t: 57.48, img: [p588] },
+]
+</script>

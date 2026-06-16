@@ -9,7 +9,7 @@
         <div
           v-if="setupIntroVisible"
           class="absolute inset-0 overlay-gradient"
-          style="background: linear-gradient(163.45deg, rgba(229,238,255,0) 35.235%, rgba(229,238,255,0.5) 53.002%, #e5eeff 70.768%);"
+          style="background: linear-gradient(168.95deg, rgba(255,255,255,0) 34.981%, rgba(251,249,234,0.5) 56.006%, #d6edf8 77.032%);"
         ></div>
       </Transition>
 
@@ -36,19 +36,29 @@
         </div>
       </Transition>
 
-      <!-- Setup guide card: docked bottom-right, persists after intro is dismissed -->
-      <div class="absolute card-rise" style="bottom: 16px; right: 16px; pointer-events: auto;">
-        <SetupGuideCard />
-      </div>
+      <!-- Setup guide card: docked bottom-right; hides when minimized to the top banner -->
+      <Transition name="setup-card">
+        <div v-if="!setupBannerVisible" class="absolute" :class="{ 'card-rise': firstReveal }" style="bottom: 16px; right: 16px; pointer-events: auto;">
+          <SetupGuideCard />
+        </div>
+      </Transition>
     </div>
   </Teleport>
 </template>
 
 <script setup>
+import { ref, watch } from 'vue'
 import SetupGuideCard from './SetupGuideCard.vue'
 import { useNewUser } from '../../composables/useNewUser'
 
-const { setupIntroVisible } = useNewUser()
+const { setupIntroVisible, setupBannerVisible } = useNewUser()
+
+// card-rise is the one-time intro reveal. After the card first goes to the
+// banner, restores use the setup-card transition only — avoids a double anim.
+const firstReveal = ref(true)
+watch(setupBannerVisible, (toBanner) => {
+  if (toBanner) firstReveal.value = false
+})
 </script>
 
 <style scoped>
@@ -121,12 +131,38 @@ const { setupIntroVisible } = useNewUser()
   box-shadow: 0px 0.5px 0px 0px rgba(0, 0, 0, 0.1);
 }
 
+/* ── Minimize to / restore from the sticky top banner ──
+   Origin-aware (docked bottom-right); ease-out in, faster out. The enter
+   variant disables card-rise so a restore doesn't replay the staged entrance. */
+.setup-card-enter-active {
+  animation: none;
+  transform-origin: bottom right;
+  transition: opacity 260ms ease-out, transform 320ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.setup-card-enter-from {
+  opacity: 0;
+  transform: translateY(16px) scale(0.98);
+}
+.setup-card-leave-active {
+  /* Drop card-rise's fill (holds opacity:1) so the fade-out can take effect
+     and Vue times the leave off this transition, not the long entrance anim */
+  animation: none;
+  transform-origin: bottom right;
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+.setup-card-leave-to {
+  opacity: 0;
+  transform: translateY(12px) scale(0.98);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .overlay-gradient,
   .intro-rise,
   .card-rise {
     animation: none;
   }
+  .setup-card-enter-active,
+  .setup-card-leave-active { transition: none; }
   .overlay-fade-leave-active,
   .overlay-text-leave-active,
   .got-it-btn {

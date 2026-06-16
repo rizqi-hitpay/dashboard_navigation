@@ -18,8 +18,8 @@
     </div>
 
     <!-- Content -->
-    <div class="flex-1 overflow-y-auto">
-      <div class="flex items-start" style="padding: 24px; gap: 40px;">
+    <div class="flex-1 min-h-0 overflow-hidden">
+      <div class="flex h-full" style="padding: 24px; gap: 40px;">
 
         <!-- Stepper sidebar -->
         <div class="flex flex-col shrink-0 bg-white" style="width: 280px; gap: 8px;">
@@ -58,27 +58,27 @@
         </div>
 
         <!-- Review & submit -->
-        <div class="flex flex-1 justify-center min-w-0">
-          <div class="flex flex-col rounded-[12px]" style="width: 764px; background: #f8f9fc; padding: 4px;">
+        <div class="flex flex-1 justify-center items-start min-w-0 min-h-0">
+          <div class="flex flex-col rounded-[12px] min-h-0" style="width: 764px; max-height: 100%; background: #f8f9fc; padding: 4px;">
 
             <!-- Title -->
-            <div class="flex flex-col justify-center" style="padding: 16px; gap: 2px;">
+            <div class="flex flex-col justify-center shrink-0" style="padding: 16px; gap: 2px;">
               <span class="text-[16px] font-medium text-[#03102f]" style="line-height: 1.4;">Review &amp; submit</span>
               <span class="text-[12px] text-[#61667c]" style="line-height: 1.5;">Review all information before submitting your verification</span>
             </div>
 
             <!-- Fields card -->
             <div
-              class="flex flex-col bg-white rounded-[8px] w-full"
-              style="padding-top: 16px; gap: 24px; box-shadow: 0px 1px 2px rgba(0,0,0,0.06), 0px 1px 0.5px rgba(0,0,0,0.06);"
+              class="flex flex-col flex-1 min-h-0 bg-white rounded-[8px] w-full"
+              style="box-shadow: 0px 1px 2px rgba(0,0,0,0.06), 0px 1px 0.5px rgba(0,0,0,0.06);"
             >
-              <div class="flex flex-col" style="padding: 0 16px; gap: 16px;">
+              <div class="flex flex-col flex-1 min-h-0 overflow-y-auto" style="padding: 16px; gap: 16px;">
 
                 <!-- Recap sections -->
                 <div
                   v-for="section in sections"
                   :key="section.title"
-                  class="recap-card flex flex-col w-full bg-white overflow-hidden rounded-[8px]"
+                  class="recap-card flex flex-col shrink-0 w-full bg-white overflow-hidden rounded-[8px]"
                   style="border: 1px solid #e5e6ea;"
                 >
                   <!-- Section head -->
@@ -105,13 +105,13 @@
                     </svg>
                   </div>
 
-                  <!-- Detail items -->
-                  <div class="flex flex-wrap content-start" style="padding: 12px 20px 20px; gap: 16px 12px;">
+                  <!-- Detail items (2-column grid) -->
+                  <div class="grid items-start" style="grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 12px 20px 20px; gap: 16px 12px;">
                     <div
                       v-for="item in section.items"
                       :key="item.label"
-                      class="flex flex-col shrink-0"
-                      style="width: 332px; gap: 2px;"
+                      class="flex flex-col min-w-0"
+                      style="gap: 2px;"
                     >
                       <span class="text-[14px] text-[#61667c]" style="line-height: 1.5;">{{ item.label }}</span>
                       <ul v-if="Array.isArray(item.value)" class="list-disc text-[14px] text-[#03102f]" style="line-height: 1.5; padding-left: 21px;">
@@ -124,7 +124,7 @@
 
                 <!-- Attestation -->
                 <div
-                  class="flex items-start w-full rounded-[8px] cursor-pointer"
+                  class="flex items-start shrink-0 w-full rounded-[8px] cursor-pointer"
                   style="background: #fcfcfd; border: 1px solid #2465de; padding: 8px 12px; gap: 12px;"
                   @click="attested = !attested"
                 >
@@ -151,8 +151,8 @@
                 </div>
               </div>
 
-              <!-- Button group -->
-              <div class="flex items-center justify-between w-full" style="border-top: 1px solid #e5e6ea; padding: 16px;">
+              <!-- Button group (pinned to the card bottom while sections scroll) -->
+              <div class="flex items-center justify-between w-full shrink-0" style="border-top: 1px solid #e5e6ea; padding: 16px;">
                 <button
                   class="btn-secondary flex items-center justify-center rounded-[8px] text-[14px] font-medium text-[#61667c]"
                   style="height: 36px; min-width: 100px; padding: 8px 12px;"
