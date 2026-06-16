@@ -13,14 +13,15 @@
           <span class="text-[14px] font-medium text-[#03102f] whitespace-nowrap" style="line-height: 1.5;">Finish your setup</span>
           <span class="text-[13px] text-[#61667c]" style="line-height: 1.5;">1 of 4 completed</span>
         </div>
-        <!-- Actions (Figma: minus + full-screen arrow when minimized) -->
-        <div class="shrink-0 flex items-center" style="gap: 9px;">
+        <!-- Actions (Figma: minus + full-screen arrow when minimized).
+             20x20 hit areas with 14px icons; gap kept so icons read ~9px apart -->
+        <div class="shrink-0 flex items-center" style="gap: 3px;">
           <!-- Minus → minimize the card into the sticky top banner -->
           <Transition name="icon-swap">
             <button
               v-if="minimized"
               class="shrink-0 flex items-center justify-center hover:opacity-70 transition-opacity duration-150"
-              style="width: 14px; height: 14px;"
+              style="width: 20px; height: 20px;"
               aria-label="Minimize to banner"
               @click="setupBannerVisible = true"
             >
@@ -33,7 +34,7 @@
           <!-- Minimize (expanded) / restore (minimized) toggle -->
           <button
             class="shrink-0 flex items-center justify-center hover:opacity-70 transition-opacity duration-150"
-            style="width: 14px; height: 14px;"
+            style="width: 20px; height: 20px;"
             :aria-label="minimized ? 'Expand' : 'Minimize'"
             @click="toggleMinimize"
           >
