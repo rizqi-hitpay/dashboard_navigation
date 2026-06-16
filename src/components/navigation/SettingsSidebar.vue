@@ -100,6 +100,12 @@ const sections = [
     ],
   },
   {
+    header: 'Online Store',
+    items: [
+      { label: 'Store Settings' },
+    ],
+  },
+  {
     header: 'Branding',
     items: [
       { label: 'Checkout Customisation' },

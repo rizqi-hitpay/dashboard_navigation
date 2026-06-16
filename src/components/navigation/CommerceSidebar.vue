@@ -66,7 +66,6 @@ import { sidebarExpanded, sidebarPinned, sidebarCollapsed } from '../../composab
 import { activeItems } from '../../composables/useSidebarActiveItem.js'
 
 import plusIcon from '../../assets/icons/icon-plus.svg'
-import gridIcon from '../../assets/icons/icon-grid.svg'
 import counterIcon from '../../assets/icons/icon-counter.svg'
 import clipboardIcon from '../../assets/icons/icon-clipboard.svg'
 import pieChartIcon from '../../assets/icons/icon-pie-chart.svg'
@@ -76,6 +75,7 @@ import discountIcon from '../../assets/icons/icon-discount.svg'
 import couponIcon from '../../assets/icons/icon-coupon.svg'
 import terminalIcon from '../../assets/icons/icon-terminal.svg'
 import mallIcon from '../../assets/icons/icon-mall.svg'
+import storeIcon from '../../assets/icons/icon-store.svg'
 import brushIcon from '../../assets/icons/icon-brush.svg'
 import documentIcon from '../../assets/icons/icon-document.svg'
 import imageIcon from '../../assets/icons/icon-image.svg'
@@ -110,7 +110,6 @@ const plusItems = [
 const sections = [
   {
     items: [
-      { icon: gridIcon, label: 'Overview' },
       { icon: counterIcon, label: 'Web POS' },
       { icon: clipboardIcon, label: 'Orders' },
       { icon: pieChartIcon, label: 'Reports' },
@@ -138,6 +137,7 @@ const sections = [
     header: 'Online Store',
     headerColor: '#8093b8',
     items: [
+      { icon: storeIcon, label: 'Store Overview' },
       { icon: brushIcon, label: 'Store Design' },
       { icon: documentIcon, label: 'Pages' },
       { icon: imageIcon, label: 'Media' },
