@@ -3,6 +3,7 @@
     <div
       class="fixed inset-0 z-40"
       :style="{ pointerEvents: setupIntroVisible ? 'auto' : 'none' }"
+      @click="maybeJiggle"
     >
       <!-- Gradient backdrop (Figma: Overlay fill) -->
       <Transition name="overlay-fade">
@@ -18,6 +19,7 @@
         <div
           v-if="setupIntroVisible"
           class="absolute flex flex-col items-start"
+          :class="{ jiggle: jiggle }"
           style="bottom: 32px; right: 459px; width: 266px; gap: 16px;"
         >
           <h2 class="intro-rise text-[24px] font-medium text-[#03102f]" style="line-height: 1.35; animation-delay: 150ms;">
@@ -40,8 +42,8 @@
       <Transition name="setup-card">
         <div
           v-if="!setupBannerVisible"
-          class="absolute setup-dock"
-          :class="{ 'card-rise': firstReveal }"
+          class="absolute setup-dock setup-card-wrap"
+          :class="{ 'card-rise': firstReveal, jiggle: jiggle }"
           :style="{ bottom: '16px', right: dockRight, pointerEvents: 'auto' }"
         >
           <SetupGuideCard />
@@ -61,6 +63,16 @@ const { setupIntroVisible, setupBannerVisible } = useNewUser()
 
 // Dock the card left of the AI Agent panel (360px + 8px content gap + 16px) when open
 const dockRight = computed(() => (agentPanelOpen.value ? '384px' : '16px'))
+
+// While the intro is up, clicking anywhere that isn't "Got it" or the setup
+// card nudges attention back to the primary path with a quick jiggle.
+const jiggle = ref(false)
+function maybeJiggle(e) {
+  if (!setupIntroVisible.value) return
+  if (e.target.closest('.got-it-btn') || e.target.closest('.setup-card-wrap')) return
+  jiggle.value = false
+  requestAnimationFrame(() => { jiggle.value = true })
+}
 
 // card-rise is the one-time intro reveal. After the card first goes to the
 // banner, restores use the setup-card transition only — avoids a double anim.
@@ -169,10 +181,29 @@ watch(setupBannerVisible, (toBanner) => {
   transform: translateY(12px) scale(0.98);
 }
 
+/* ── Attention jiggle ──
+   Fires when the user clicks away from "Got it" / the setup card. Quick,
+   damped horizontal shake; defined after .card-rise so it wins the
+   animation slot on the shared element. */
+.jiggle {
+  animation: jiggle 480ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes jiggle {
+  0%   { transform: translateX(0); }
+  15%  { transform: translateX(-6px); }
+  30%  { transform: translateX(5px); }
+  45%  { transform: translateX(-4px); }
+  60%  { transform: translateX(3px); }
+  75%  { transform: translateX(-2px); }
+  100% { transform: translateX(0); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .overlay-gradient,
   .intro-rise,
-  .card-rise {
+  .card-rise,
+  .jiggle {
     animation: none;
   }
   .setup-card-enter-active,
