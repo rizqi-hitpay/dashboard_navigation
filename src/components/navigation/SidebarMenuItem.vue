@@ -1,6 +1,7 @@
 <template>
   <div>
     <div
+      ref="rowRef"
       class="flex items-center py-1 rounded-lg cursor-pointer transition-colors duration-150 group"
       :class="[
         active ? 'bg-white border border-[#f2f2f4]' : 'hover:bg-[rgba(0,39,113,0.04)]',
@@ -8,6 +9,8 @@
       ]"
       :style="active ? { boxShadow: '0px 1.5px 1.5px 0px rgba(0,0,0,0.04), 0px 1px 10px 0px rgba(0,0,0,0.06)' } : {}"
       @click="toggle"
+      @mouseenter="hovered = true"
+      @mouseleave="hovered = false"
     >
       <img
         :src="icon"
@@ -77,12 +80,16 @@
         </div>
       </div>
     </div>
+
+    <!-- Collapsed-mode hover tooltip -->
+    <NavTooltip :label="label" :anchor="rowRef" :visible="!sidebarExpanded && hovered" />
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, useTemplateRef } from 'vue'
 import NavBadge from './NavBadge.vue'
+import NavTooltip from './NavTooltip.vue'
 import chevronIcon from '../../assets/icons/icon-chevron-right.svg'
 import { sidebarExpanded } from '../../composables/useSidebarCollapsed.js'
 
@@ -102,6 +109,8 @@ const props = defineProps({
 })
 
 const isOpen = ref(props.defaultOpen)
+const hovered = ref(false)
+const rowRef = useTemplateRef('rowRef')
 
 // Chevron items (e.g. Settings) toggle on click; submenu items reveal when active.
 const submenuOpen = computed(() => (props.expandable ? isOpen.value : props.active))
