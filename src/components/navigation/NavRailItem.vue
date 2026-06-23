@@ -30,6 +30,7 @@ defineProps({
   iconSize: { type: Number, default: 22 },
 })
 
-const activeFilter = 'invert(27%) sepia(90%) saturate(1285%) hue-rotate(200deg) brightness(95%) contrast(97%)'
-const inactiveFilter = 'invert(39%) sepia(21%) saturate(657%) hue-rotate(185deg) brightness(88%) contrast(84%)'
+// Filters tuned to exact design tokens: active = Primary/500 #2465de, inactive = Dark Blue/400 #4c689c
+const activeFilter = 'invert(52%) sepia(98%) saturate(5187%) hue-rotate(210deg) brightness(88%) contrast(97%)'
+const inactiveFilter = 'invert(37%) sepia(13%) saturate(1864%) hue-rotate(181deg) brightness(99%) contrast(84%)'
 </script>

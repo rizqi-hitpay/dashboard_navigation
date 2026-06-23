@@ -1,29 +1,8 @@
 <template>
   <div class="w-[81px] flex flex-col h-full bg-[#f8f9fc] shrink-0 py-2">
     <!-- Logo -->
-    <div
-      class="relative flex justify-center items-center cursor-pointer h-[56px] px-2"
-      @mouseenter="logoHovered = true"
-      @mouseleave="logoHovered = false"
-      @click="sidebarCollapsed = !sidebarCollapsed"
-    >
-      <Transition name="logo-swap">
-        <img
-          v-if="!logoHovered"
-          key="logo"
-          :src="logoIcon"
-          alt="HitPay"
-          class="absolute w-8 h-8"
-        />
-        <img
-          v-else
-          key="icon"
-          :src="collapseIcon"
-          alt="HitPay"
-          class="absolute w-[18px] h-[18px]"
-          :style="{ transform: sidebarCollapsed ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 200ms ease' }"
-        />
-      </Transition>
+    <div class="relative flex justify-center items-center h-[56px] px-2">
+      <img :src="logoIcon" alt="HitPay" class="w-8 h-8" />
     </div>
 
     <!-- Product nav items -->
@@ -46,11 +25,32 @@
         v-for="(item, i) in bottomItems"
         :key="item.label"
         :icon="item.icon"
+        :icon-active="item.iconActive"
         :label="item.label"
-        :active="item.label === 'Ask Agent' ? agentPanelOpen : activeBottom === i"
+        :active="item.label === 'AI Assistant' ? agentPanelOpen : activeBottom === i"
         :icon-size="18"
         @click="handleBottomClick(i, item)"
       />
+
+      <!-- Sidebar collapse toggle -->
+      <button
+        type="button"
+        class="flex items-center justify-center cursor-pointer opacity-70 hover:opacity-100 transition-opacity duration-150"
+        style="padding: 12px 8px;"
+        :aria-label="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+        @click="sidebarCollapsed = !sidebarCollapsed"
+      >
+        <img
+          :src="collapseIcon"
+          alt=""
+          class="w-[18px] h-[18px]"
+          :style="{
+            transform: sidebarCollapsed ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 200ms ease',
+            filter: collapseFilter,
+          }"
+        />
+      </button>
     </div>
   </div>
 </template>
@@ -67,19 +67,21 @@ import bag2LineIcon from '../../assets/icons/icon-bag-2.svg'
 import bag2BulkIcon from '../../assets/icons/icon-bag-2-bulk.svg'
 import note2LineIcon from '../../assets/icons/icon-note-2.svg'
 import note2BulkIcon from '../../assets/icons/icon-note-2-bulk.svg'
-import sparkleIcon from '../../assets/icons/icon-sparkle.svg'
+import aiChatIcon from '../../assets/icons/icon-ai-chat.svg'
+import aiChatBulkIcon from '../../assets/icons/icon-ai-chat-bulk.svg'
 import giftIcon from '../../assets/icons/icon-gift.svg'
-import questionIcon from '../../assets/icons/icon-question-mark.svg'
 
 import { ref } from 'vue'
 import { agentPanelOpen } from '../../composables/useAgentPanel.js'
 import { sidebarCollapsed } from '../../composables/useSidebarCollapsed.js'
 
 const activeBottom = ref(null)
-const logoHovered = ref(false)
+
+// Matches NavRailItem's inactive icon color (Dark Blue/400 #4c689c)
+const collapseFilter = 'invert(37%) sepia(13%) saturate(1864%) hue-rotate(181deg) brightness(99%) contrast(84%)'
 
 function handleBottomClick(i, item) {
-  if (item.label === 'Ask Agent') {
+  if (item.label === 'AI Assistant') {
     agentPanelOpen.value = !agentPanelOpen.value
   } else {
     activeBottom.value = activeBottom.value === i ? null : i
@@ -93,20 +95,7 @@ const productItems = [
 ]
 
 const bottomItems = [
-  { icon: sparkleIcon, label: 'Ask Agent' },
+  { icon: aiChatIcon, iconActive: aiChatBulkIcon, label: 'AI Assistant' },
   { icon: giftIcon, label: 'Refer' },
-  { icon: questionIcon, label: 'Help' },
 ]
 </script>
-
-<style scoped>
-.logo-swap-enter-active,
-.logo-swap-leave-active {
-  transition: opacity 180ms ease;
-  position: absolute;
-}
-.logo-swap-enter-from,
-.logo-swap-leave-to {
-  opacity: 0;
-}
-</style>

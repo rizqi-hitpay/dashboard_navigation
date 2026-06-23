@@ -3,25 +3,26 @@
     <!-- Trigger row -->
     <div
       ref="triggerRef"
-      class="flex items-center border-t border-[#e5e6ea] cursor-pointer transition-colors duration-150"
+      class="flex items-center border-t border-[#e5e6ea] bg-[#fcfcfd] cursor-pointer transition-colors duration-150"
       :class="[open ? 'bg-[rgba(0,39,113,0.04)]' : 'hover:bg-white/60', sidebarExpanded ? 'gap-2' : 'justify-center']"
-      style="height: 47px; padding: 0 8px;"
+      style="height: 56px; padding: 0 8px;"
       @click="open = !open"
     >
-      <div class="w-7 h-7 rounded-[5px] bg-[#333748] flex items-center justify-center shrink-0 overflow-hidden">
-        <span class="text-[12px] font-medium text-white">N</span>
+      <div class="w-8 h-8 rounded-[5px] bg-[#343848] flex items-center justify-center shrink-0 overflow-hidden">
+        <span class="text-[14px] font-medium text-white">C</span>
       </div>
       <template v-if="sidebarExpanded">
-        <span class="text-[13px] text-[#61667c] shrink-0">Nitin</span>
-        <div class="w-px h-6 bg-[#e5e6ea] shrink-0"></div>
-        <span class="text-[13px] text-[#03102f] flex-1 truncate">My Cat Shop</span>
+        <div class="flex-1 min-w-0 flex flex-col justify-center">
+          <span class="text-[13px] leading-[1.5] text-[#03102f] truncate">My Cat Shop</span>
+          <span class="text-[12px] leading-[1.5] text-[#61667c] truncate">Cherry Test QA</span>
+        </div>
         <img
           :src="arrowUpDownIcon"
           alt="switch"
           class="w-4 h-4 shrink-0 transition-transform duration-200"
           :style="{
             transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
-            filter: 'invert(39%) sepia(21%) saturate(657%) hue-rotate(185deg) brightness(88%) contrast(84%)'
+            filter: 'invert(38%) sepia(7%) saturate(1126%) hue-rotate(192deg) brightness(101%) contrast(88%)'
           }"
         />
       </template>
