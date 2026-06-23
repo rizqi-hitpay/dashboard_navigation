@@ -5,8 +5,8 @@
     <div class="flex items-center shrink-0" style="height: 44px; padding: 12px 16px; border-bottom: 1px solid #e5e6ea;">
       <!-- Conversation selector -->
       <button class="flex items-center gap-2 text-[13px] text-[#03102f] hover:opacity-70 transition-opacity">
-        Setup guide
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+        {{ activeTab === 'chat' ? 'Live Chat' : 'Setup guide' }}
+        <svg v-if="activeTab !== 'chat'" width="13" height="13" viewBox="0 0 13 13" fill="none">
           <path d="M3.5 5.5l3 3 3-3" stroke="#03102f" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
@@ -24,8 +24,32 @@
       </div>
     </div>
 
+    <!-- ── Tab group: AI Assistant · Live Chat ── -->
+    <div class="shrink-0 w-full" style="padding: 4px 8px;">
+      <div class="relative flex items-center w-full" style="background: #fcfcfd; border: 1px solid #f2f2f4; border-radius: 40px; padding: 4px; gap: 4px;">
+        <!-- Moving pill: slides under the active tab -->
+        <div
+          class="tab-pill"
+          :style="{ transform: `translateX(calc((100% + 4px) * ${activeIndex}))` }"
+        />
+        <button
+          v-for="tab in tabs"
+          :key="tab.key"
+          class="relative z-10 flex-1 flex items-center justify-center"
+          style="border-radius: 40px; padding: 4px 8px; gap: 4px;"
+          @click="activeTab = tab.key"
+        >
+          <img :src="activeTab === tab.key ? tab.iconActive : tab.icon" alt="" style="width: 14px; height: 14px;" />
+          <span
+            class="text-[12px] leading-[1.5] whitespace-nowrap transition-colors duration-200"
+            :style="{ color: activeTab === tab.key ? '#03102f' : '#61667c' }"
+          >{{ tab.label }}</span>
+        </button>
+      </div>
+    </div>
+
     <!-- ── Main: scrollable, To-do vertically centered ── -->
-    <div class="flex-1 overflow-y-auto flex flex-col items-center justify-center">
+    <div v-if="activeTab === 'ai'" class="flex-1 overflow-y-auto flex flex-col items-center justify-center">
 
       <!-- To-do: 312px wide, gap 16px between Greeting and Setup Guide -->
       <div style="width: 312px; display: flex; flex-direction: column; gap: 16px; padding: 24px 0;">
@@ -139,6 +163,17 @@
       </div>
     </div>
 
+    <!-- ── Main: Live Chat ── -->
+    <div v-else class="flex-1 overflow-y-auto flex flex-col items-center justify-center">
+      <div class="flex flex-col items-center text-center" style="width: 312px; gap: 8px; padding: 24px 0;">
+        <span class="shrink-0 flex items-center justify-center rounded-full" style="width: 44px; height: 44px; background: #f2f2f4;">
+          <img :src="tabChatIcon" alt="" style="width: 22px; height: 22px;" />
+        </span>
+        <span style="font-size: 16px; font-weight: 500; color: #03102f; line-height: 1.375;">Live Chat</span>
+        <span style="font-size: 14px; font-weight: 400; color: #61667c; line-height: 1.5;">Start a conversation with our support team.</span>
+      </div>
+    </div>
+
     <!-- ── Chat Input ── -->
     <div class="shrink-0" style="padding: 8px; position: relative;">
       <!-- Animated gradient glow blob -->
@@ -172,16 +207,28 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import composeIcon  from '../../assets/icons/icon-compose.svg'
 import minimizeIcon from '../../assets/icons/icon-minimize.svg'
 import closeIcon    from '../../assets/icons/icon-agent-close.svg'
+import tabSparkleIcon     from '../../assets/icons/icon-tab-sparkle.svg'        // active (filled, purple)
+import tabSparkleLineIcon from '../../assets/icons/icon-tab-sparkle-line.svg'   // inactive (line, grey)
+import tabChatIcon        from '../../assets/icons/icon-tab-chat.svg'           // inactive (grey)
+import tabChatActiveIcon  from '../../assets/icons/icon-tab-chat-active.svg'    // active (dark)
 
 defineEmits(['close'])
 
+const activeTab = ref('ai')   // 'ai' = AI Assistant · 'chat' = Live Chat
 const openIndex = ref(0)   // Account Setup starts expanded
 const chatInput = ref('')
 const isFocused = ref(false)
+
+const tabs = [
+  { key: 'ai',   label: 'AI Assistant', icon: tabSparkleLineIcon, iconActive: tabSparkleIcon },
+  { key: 'chat', label: 'Live Chat',    icon: tabChatIcon,        iconActive: tabChatActiveIcon },
+]
+
+const activeIndex = computed(() => tabs.findIndex(t => t.key === activeTab.value))
 
 function sendMessage() {
   if (!chatInput.value.trim()) return
@@ -230,6 +277,20 @@ const accordions = [
 <style scoped>
 input::placeholder {
   color: #9295a5;
+}
+
+/* Tab group sliding pill — matches the project's 250ms cubic-bezier(0.4,0,0.2,1) motion */
+.tab-pill {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 6px);
+  border-radius: 40px;
+  background: linear-gradient(to bottom, #ffffff 40%, #fcfcfd);
+  box-shadow: 0px 1px 1px 0px rgba(0, 0, 0, 0.04), 0px 3px 8px 0px rgba(38, 42, 50, 0.08);
+  transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
 }
 
 .chat-glow {
