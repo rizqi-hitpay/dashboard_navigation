@@ -3,11 +3,13 @@
        the message off to the AI Assistant and opens the panel. Rises into view
        the first time it scrolls onto screen. -->
   <div ref="rootEl" class="chat-input" :class="{ 'is-shown': shown }" style="position: relative;">
-    <!-- Animated gradient glow blob -->
+    <!-- Soft gradient glow — subtle horizontal drift -->
     <div class="chat-glow" :class="{ 'chat-glow--hidden': isFocused }" />
+    <!-- Animated rotating gradient border -->
+    <div class="chat-border" :class="{ 'chat-border--focused': isFocused }" />
     <div
       class="flex items-center bg-white"
-      style="position: relative; z-index: 1; border: 1px solid #e5e6ea; border-radius: 16px; padding: 12px 12px 12px 16px; gap: 12px; min-height: 52px;"
+      style="position: relative; z-index: 1; border: 1px solid transparent; border-radius: 16px; padding: 12px 12px 12px 16px; gap: 12px; min-height: 52px;"
     >
       <input
         v-model="chatInput"
@@ -101,17 +103,19 @@ input::placeholder {
   .chat-input.is-shown { animation: none; }
 }
 
+/* Soft gradient glow behind the input — low opacity, very subtle horizontal
+   drift (no rotation). */
 .chat-glow {
   position: absolute;
   inset: 0;
   border-radius: 16px;
   background: linear-gradient(115deg, #9333ea 0%, #22d3ee 100%);
-  filter: blur(14px);
-  opacity: 0.25;
+  filter: blur(16px);
+  opacity: 0.12;
   z-index: 0;
   pointer-events: none;
   transition: opacity 200ms ease-out;
-  animation: chat-glow-drift 6s ease-in-out infinite alternate;
+  animation: chat-glow-drift 7s ease-in-out infinite alternate;
 }
 
 .chat-glow--hidden {
@@ -119,7 +123,50 @@ input::placeholder {
 }
 
 @keyframes chat-glow-drift {
-  from { transform: rotate(-6deg) scaleX(1.0); }
-  to   { transform: rotate(6deg)  scaleX(1.08); }
+  from { transform: translateX(-3%); }
+  to   { transform: translateX(3%);  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-glow { animation: none; }
+}
+
+/* Animated gradient border — a conic gradient masked down to a thin ring that
+   rotates around the input. */
+@property --chat-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.chat-border {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  padding: 1.5px;                 /* ring thickness */
+  background: conic-gradient(from var(--chat-angle), #9333ea, #22d3ee, #2364dd, #9333ea);
+  /* Show only the padding ring, punch out the center */
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.75;
+  transition: opacity 200ms ease-out;
+  animation: chat-border-spin 4s linear infinite;
+}
+
+.chat-border--focused {
+  opacity: 1;
+}
+
+@keyframes chat-border-spin {
+  to { --chat-angle: 360deg; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-border { animation: none; }
 }
 </style>
