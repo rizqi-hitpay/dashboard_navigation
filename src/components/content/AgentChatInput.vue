@@ -1,7 +1,8 @@
 <template>
   <!-- Chat box — visually matches the AI Assistant panel input. On send, hands
-       the message off to the AI Assistant and opens the panel. -->
-  <div style="position: relative;">
+       the message off to the AI Assistant and opens the panel. Rises into view
+       the first time it scrolls onto screen. -->
+  <div ref="rootEl" class="chat-input" :class="{ 'is-shown': shown }" style="position: relative;">
     <!-- Animated gradient glow blob -->
     <div class="chat-glow" :class="{ 'chat-glow--hidden': isFocused }" />
     <div
@@ -32,11 +33,42 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { agentPanelOpen, pendingAgentMessage } from '../../composables/useAgentPanel.js'
 
 const chatInput = ref('')
 const isFocused = ref(false)
+
+// Rise-in each time the input enters the viewport (resets when it leaves so it
+// replays on the next scroll-in). A short delay lets the entrance read clearly.
+const RISE_DELAY = 200 // ms before the animation plays after entering view
+
+const rootEl = ref(null)
+const shown = ref(false)
+let observer = null
+let riseTimer = null
+
+onMounted(() => {
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (reduce || !('IntersectionObserver' in window)) { shown.value = true; return }
+  observer = new IntersectionObserver((entries) => {
+    const entry = entries[0]
+    if (entry.isIntersecting) {
+      // Delay the reveal, then play
+      riseTimer = setTimeout(() => { shown.value = true }, RISE_DELAY)
+    } else {
+      // Left the viewport — reset so the animation can replay on re-entry
+      clearTimeout(riseTimer)
+      shown.value = false
+    }
+  }, { threshold: 0.2 })
+  if (rootEl.value) observer.observe(rootEl.value)
+})
+
+onBeforeUnmount(() => {
+  observer?.disconnect()
+  clearTimeout(riseTimer)
+})
 
 function send() {
   const msg = chatInput.value.trim()
@@ -50,6 +82,23 @@ function send() {
 <style scoped>
 input::placeholder {
   color: #9295a5;
+}
+
+/* Rise-in entrance — fades up from the bottom while growing from narrow to
+   full width. Matches the carousel's onboarding ease. */
+.chat-input { opacity: 0; transform-origin: center; }
+.chat-input.is-shown {
+  animation: chat-rise 720ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes chat-rise {
+  from { opacity: 0; transform: translateY(12px) scaleX(0.85); }
+  to   { opacity: 1; transform: translateY(0)    scaleX(1);    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-input { opacity: 1; }
+  .chat-input.is-shown { animation: none; }
 }
 
 .chat-glow {

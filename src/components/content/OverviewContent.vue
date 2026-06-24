@@ -62,8 +62,8 @@
 
           <!-- Chat box → opens the AI Assistant with the typed message.
                Hidden while the AI Assistant panel is open. -->
-          <div v-if="!agentPanelOpen" class="flex justify-center" style="margin-top: 32px;">
-            <AgentChatInput style="width: 360px;" />
+          <div v-if="!agentPanelOpen" class="flex justify-center" style="margin-top: 64px;">
+            <AgentChatInput style="width: 500px;" />
           </div>
         </div>
       </div>
