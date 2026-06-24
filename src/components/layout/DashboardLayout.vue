@@ -1,6 +1,6 @@
 <template>
   <div class="flex h-screen bg-[#f8f9fc] overflow-hidden">
-    <!-- Left nav rail: 81px -->
+    <!-- Left nav rail: 64px -->
     <NavRail />
 
     <!-- Content area: 8px padding top/right/bottom, 4px gap between cards -->
