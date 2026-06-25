@@ -207,7 +207,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { pendingAgentMessage } from '../../composables/useAgentPanel.js'
 import composeIcon  from '../../assets/icons/icon-compose.svg'
 import minimizeIcon from '../../assets/icons/icon-minimize.svg'
 import closeIcon    from '../../assets/icons/icon-agent-close.svg'
@@ -229,6 +230,15 @@ const tabs = [
 ]
 
 const activeIndex = computed(() => tabs.findIndex(t => t.key === activeTab.value))
+
+// A message handed off from the Overview chat box prefills the input and
+// focuses the AI Assistant tab.
+watch(pendingAgentMessage, (msg) => {
+  if (!msg) return
+  activeTab.value = 'ai'
+  chatInput.value = msg
+  pendingAgentMessage.value = ''
+}, { immediate: true })
 
 function sendMessage() {
   if (!chatInput.value.trim()) return
