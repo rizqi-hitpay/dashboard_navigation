@@ -49,7 +49,7 @@
           :active="activeItem === item.label"
           :expandable="item.expandable"
           :submenu-items="item.submenuItems || []"
-          @click="activeItem = item.label"
+          @click="handleItemClick(item)"
         />
       </template>
     </div>
@@ -59,6 +59,7 @@
 
 <script setup>
 import { ref, watch, useTemplateRef } from 'vue'
+import { useRouter } from 'vue-router'
 import SidebarMenuItem from './SidebarMenuItem.vue'
 import PlusMenu from './PlusMenu.vue'
 import { settingsOpen } from '../../composables/useSettingsPanel.js'
@@ -80,10 +81,17 @@ import paperRollIcon from '../../assets/icons/icon-paper-roll.svg'
 import document2Icon from '../../assets/icons/icon-document-2.svg'
 import refreshIcon from '../../assets/icons/icon-refresh.svg'
 import settingIcon from '../../assets/icons/icon-setting.svg'
+import sparkleIcon from '../../assets/icons/icon-sparkle.svg'
 
+const router = useRouter()
 const activeItem = activeItems.finance
 const plusOpen = ref(false)
 const plusBtnRef = useTemplateRef('plusBtnRef')
+
+function handleItemClick(item) {
+  activeItem.value = item.label
+  if (item.url) router.push(item.url)
+}
 
 watch(plusOpen, (open) => { sidebarPinned.value = open })
 
@@ -112,7 +120,16 @@ const sections = [
     header: 'Tools',
     headerColor: '#8093b8',
     items: [
-      { icon: dollarPaperIcon, label: 'Bill Pay' },
+      {
+        icon: dollarPaperIcon,
+        label: 'Bill Pay',
+        url: '/bills',
+        submenuItems: [
+          { label: 'Bill', url: '/bills' },
+          { label: 'Vendors', url: '/vendors' },
+          { label: 'Settings', url: '/settings' },
+        ],
+      },
       { icon: sendMoneyIcon, label: 'Send Money' },
       { icon: walletIcon, label: 'Employee Spend' },
       { icon: cashIcon, label: 'Payroll' },
@@ -135,6 +152,7 @@ const sections = [
     header: 'Others',
     headerColor: '#a6b3cd',
     items: [
+      { icon: sparkleIcon, label: 'Motion Guide', url: '/motion' },
       { icon: settingIcon, label: 'Settings', expandable: true },
     ],
   },

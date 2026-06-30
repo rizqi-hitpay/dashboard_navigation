@@ -88,6 +88,7 @@
 
 <script setup>
 import { ref, computed, useTemplateRef } from 'vue'
+import { useRouter } from 'vue-router'
 import NavBadge from './NavBadge.vue'
 import NavTooltip from './NavTooltip.vue'
 import chevronIcon from '../../assets/icons/icon-chevron-right.svg'
@@ -108,6 +109,7 @@ const props = defineProps({
   iconSize: { type: String, default: 'sm' },
 })
 
+const router = useRouter()
 const isOpen = ref(props.defaultOpen)
 const hovered = ref(false)
 const rowRef = useTemplateRef('rowRef')
@@ -126,6 +128,7 @@ function toggle() {
 
 function selectSub(item) {
   activeSub.value = item.label
+  if (item.url) router.push(item.url)
 }
 
 const iconSizeClass = computed(() => props.iconSize === 'md' ? 'w-[18px] h-[18px]' : 'w-[15px] h-[15px]')

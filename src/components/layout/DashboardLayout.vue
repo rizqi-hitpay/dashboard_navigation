@@ -25,9 +25,7 @@
 
         <!-- Main content -->
         <main class="flex-1 bg-white overflow-hidden min-w-0" style="box-shadow: 0px 3px 22px 0px rgba(38,42,50,0.08), 0px 1px 1px 0px rgba(0,0,0,0.08);">
-          <slot>
-            <OverviewContent />
-          </slot>
+          <router-view />
         </main>
       </div>
 
@@ -65,7 +63,6 @@ import { activeProduct } from '../../composables/useNav.js'
 import { agentPanelOpen } from '../../composables/useAgentPanel.js'
 import { sidebarCollapsed } from '../../composables/useSidebarCollapsed.js'
 import { settingsOpen } from '../../composables/useSettingsPanel.js'
-import OverviewContent from '../content/OverviewContent.vue'
 import AskAgentPanel from '../content/AskAgentPanel.vue'
 
 // Direction-aware sidebar transition
