@@ -97,6 +97,7 @@ import { sidebarExpanded } from '../../composables/useSidebarCollapsed.js'
 const props = defineProps({
   icon: { type: String, required: true },
   label: { type: String, required: true },
+  url: { type: String, default: '' },
   active: { type: Boolean, default: false },
   expandable: { type: Boolean, default: false },
   defaultOpen: { type: Boolean, default: false },
@@ -122,13 +123,21 @@ const activeSub = ref(
   props.submenuItems.find((i) => i.active)?.label || props.submenuItems[0]?.label || null
 )
 
+// Derive a route slug from a label, e.g. "Payouts & Balances" → "payouts-balances"
+function slug(s) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+}
+
 function toggle() {
-  if (props.expandable) isOpen.value = !isOpen.value
+  if (props.expandable) { isOpen.value = !isOpen.value; return }
+  if (props.url) { router.push(props.url); return }
+  if (props.submenuItems.length) return // parent category → just reveals its submenu
+  router.push('/' + slug(props.label)) // leaf link → real page or "coming soon"
 }
 
 function selectSub(item) {
   activeSub.value = item.label
-  if (item.url) router.push(item.url)
+  router.push(item.url || '/' + slug(item.label))
 }
 
 const iconSizeClass = computed(() => props.iconSize === 'md' ? 'w-[18px] h-[18px]' : 'w-[15px] h-[15px]')

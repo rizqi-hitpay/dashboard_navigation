@@ -29,7 +29,7 @@
           :class="activeItem === item.label
             ? 'bg-[rgba(0,39,113,0.04)]'
             : 'hover:bg-[rgba(0,39,113,0.04)]'"
-          @click="activeItem = item.label"
+          @click="selectSetting(item)"
         >
           <span
             class="flex-1 text-[13px] truncate"
@@ -79,9 +79,17 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { settingsOpen } from '../../composables/useSettingsPanel.js'
 
+const router = useRouter()
 const activeItem = ref('Business Details')
+
+function selectSetting(item) {
+  activeItem.value = item.label
+  const slug = item.label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+  router.push('/settings/' + slug)
+}
 
 const sections = [
   {

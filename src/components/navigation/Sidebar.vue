@@ -46,6 +46,7 @@
           :key="item.label"
           :icon="item.icon"
           :label="item.label"
+          :url="item.url"
           :active="activeItem === item.label"
           :expandable="item.expandable"
           :default-open="item.defaultOpen"
@@ -123,7 +124,7 @@ const payoutsSubmenu = [
 const sections = [
   {
     items: [
-      { icon: gridIcon, label: 'Overview' },
+      { icon: gridIcon, label: 'Overview', url: '/' },
       { icon: transactionIcon, label: 'Transactions' },
       { icon: pieChartIcon, label: 'Reports' },
       { icon: bankIcon, label: 'Payouts & Balances', submenuItems: payoutsSubmenu },

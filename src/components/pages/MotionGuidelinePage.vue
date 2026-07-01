@@ -828,7 +828,7 @@ const codeRise = `.chat-input.is-shown {
 .motion-page .spec-val {
   font-size: 12px;
   color: #03102f;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: 'Reddit Mono', ui-monospace, monospace;
   line-height: 1.5;
   word-break: break-word;
 }
@@ -841,7 +841,7 @@ const codeRise = `.chat-input.is-shown {
   padding: 16px;
   font-size: 11.5px;
   line-height: 1.6;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: 'Reddit Mono', ui-monospace, monospace;
   overflow-x: auto;
   white-space: pre;
 }

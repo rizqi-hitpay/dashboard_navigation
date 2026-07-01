@@ -14,7 +14,7 @@
         <div class="relative overflow-hidden shrink-0" style="width: 18px; height: 12px; border-radius: 1px;">
           <img :src="flag" class="absolute inset-0 w-full h-full object-cover" alt="" />
         </div>
-        <p class="relative" style="font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 16px; line-height: 1.4; color: #000;">$100</p>
+        <p class="relative" style="font-family: 'Reddit Mono', monospace; font-weight: 500; font-size: 16px; line-height: 1.4; color: #000;">$100</p>
         <div class="absolute inset-0 pointer-events-none" style="border-radius: 4px; box-shadow: inset 0px 2px 2px 0px rgba(0,0,0,0.16);"></div>
       </div>
       <!-- Send icon -->

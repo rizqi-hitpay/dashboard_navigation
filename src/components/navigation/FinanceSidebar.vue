@@ -46,6 +46,7 @@
           :key="item.label"
           :icon="item.icon"
           :label="item.label"
+          :url="item.url"
           :active="activeItem === item.label"
           :expandable="item.expandable"
           :submenu-items="item.submenuItems || []"
@@ -59,7 +60,6 @@
 
 <script setup>
 import { ref, watch, useTemplateRef } from 'vue'
-import { useRouter } from 'vue-router'
 import SidebarMenuItem from './SidebarMenuItem.vue'
 import PlusMenu from './PlusMenu.vue'
 import { settingsOpen } from '../../composables/useSettingsPanel.js'
@@ -83,14 +83,13 @@ import refreshIcon from '../../assets/icons/icon-refresh.svg'
 import settingIcon from '../../assets/icons/icon-setting.svg'
 import sparkleIcon from '../../assets/icons/icon-sparkle.svg'
 
-const router = useRouter()
 const activeItem = activeItems.finance
 const plusOpen = ref(false)
 const plusBtnRef = useTemplateRef('plusBtnRef')
 
 function handleItemClick(item) {
+  // Navigation is handled by SidebarMenuItem (via :url / auto-slug); just track active state.
   activeItem.value = item.label
-  if (item.url) router.push(item.url)
 }
 
 watch(plusOpen, (open) => { sidebarPinned.value = open })

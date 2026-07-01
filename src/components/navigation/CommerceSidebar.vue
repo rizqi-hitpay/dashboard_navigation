@@ -46,6 +46,7 @@
           :key="item.label"
           :icon="item.icon"
           :label="item.label"
+          :url="item.url"
           :active="activeItem === item.label"
           :expandable="item.expandable"
           :submenu-items="item.submenuItems || []"
