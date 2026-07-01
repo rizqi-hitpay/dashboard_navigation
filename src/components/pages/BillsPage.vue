@@ -339,7 +339,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="b in filteredBills" :key="b.id" class="hover:bg-[#f8f9fc] transition-colors duration-150 [&:last-child>td]:border-b-0">
+                <tr v-for="b in filteredBills" :key="b.id" class="hover:bg-[#f8f9fc] transition-colors duration-150 cursor-pointer [&:last-child>td]:border-b-0" @click="viewBill(b)">
                   <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-r border-[#e5e6ea] text-[13px] text-[#03102f] whitespace-nowrap">{{ b.recipient }}</td>
                   <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-r border-[#e5e6ea] text-[13px] text-[#03102f] whitespace-nowrap">{{ b.invoice }}</td>
                   <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-r border-[#e5e6ea] text-[13px] text-[#03102f] whitespace-nowrap" style="font-family: 'Reddit Mono', ui-monospace, monospace; font-weight: 500;">{{ b.amount }}</td>
@@ -363,8 +363,8 @@
                       class="inline-flex items-center h-[28px] rounded-[8px] border border-[#2465de] overflow-hidden align-middle"
                       style="box-shadow: 0px 1.5px 0px 0px #1d5fd9;"
                     >
-                      <button type="button" class="h-full pl-[12px] pr-[8px] text-[13px] font-medium text-white" style="background: linear-gradient(to bottom, #4179e2, #1f5bcc); text-shadow: 0px 1px 1px rgba(0,0,0,0.12);">Approve</button>
-                      <button type="button" class="h-full w-[24px] flex items-center justify-center border-l border-[rgba(255,255,255,0.25)]" style="background: linear-gradient(to bottom, #4179e2, #1f5bcc);" aria-label="More approve options">
+                      <button type="button" class="h-full pl-[12px] pr-[8px] text-[13px] font-medium text-white" style="background: linear-gradient(to bottom, #4179e2, #1f5bcc); text-shadow: 0px 1px 1px rgba(0,0,0,0.12);" @click.stop>Approve</button>
+                      <button type="button" class="h-full w-[24px] flex items-center justify-center border-l border-[rgba(255,255,255,0.25)]" style="background: linear-gradient(to bottom, #4179e2, #1f5bcc);" aria-label="More approve options" @click.stop>
                         <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 6.5l3 3 3-3" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
                       </button>
                     </span>
@@ -374,13 +374,14 @@
                       type="button"
                       class="h-[28px] px-[12px] rounded-[8px] border border-[#f2f2f4] text-[13px] font-medium text-[#61667c] align-middle"
                       style="background: linear-gradient(to bottom, #ffffff, #f2f2f2); box-shadow: 0px 1.5px 0px 0px #e5e5e5; text-shadow: 0px 1px 1px rgba(0,0,0,0.08);"
+                      @click.stop="viewBill(b)"
                     >Send again</button>
                     <!-- See details for everything else -->
                     <a
                       v-else
                       href="#"
                       class="text-[13px] font-medium text-[#2465de] hover:underline cursor-pointer align-middle"
-                      @click.prevent="$router.push('/bills/view')"
+                      @click.prevent.stop="viewBill(b)"
                     >See details</a>
                   </td>
                 </tr>
@@ -448,6 +449,8 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { bills, fundingStyle, statusStyle } from '../../composables/useBills.js'
 import ellipse37 from '../../assets/images/billpay/ellipse37.svg'
 import ellipse38 from '../../assets/images/billpay/ellipse38.png'
 import image from '../../assets/images/billpay/image.svg'
@@ -493,20 +496,6 @@ const columns = [
   { key: 'action', label: '', sortable: false },
 ]
 
-const bills = [
-  { id: 1, recipient: 'Berry Sharp', invoice: 'INV-83177', amount: 'SGD 1,870.00', due: '2025-08-15', funding: 'Returned', status: 'Failed' },
-  { id: 2, recipient: 'David Tarigan', invoice: 'INV-98765', amount: 'SGD 870.00', due: '2025-11-05', funding: 'Collected', status: 'Pending' },
-  { id: 3, recipient: 'Naomi Atkinson', invoice: 'N/A', amount: 'SGD 1,088.00', due: 'N/A', funding: 'Returned', status: 'Failed' },
-  { id: 4, recipient: 'Naomi Atkinson', invoice: 'INV-67890', amount: 'SGD 1,088.00', due: '2025-09-10', funding: 'Awaiting funds', status: 'Need approval' },
-  { id: 5, recipient: 'Liam Carter', invoice: 'INV-12345', amount: 'SGD 987.75', due: '2026-01-30', funding: 'Collected', status: 'Scheduled' },
-  { id: 6, recipient: 'Sophia Bennett', invoice: 'INV-67891', amount: 'SGD 1,350.00', due: '2026-02-14', funding: 'Not funded', status: 'Draft' },
-  { id: 7, recipient: 'Ethan Johnson', invoice: 'INV-54321', amount: 'SGD 750.25', due: '2026-03-01', funding: 'Collected', status: 'Processing' },
-  { id: 8, recipient: 'Olivia Smith', invoice: 'INV-98765', amount: 'SGD 1,560.80', due: '2026-04-18', funding: 'Returned', status: 'Rejected' },
-  { id: 9, recipient: 'Mason Lee', invoice: 'INV-24680', amount: 'SGD 1,100.00', due: '2026-05-25', funding: 'Returned', status: 'Cancel' },
-  { id: 10, recipient: 'Ava Davis', invoice: 'N/A', amount: 'SGD 1,425.90', due: 'N/A', funding: 'Collected', status: 'Completed' },
-  { id: 11, recipient: 'Naomi Atkinson', invoice: 'INV-12445', amount: 'SGD 1,245.50', due: '2025-10-22', funding: 'Collected', status: 'Completed' },
-]
-
 // Tab → matching status (visual filtering)
 const tabStatus = { Draft: 'Draft', 'Need Approval': 'Need approval', Scheduled: 'Scheduled', Completed: 'Completed' }
 const filteredBills = computed(() => {
@@ -514,30 +503,9 @@ const filteredBills = computed(() => {
   return bills.filter((b) => b.status === tabStatus[activeTab.value])
 })
 
-// Funding chips — outline pills
-function fundingStyle(funding) {
-  const map = {
-    Returned: { border: '#80acfe', text: '#2465de' },
-    Collected: { border: '#a6e5c3', text: '#1b8a4b' },
-    'Awaiting funds': { border: '#ffe0a2', text: '#bd8400' },
-    'Not funded': { border: '#dcdfe6', text: '#61667c' },
-  }
-  return map[funding] || { border: '#dcdfe6', text: '#61667c' }
-}
-// Bill status chips — soft-filled
-function statusStyle(status) {
-  const map = {
-    Failed: { bg: '#fdecec', text: '#d92d20' },
-    Rejected: { bg: '#fdecec', text: '#d92d20' },
-    Cancel: { bg: '#fdecec', text: '#d92d20' },
-    Pending: { bg: '#fff4e5', text: '#bd8400' },
-    Scheduled: { bg: '#fff4e5', text: '#bd8400' },
-    'Need approval': { bg: '#f4ecfe', text: '#7e3ff2' },
-    Draft: { bg: '#f0f1f5', text: '#61667c' },
-    Processing: { bg: '#eef2ff', text: '#2465de' },
-    Completed: { bg: '#e8f7ee', text: '#1b8a4b' },
-  }
-  return map[status] || { bg: '#f0f1f5', text: '#61667c' }
+const router = useRouter()
+function viewBill(b) {
+  router.push({ path: '/bills/view', query: { id: b.id } })
 }
 
 // Pagination (visual)

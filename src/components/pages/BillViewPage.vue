@@ -11,13 +11,13 @@
             Back
           </button>
           <div class="flex items-center gap-[8px]">
-            <h1 class="text-[20px] font-medium text-[#03102f] leading-[1.3]">INV-0128HYY</h1>
-            <span class="inline-flex items-center px-[10px] py-[3px] rounded-full text-[12px] font-medium" style="background: #e8f7ee; color: #1b8a4b;">Completed</span>
+            <h1 class="text-[20px] font-medium text-[#03102f] leading-[1.3]">{{ bill.invoice }}</h1>
+            <span class="inline-flex items-center px-[10px] py-[3px] rounded-full text-[12px] font-medium" :style="{ background: statusStyle(bill.status).bg, color: statusStyle(bill.status).text }">{{ bill.status }}</span>
           </div>
         </div>
         <div class="flex flex-col items-end gap-[2px] shrink-0">
           <span class="text-[11px] font-medium uppercase tracking-[0.3px] text-[#8093b8]">Amount to pay</span>
-          <span class="text-[20px] text-[#03102f] leading-[1.3]" style="font-family: 'Reddit Mono', ui-monospace, monospace; font-weight: 500;">SGD 303.50</span>
+          <span class="text-[20px] text-[#03102f] leading-[1.3]" style="font-family: 'Reddit Mono', ui-monospace, monospace; font-weight: 500;">{{ youPaidText }}</span>
         </div>
       </div>
 
@@ -26,12 +26,12 @@
         <div class="flex rounded-[8px] border border-[#e5e6ea] overflow-hidden">
           <div class="flex-1 flex flex-col gap-[6px] p-[16px]">
             <span class="text-[13px] text-[#61667c] leading-[1.5]">Funding status</span>
-            <span class="inline-flex self-start items-center px-[10px] py-[3px] rounded-full text-[12px] font-medium border bg-white" style="border-color: #a6e5c3; color: #1b8a4b;">Funding collected</span>
+            <span class="inline-flex self-start items-center px-[10px] py-[3px] rounded-full text-[12px] font-medium border bg-white" :style="{ borderColor: fundingStyle(bill.funding).border, color: fundingStyle(bill.funding).text }">{{ bill.funding }}</span>
           </div>
           <div class="w-px bg-[#e5e6ea] shrink-0" />
           <div class="flex-1 flex flex-col gap-[6px] p-[16px]">
             <span class="text-[13px] text-[#61667c] leading-[1.5]">Funding collected on</span>
-            <span class="text-[14px] text-[#03102f] leading-[1.5]" style="font-family: 'Reddit Mono', ui-monospace, monospace;">08/08/2025 10:00 AM</span>
+            <span class="text-[14px] text-[#03102f] leading-[1.5]" style="font-family: 'Reddit Mono', ui-monospace, monospace;">{{ fundingCollectedOn }}</span>
           </div>
           <div class="w-px bg-[#e5e6ea] shrink-0" />
           <div class="flex-1" />
@@ -89,7 +89,7 @@
                 <span class="text-[13px] font-medium text-[#cbcdd4] leading-[1.5]">You paid</span>
                 <span class="flex items-baseline gap-[8px]">
                   <span class="text-[12px] font-medium text-[#cbcdd4] leading-[1.5]">SGD</span>
-                  <span class="text-[24px] text-white leading-[1.35]" style="font-family: 'Reddit Mono', ui-monospace, monospace; font-weight: 500;">303.50</span>
+                  <span class="text-[24px] text-white leading-[1.35]" style="font-family: 'Reddit Mono', ui-monospace, monospace; font-weight: 500;">{{ youPaidNum }}</span>
                 </span>
               </div>
             </div>
@@ -170,33 +170,49 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { bills, getBill, fundingStyle, statusStyle, parseAmount, formatSGD } from '../../composables/useBills.js'
 import invoice from '../../assets/images/billreview/invoice.png'
 
+const route = useRoute()
 const showInvoice = ref(false)
 
-const amountRows = [
-  { label: 'Amount to pay', value: 'SGD 300.00', mono: true },
-  { label: 'Fee', value: 'SGD 3.50', mono: true },
+// Bill selected from the list (falls back to the first bill if opened directly)
+const bill = computed(() => getBill(route.query.id) || bills[0])
+
+const FEE = 3.5
+const amountToPay = computed(() => parseAmount(bill.value.amount))
+const youPaid = computed(() => amountToPay.value + FEE)
+const youPaidText = computed(() => formatSGD(youPaid.value))
+const youPaidNum = computed(() => youPaid.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
+const fundingCollectedOn = computed(() => (bill.value.funding === 'Collected' ? '08/08/2025 10:00 AM' : '—'))
+
+// Amount breakdown — driven by the row's amount
+const amountRows = computed(() => [
+  { label: 'Amount to pay', value: formatSGD(amountToPay.value), mono: true },
+  { label: 'Fee', value: formatSGD(FEE), mono: true },
   { label: 'Transfer Type', value: 'LOCAL', mono: false },
-]
-const beneficiaryRows = [
-  { label: 'Recipient', value: 'Alex Turner' },
+])
+// Recipient comes from the row; the rest isn't in the table, so kept as sample detail
+const beneficiaryRows = computed(() => [
+  { label: 'Recipient', value: bill.value.recipient },
   { label: 'Account number', value: '621788432' },
   { label: 'Bank', value: 'HSBC UK BANK PLC' },
-]
-const invoiceRows = [
-  { label: 'Invoice number', value: 'INV-0128HYY' },
+])
+const invoiceRows = computed(() => [
+  { label: 'Invoice number', value: bill.value.invoice },
   { label: 'Invoice date', value: '08/08/2025' },
-  { label: 'Due date', value: '08/09/2025' },
+  { label: 'Due date', value: bill.value.due },
   { label: 'Category', value: 'Fashion' },
   { label: 'Description', value: 'For cleaning shoes payment' },
-]
-const timeline = [
+])
+// Timeline isn't in the table — sample events (recipient name pulled from the row)
+const timeline = computed(() => [
   { date: 'Aug, 07 2025, 7:48 PM', text: 'Payment completed', active: true },
-  { date: 'Aug, 07 2025, 4:28 PM', text: 'Payment processed to Alex Turner' },
+  { date: 'Aug, 07 2025, 4:28 PM', text: `Payment processed to ${bill.value.recipient}` },
   { date: 'Jul, 23 2025, 4:28 PM', text: 'Funds collected, initiated by Olivia Winston' },
   { date: 'Jul, 23 2025, 4:28 PM', text: 'Bill approved by Olivia Winston' },
   { date: 'Apr, 10 2025, 4:28 PM', text: 'Bill submitted for approval by Gabriella' },
-]
+])
 </script>
