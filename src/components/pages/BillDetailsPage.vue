@@ -355,12 +355,12 @@
           </div>
 
           <!-- Search vendor (opened from "Change") -->
-          <div v-else key="search" class="flex flex-1 flex-col min-h-0">
+          <div v-else-if="!addVendorOpen" key="search" class="flex flex-1 flex-col min-h-0">
             <div class="flex-1 overflow-y-auto flex flex-col gap-[16px] items-start px-[48px] pt-[24px] pb-[88px]">
               <!-- header -->
               <div class="flex items-center justify-between w-full">
                 <p class="font-medium text-[16px] text-[#03102f] leading-[1.4]">Search vendor</p>
-                <button type="button" class="flex gap-[6px] h-[28px] items-center justify-center px-[8px] rounded-[8px] transition-colors duration-150 hover:bg-[#f0f1f5]">
+                <button type="button" class="flex gap-[6px] h-[28px] items-center justify-center px-[8px] rounded-[8px] transition-colors duration-150 hover:bg-[#f0f1f5]" @click="openAddVendor">
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 3.5V12.5M3.5 8H12.5" stroke="#61667c" stroke-width="1.4" stroke-linecap="round" /></svg>
                   <span class="font-medium text-[12px] text-[#61667c] leading-[1.5]">New vendor</span>
                 </button>
@@ -399,6 +399,89 @@
                   </span>
                 </button>
                 <p v-if="!filteredVendors.length" class="font-normal text-[13px] text-[#9295a5] leading-[1.5] py-[8px]">No vendors match “{{ vendorSearch }}”.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add new vendor (opened from "New vendor") -->
+          <div v-else key="addvendor" class="flex flex-1 flex-col min-h-0">
+            <div class="flex-1 overflow-y-auto flex flex-col gap-[16px] items-start px-[48px] pt-[24px] pb-[24px]">
+              <!-- header: title + tabs -->
+              <div class="flex items-center justify-between gap-[12px] w-full">
+                <p class="font-medium text-[16px] text-[#03102f] leading-[1.4] whitespace-nowrap">Add new vendor</p>
+                <div class="flex items-center gap-[16px]">
+                  <button
+                    v-for="t in vendorTabs"
+                    :key="t.key"
+                    type="button"
+                    class="flex items-center justify-center min-w-[88px] pb-[8px] text-[12px] leading-[1.5] whitespace-nowrap border-b-2 transition-colors duration-150"
+                    :class="vendorTab === t.key ? 'border-[#2465de] text-[#03102f] font-medium' : 'border-transparent text-[#61667c] font-normal hover:text-[#03102f]'"
+                    @click="vendorTab = t.key"
+                  >{{ t.label }}</button>
+                </div>
+              </div>
+
+              <!-- fields -->
+              <div class="flex flex-col gap-[16px] w-full">
+                <template v-for="(row, ri) in (vendorTab === 'details' ? vendorDetailRows : paymentDetailRows)" :key="ri">
+                  <p v-if="row.section" class="font-medium text-[14px] text-[#03102f] leading-[1.5] pt-[8px]">{{ row.section }}</p>
+                  <div v-else class="flex gap-[12px] items-start w-full">
+                    <div v-for="f in row" :key="f.k" class="flex flex-1 flex-col gap-[4px] items-start min-w-px">
+                      <span class="flex items-center h-[20px] font-medium text-[12px] text-[#61667c] leading-[1.5]">{{ f.label }}</span>
+
+                      <!-- phone: country code + number -->
+                      <div v-if="f.type === 'phone'" class="aba-control">
+                        <span class="flex items-center gap-[4px] h-full pl-[8px] pr-[8px] border-r border-[#e5e6ea] shrink-0">
+                          <span class="text-[12px] font-medium text-[#61667c] leading-[1.5]">+65</span>
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6.5l4 4 4-4" stroke="#61667c" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                        </span>
+                        <input v-model="addVendor[f.k]" type="text" inputmode="tel" placeholder="877 1261 8181" class="aba-input" />
+                      </div>
+
+                      <!-- select (visual) -->
+                      <div v-else-if="f.type === 'select'" class="aba-control">
+                        <input v-model="addVendor[f.k]" type="text" :placeholder="f.ph" class="aba-input pr-[28px] cursor-pointer" />
+                        <svg class="aba-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6.5l4 4 4-4" stroke="#61667c" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                      </div>
+
+                      <!-- text -->
+                      <div v-else class="aba-control">
+                        <input v-model="addVendor[f.k]" type="text" :placeholder="f.ph" class="aba-input" />
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <!-- footer -->
+            <div class="shrink-0 border-t border-[#e5e6ea] flex items-center justify-between px-[40px] py-[16px]">
+              <button
+                type="button"
+                class="flex h-[36px] items-center justify-center min-w-[71px] px-[12px] rounded-[8px] border border-[#f2f2f4]"
+                style="background: linear-gradient(to bottom, #ffffff, #f2f2f2); box-shadow: 0px 1.5px 0px 0px #e5e5e5;"
+                @click="closeAddVendor"
+              >
+                <span class="font-medium text-[14px] text-[#61667c] leading-[1.5]" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.08);">Cancel</span>
+              </button>
+              <div class="flex items-center gap-[8px]">
+                <button
+                  v-if="vendorTab === 'payment'"
+                  type="button"
+                  class="flex h-[36px] items-center justify-center min-w-[72px] px-[12px] rounded-[8px] border border-[#f2f2f4]"
+                  style="background: linear-gradient(to bottom, #ffffff, #f2f2f2); box-shadow: 0px 1.5px 0px 0px #e5e5e5;"
+                  @click="vendorTab = 'details'"
+                >
+                  <span class="font-medium text-[14px] text-[#61667c] leading-[1.5]" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.08);">Back</span>
+                </button>
+                <button
+                  type="button"
+                  class="flex h-[36px] items-center justify-center min-w-[100px] px-[12px] rounded-[8px] border border-[#2465de]"
+                  style="background: linear-gradient(to bottom, #4179e2, #1f5bcc); box-shadow: 0px 1.5px 0px 0px #1d5fd9;"
+                  @click="vendorTab === 'details' ? (vendorTab = 'payment') : (vendorPasswordOpen = true)"
+                >
+                  <span class="font-medium text-[14px] text-white leading-[1.5]" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.12);">{{ vendorTab === 'details' ? 'Next' : 'Save' }}</span>
+                </button>
               </div>
             </div>
           </div>
@@ -774,6 +857,9 @@
 
     <!-- Total fees breakdown modal -->
     <TotalFeesModal v-model="totalFeesModalOpen" :rows="feeBreakdownRows" :total="totalFeesText" />
+
+    <!-- HitPay password confirmation for saving a new vendor -->
+    <HitPayPasswordModal v-model="vendorPasswordOpen" @confirm="confirmNewVendor" />
   </div>
 </template>
 
@@ -782,6 +868,7 @@ import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import PaymentMethodModal from '../modals/PaymentMethodModal.vue'
 import TotalFeesModal from '../modals/TotalFeesModal.vue'
+import HitPayPasswordModal from '../modals/HitPayPasswordModal.vue'
 import invoice from '../../assets/images/billreview/invoice.png'
 import zoomIn from '../../assets/images/billreview/zoom-in.svg'
 import zoomOut from '../../assets/images/billreview/zoom-out.svg'
@@ -914,6 +1001,54 @@ function pickVendor(id) {
   selected.value = id
   vswapName.value = 'vswap-down'
   searching.value = false
+}
+
+// Add-new-vendor flow (two tabs + HitPay password confirmation)
+const addVendorOpen = ref(false)
+const vendorTab = ref('details')
+const vendorPasswordOpen = ref(false)
+const vendorTabs = [
+  { key: 'details', label: 'Vendor details' },
+  { key: 'payment', label: 'Payment details' },
+]
+const vendorDetailRows = [
+  [{ k: 'legal', label: 'Legal name', ph: 'Enter legal name' }, { k: 'email', label: 'Email address', ph: 'Enter email address' }],
+  [{ k: 'phone', label: 'Phone', type: 'phone' }, { k: 'tax', label: 'Tax ID', ph: 'Enter tax ID' }],
+  { section: 'Address details' },
+  [{ k: 'street', label: 'Street', ph: 'Customer address' }],
+  [{ k: 'city', label: 'City', ph: 'City name' }, { k: 'state', label: 'State', ph: 'State name' }],
+  [{ k: 'country', label: 'Country', type: 'select', ph: 'Select country' }, { k: 'postal', label: 'Postal code', ph: 'Postal code' }],
+  [{ k: 'notes', label: 'Notes (optional)', ph: 'Internal notes about this vendor' }],
+]
+const paymentDetailRows = [
+  [{ k: 'pcountry', label: 'Country', type: 'select', ph: 'Singapore' }],
+  [{ k: 'entity', label: 'Entity type', type: 'select', ph: 'Entity type' }, { k: 'currency', label: 'Currency', type: 'select', ph: 'Select currency' }],
+  [{ k: 'tmethod', label: 'Transfer method', type: 'select', ph: 'Bank transfer' }, { k: 'ttype', label: 'Transfer type', type: 'select', ph: 'FAST' }],
+  [{ k: 'holder', label: 'Account holder name', ph: 'Orion Ventures' }, { k: 'accnum', label: 'Account number', ph: 'H27748390' }],
+  [{ k: 'bank', label: 'Bank name', type: 'select', ph: 'DBS Bank Singapore' }, { k: 'nick', label: 'Nickname (optional)', ph: 'Orion Vendorlen' }],
+  [{ k: 'remark', label: 'Remark (optional)', ph: 'Notes for retail vendors' }],
+]
+const addVendor = reactive({})
+
+function openAddVendor() {
+  vendorTab.value = 'details'
+  vswapName.value = 'vswap-up'
+  addVendorOpen.value = true
+}
+function closeAddVendor() {
+  vswapName.value = 'vswap-down'
+  addVendorOpen.value = false
+}
+function confirmNewVendor() {
+  // Add the new vendor to the directory, select it, and return to the form
+  const name = (addVendor.legal || '').trim() || 'New Vendor'
+  const id = 'v' + (vendorList.length + 1)
+  const initial = name.charAt(0).toUpperCase()
+  vendorList.unshift({ id, initial, name, meta: (addVendor.bank || 'New account') + ' • Tax ID: ' + (addVendor.tax || '—') })
+  selected.value = id
+  addVendorOpen.value = false
+  searching.value = false
+  vswapName.value = 'vswap-down'
 }
 
 // Paying-to (form) reflects the confirmed/selected vendor
