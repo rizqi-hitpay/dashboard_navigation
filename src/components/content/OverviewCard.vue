@@ -30,7 +30,7 @@
             :fill="downColor"
           />
         </svg>
-        <span class="text-[13px] text-[#03102f] leading-none" style="font-family: 'Reddit Mono', monospace; font-weight: 400;">{{ trend }}</span>
+        <span class="text-[13px] text-[#03102f] leading-none" style="font-family: 'Reddit Mono', monospace; font-weight: 400;"><TickerNumber :value="trend" /></span>
       </div>
     </div>
 
@@ -39,12 +39,14 @@
       <span
         class="text-[24px] text-[#03102f] truncate leading-none"
         style="font-family: 'Reddit Mono', monospace; font-weight: 500;"
-      >{{ value }}</span>
+      ><TickerNumber :value="value" /></span>
     </div>
   </div>
 </template>
 
 <script setup>
+import TickerNumber from './TickerNumber.vue'
+
 defineProps({
   label:     { type: String, required: true },
   value:     { type: String, required: true },

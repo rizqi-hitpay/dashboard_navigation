@@ -12,7 +12,10 @@
     </div>
 
     <!-- Table -->
-    <div class="overflow-hidden" style="border: 1px solid #e5e6ea; border-radius: 8px;">
+    <div class="relative overflow-hidden" style="border: 1px solid #e5e6ea; border-radius: 8px;">
+      <Transition name="tbl-overlay">
+        <TableLoadingOverlay v-if="!dataLoaded" />
+      </Transition>
       <table class="w-full border-collapse">
         <!-- Header -->
         <thead>
@@ -58,14 +61,20 @@
             <!-- Date -->
             <td style="padding: 8px 12px; border-right: 1px solid #e5e6ea;">
               <span
-                class="text-[13px] text-[#03102f] whitespace-nowrap"
+                class="text-[13px] text-[#03102f] whitespace-nowrap cell-fade"
+                :class="{ 'cell-fade--in': dataLoaded }"
+                :style="{ transitionDelay: i * 50 + 'ms' }"
                 style="font-family: 'Reddit Mono', monospace; font-weight: 400;"
               >{{ row.date }}</span>
             </td>
 
             <!-- Customer -->
             <td style="padding: 8px 12px; border-right: 1px solid #e5e6ea;">
-              <span class="text-[13px] text-[#03102f] truncate block">{{ row.customer }}</span>
+              <span
+                class="text-[13px] text-[#03102f] truncate block cell-fade"
+                :class="{ 'cell-fade--in': dataLoaded }"
+                :style="{ transitionDelay: i * 50 + 'ms' }"
+              >{{ row.customer }}</span>
             </td>
 
             <!-- Amount -->
@@ -73,7 +82,7 @@
               <span
                 class="text-[13px] text-[#03102f] whitespace-nowrap"
                 style="font-family: 'Reddit Mono', monospace; font-weight: 600;"
-              >{{ row.amount }}</span>
+              ><TickerNumber :value="row.amount" /></span>
             </td>
           </tr>
         </tbody>
@@ -83,6 +92,12 @@
 </template>
 
 <script setup>
+import TickerNumber from './TickerNumber.vue'
+import TableLoadingOverlay from './TableLoadingOverlay.vue'
+import { useDashboardData } from '../../composables/useDashboardData.js'
+
+const { dataLoaded } = useDashboardData()
+
 defineProps({
   rows: {
     type: Array,
@@ -90,3 +105,20 @@ defineProps({
   },
 })
 </script>
+
+<style scoped>
+/* Loading state (Figma 3973:3773): text cells hidden until the data is ready,
+   then fade in with a light per-row stagger. Amounts stay visible at SGD 0.00
+   and count up via TickerNumber. */
+.cell-fade { opacity: 0; }
+.cell-fade--in { opacity: 1; transition: opacity 400ms cubic-bezier(0.32, 0.72, 0, 1); }
+
+/* Spinner overlay lifts with a quick fade once the data lands */
+.tbl-overlay-leave-active { transition: opacity 250ms ease; }
+.tbl-overlay-leave-to { opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cell-fade--in { transition: none; }
+  .tbl-overlay-leave-active { transition: none; }
+}
+</style>

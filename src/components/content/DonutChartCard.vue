@@ -43,17 +43,30 @@
             <!-- Transparent background catches hover on center hole / gaps -->
             <circle cx="105" cy="105" r="105" fill="rgba(0,0,0,0)" style="pointer-events: all;" />
 
-            <path
-              v-for="(seg, i) in computedSegments"
-              :key="i"
-              :d="seg.path"
-              :style="{
-                fill: segFill(i),
-                cursor: 'pointer',
-                transition: 'fill 180ms ease',
-              }"
-              transform="rotate(-90, 105, 105)"
+            <!-- Loading state (Figma 3973:3917): neutral ring shown until the
+                 data lands, colored segments sweep clockwise over it -->
+            <circle
+              cx="105"
+              cy="105"
+              :r="(OUTER_R + INNER_R) / 2"
+              fill="none"
+              stroke="#f2f2f4"
+              :stroke-width="OUTER_R - INNER_R"
             />
+
+            <template v-if="sweep > 0">
+              <path
+                v-for="(seg, i) in computedSegments"
+                :key="i"
+                :d="seg.path"
+                :style="{
+                  fill: segFill(i),
+                  cursor: 'pointer',
+                  transition: 'fill 180ms ease',
+                }"
+                transform="rotate(-90, 105, 105)"
+              />
+            </template>
           </svg>
 
           <!-- Center label overlay -->
@@ -68,7 +81,7 @@
             <span
               class="text-[16px] font-medium text-[#03102f]"
               style="line-height: 1.4;"
-            >{{ centerValue }}</span>
+            ><TickerNumber v-if="hoveredIndex === null" :value="total" /><template v-else>{{ centerValue }}</template></span>
           </div>
         </div>
       </div>
@@ -110,7 +123,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onBeforeUnmount } from 'vue'
+import TickerNumber from './TickerNumber.vue'
+import { useDashboardData } from '../../composables/useDashboardData.js'
 
 const props = defineProps({
   title:        { type: String, required: true },
@@ -123,6 +138,29 @@ const props = defineProps({
 
 const activeTab    = ref('30d')
 const hoveredIndex = ref(null)
+
+// Sweep progress: 0 = neutral loading ring, 1 = fully drawn segments.
+// Mounted after the data is already loaded → drawn immediately.
+const { dataLoaded } = useDashboardData()
+const sweep = ref(dataLoaded.value ? 1 : 0)
+let sweepRaf = null
+
+watch(dataLoaded, (loaded) => {
+  cancelAnimationFrame(sweepRaf)
+  if (!loaded) { sweep.value = 0; return }
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (reduce) { sweep.value = 1; return }
+  const t0 = performance.now()
+  const DURATION = 900
+  const tick = (now) => {
+    const t = Math.min((now - t0) / DURATION, 1)
+    sweep.value = 1 - Math.pow(1 - t, 3) // decelerate
+    if (t < 1) sweepRaf = requestAnimationFrame(tick)
+  }
+  sweepRaf = requestAnimationFrame(tick)
+})
+
+onBeforeUnmount(() => cancelAnimationFrame(sweepRaf))
 
 // ── Donut geometry (Figma: 210×210px, innerRadius ratio 0.8) ──
 const CX = 105, CY = 105
@@ -152,8 +190,8 @@ const computedSegments = computed(() => {
 
   for (const seg of props.segments) {
     const arcLen     = (seg.pct / totalPct) * usableC
-    const startAngle = (cumulative / C) * 2 * Math.PI
-    const endAngle   = ((cumulative + arcLen) / C) * 2 * Math.PI
+    const startAngle = (cumulative / C) * 2 * Math.PI * sweep.value
+    const endAngle   = ((cumulative + arcLen) / C) * 2 * Math.PI * sweep.value
     result.push({ ...seg, arcLen, startAngle, endAngle, path: ringArcPath(startAngle, endAngle) })
     cumulative += arcLen + GAP
   }
