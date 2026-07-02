@@ -14,7 +14,7 @@
     <!-- Table -->
     <div class="relative overflow-hidden" style="border: 1px solid #e5e6ea; border-radius: 8px;">
       <Transition name="tbl-overlay">
-        <TableLoadingOverlay v-if="!dataLoaded" />
+        <TableLoadingOverlay v-if="!loaded" />
       </Transition>
       <table class="w-full border-collapse">
         <!-- Header -->
@@ -62,7 +62,7 @@
             <td style="padding: 8px 12px; border-right: 1px solid #e5e6ea;">
               <span
                 class="text-[13px] text-[#03102f] whitespace-nowrap cell-fade"
-                :class="{ 'cell-fade--in': dataLoaded }"
+                :class="{ 'cell-fade--in': loaded }"
                 :style="{ transitionDelay: i * 50 + 'ms' }"
                 style="font-family: 'Reddit Mono', monospace; font-weight: 400;"
               >{{ row.date }}</span>
@@ -72,7 +72,7 @@
             <td style="padding: 8px 12px; border-right: 1px solid #e5e6ea;">
               <span
                 class="text-[13px] text-[#03102f] truncate block cell-fade"
-                :class="{ 'cell-fade--in': dataLoaded }"
+                :class="{ 'cell-fade--in': loaded }"
                 :style="{ transitionDelay: i * 50 + 'ms' }"
               >{{ row.customer }}</span>
             </td>
@@ -82,7 +82,7 @@
               <span
                 class="text-[13px] text-[#03102f] whitespace-nowrap"
                 style="font-family: 'Reddit Mono', monospace; font-weight: 600;"
-              ><TickerNumber :value="row.amount" /></span>
+              ><TickerNumber :value="row.amount" :loaded="loaded" /></span>
             </td>
           </tr>
         </tbody>
@@ -94,15 +94,13 @@
 <script setup>
 import TickerNumber from './TickerNumber.vue'
 import TableLoadingOverlay from './TableLoadingOverlay.vue'
-import { useDashboardData } from '../../composables/useDashboardData.js'
-
-const { dataLoaded } = useDashboardData()
 
 defineProps({
   rows: {
     type: Array,
     default: () => [],
   },
+  loaded: { type: Boolean, default: false },
 })
 </script>
 

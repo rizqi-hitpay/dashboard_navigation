@@ -14,7 +14,7 @@
     <!-- Table -->
     <div class="relative overflow-hidden" style="border: 1px solid #e5e6ea; border-radius: 8px;">
       <Transition name="tbl-overlay">
-        <TableLoadingOverlay v-if="!dataLoaded" />
+        <TableLoadingOverlay v-if="!loaded" />
       </Transition>
       <table class="w-full border-collapse">
 
@@ -61,7 +61,7 @@
             <td :style="{ padding: '8px 12px', borderRight: '1px solid #e5e6ea' }">
               <span
                 class="text-[13px] text-[#03102f] whitespace-nowrap cell-fade"
-                :class="{ 'cell-fade--in': dataLoaded }"
+                :class="{ 'cell-fade--in': loaded }"
                 :style="{ transitionDelay: ri * 50 + 'ms' }"
                 style="font-family: 'Reddit Mono', monospace; font-weight: 400;"
               >{{ row.date }}</span>
@@ -69,7 +69,7 @@
 
             <!-- Bank Account -->
             <td :style="{ padding: '8px 12px', borderRight: '1px solid #e5e6ea' }">
-              <div class="cell-fade" :class="{ 'cell-fade--in': dataLoaded }" :style="{ transitionDelay: ri * 50 + 'ms' }">
+              <div class="cell-fade" :class="{ 'cell-fade--in': loaded }" :style="{ transitionDelay: ri * 50 + 'ms' }">
                 <div class="text-[13px] text-[#03102f]">{{ row.bank }}</div>
                 <div v-if="row.bankSub" class="text-[12px] text-[#61667c] mt-0.5">{{ row.bankSub }}</div>
               </div>
@@ -80,14 +80,14 @@
               <span
                 class="text-[13px] text-[#03102f] whitespace-nowrap"
                 style="font-family: 'Reddit Mono', monospace; font-weight: 600;"
-              ><TickerNumber :value="row.amount" /></span>
+              ><TickerNumber :value="row.amount" :loaded="loaded" /></span>
             </td>
 
             <!-- Status chip -->
             <td style="padding: 8px 12px;">
               <span
                 class="inline-flex items-center text-[12px] font-medium whitespace-nowrap cell-fade"
-                :class="{ 'cell-fade--in': dataLoaded }"
+                :class="{ 'cell-fade--in': loaded }"
                 :style="[chipStyle(row.status), { transitionDelay: ri * 50 + 'ms' }]"
               >{{ row.status }}</span>
             </td>
@@ -101,9 +101,6 @@
 <script setup>
 import TickerNumber from './TickerNumber.vue'
 import TableLoadingOverlay from './TableLoadingOverlay.vue'
-import { useDashboardData } from '../../composables/useDashboardData.js'
-
-const { dataLoaded } = useDashboardData()
 
 const columns = [
   { key: 'date',   label: 'Initiate Date',  align: 'left'  },
@@ -118,6 +115,7 @@ defineProps({
     default: () => [],
     // Each row: { date, bank, bankSub?, amount, status }
   },
+  loaded: { type: Boolean, default: false },
 })
 
 function chipStyle(status) {

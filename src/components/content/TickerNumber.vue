@@ -4,19 +4,16 @@
 
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { useDashboardData } from '../../composables/useDashboardData.js'
 
 // Renders a formatted figure like "SGD 398,152", "+5%" or "SGD 1,200.00".
-// While the dashboard data hasn't "arrived" it shows the zero equivalent
-// (same prefix/suffix/decimals); when dataLoaded flips true it counts up to
-// the real value. Mounted after the data is already loaded → shows the final
-// value with no animation (APIs are cached on re-visits).
+// While `loaded` is false it shows the zero equivalent (same prefix/suffix/
+// decimals); when it flips true it counts up to the real value. Mounted with
+// loaded already true → shows the final value with no animation.
 const props = defineProps({
   value: { type: String, required: true },
+  loaded: { type: Boolean, default: false },
   duration: { type: Number, default: 1400 },
 })
-
-const { dataLoaded } = useDashboardData()
 
 // "SGD 398,152.50" → prefix "SGD ", target 398152.5, decimals 2, suffix ""
 const parsed = computed(() => {
@@ -30,10 +27,10 @@ const parsed = computed(() => {
   }
 })
 
-const progress = ref(dataLoaded.value ? 1 : 0)
+const progress = ref(props.loaded ? 1 : 0)
 let raf = null
 
-watch(dataLoaded, (loaded) => {
+watch(() => props.loaded, (loaded) => {
   cancelAnimationFrame(raf)
   if (!loaded) { progress.value = 0; return }
   const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches

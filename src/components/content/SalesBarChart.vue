@@ -63,9 +63,9 @@
               :key="'b' + bi"
               class="bar-grow"
               :x="groupX(gi) + bi * (barW30d + INNER_GAP)"
-              :y="dataLoaded ? BAR_AREA_H - valToPx(bar.value) : BAR_AREA_H"
+              :y="loaded ? BAR_AREA_H - valToPx(bar.value) : BAR_AREA_H"
               :width="barW30d"
-              :height="dataLoaded ? valToPx(bar.value) : 0"
+              :height="loaded ? valToPx(bar.value) : 0"
               rx="2"
               :fill="bar.highlight ? '#2364dd' : 'rgba(35,100,221,0.25)'"
               :style="{ transitionDelay: (gi * N_BARS_GROUP + bi) * 15 + 'ms' }"
@@ -84,7 +84,7 @@
 
           <!-- Dashed marker line + dot — hidden until loaded, fades in after
                the bars finish growing -->
-          <g class="marker-fade" :class="{ 'marker-fade--in': dataLoaded }">
+          <g class="marker-fade" :class="{ 'marker-fade--in': loaded }">
             <line
               :x1="markerX"
               :x2="markerX"
@@ -119,9 +119,9 @@
             <rect
               class="bar-grow"
               :x="dayX7d(i)"
-              :y="dataLoaded ? BAR_AREA_H - valToPx(bar.value) : BAR_AREA_H"
+              :y="loaded ? BAR_AREA_H - valToPx(bar.value) : BAR_AREA_H"
               :width="barW7d"
-              :height="dataLoaded ? valToPx(bar.value) : 0"
+              :height="loaded ? valToPx(bar.value) : 0"
               rx="2"
               :fill="bar.highlight ? '#2364dd' : 'rgba(35,100,221,0.25)'"
               :style="{ transitionDelay: i * 40 + 'ms' }"
@@ -144,9 +144,10 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useDashboardData } from '../../composables/useDashboardData.js'
 
-const { dataLoaded } = useDashboardData()
+defineProps({
+  loaded: { type: Boolean, default: false },
+})
 
 const activeTab = ref('30d')
 

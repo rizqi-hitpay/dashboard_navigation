@@ -81,7 +81,7 @@
             <span
               class="text-[16px] font-medium text-[#03102f]"
               style="line-height: 1.4;"
-            ><TickerNumber v-if="hoveredIndex === null" :value="total" /><template v-else>{{ centerValue }}</template></span>
+            ><TickerNumber v-if="hoveredIndex === null" :value="total" :loaded="loaded" /><template v-else>{{ centerValue }}</template></span>
           </div>
         </div>
       </div>
@@ -125,7 +125,6 @@
 <script setup>
 import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import TickerNumber from './TickerNumber.vue'
-import { useDashboardData } from '../../composables/useDashboardData.js'
 
 const props = defineProps({
   title:        { type: String, required: true },
@@ -134,18 +133,18 @@ const props = defineProps({
   centerLabel:  { type: String, default: 'Total' },
   discoverText: { type: String, default: '' },
   tabs:         { type: Array,  default: () => [{ label: '7d' }, { label: '30d' }] },
+  loaded:       { type: Boolean, default: false },
 })
 
 const activeTab    = ref('30d')
 const hoveredIndex = ref(null)
 
 // Sweep progress: 0 = neutral loading ring, 1 = fully drawn segments.
-// Mounted after the data is already loaded → drawn immediately.
-const { dataLoaded } = useDashboardData()
-const sweep = ref(dataLoaded.value ? 1 : 0)
+// Mounted with loaded already true → drawn immediately.
+const sweep = ref(props.loaded ? 1 : 0)
 let sweepRaf = null
 
-watch(dataLoaded, (loaded) => {
+watch(() => props.loaded, (loaded) => {
   cancelAnimationFrame(sweepRaf)
   if (!loaded) { sweep.value = 0; return }
   const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches

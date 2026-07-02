@@ -54,7 +54,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import NavRail from '../navigation/NavRail.vue'
 import VideoIntroModal from '../modals/VideoIntroModal.vue'
-import { useDashboardData } from '../../composables/useDashboardData.js'
+import { startDashboardLoading, stopDashboardLoading } from '../../composables/useDashboardData.js'
 import { introModalOpen } from '../../composables/useIntroModal.js'
 import Sidebar from '../navigation/Sidebar.vue'
 import CommerceSidebar from '../navigation/CommerceSidebar.vue'
@@ -67,15 +67,10 @@ import { sidebarCollapsed } from '../../composables/useSidebarCollapsed.js'
 import { settingsOpen } from '../../composables/useSettingsPanel.js'
 import AskAgentPanel from '../content/AskAgentPanel.vue'
 
-// Fake API window: numbers render as zero for 5s after dashboard entry, then
-// TickerNumber counts them up to their real values
-const { dataLoaded } = useDashboardData()
-let dataTimer = null
-onMounted(() => {
-  dataLoaded.value = false
-  dataTimer = setTimeout(() => { dataLoaded.value = true }, 5000)
-})
-onUnmounted(() => clearTimeout(dataTimer))
+// Fake API window: each dashboard element's data source arrives after its own
+// random delay, so the loading treatments resolve independently
+onMounted(() => startDashboardLoading({ min: 1500, max: 5000 }))
+onUnmounted(() => stopDashboardLoading())
 
 // Direction-aware sidebar transition
 const sidebarTransition = ref('sidebar')

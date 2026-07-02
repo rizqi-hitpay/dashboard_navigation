@@ -6,25 +6,26 @@
       <h1 class="text-[18px] font-medium text-[#03102f]">Overview</h1>
     </div>
 
-    <!-- Stat cards row -->
+    <!-- Stat cards row — each card is its own fake API source -->
     <div class="grid grid-cols-4 gap-3 shrink-0 mb-5">
       <OverviewCard
-        v-for="card in statCards"
+        v-for="(card, i) in statCards"
         :key="card.label"
         :label="card.label"
         :value="card.value"
         :trend="card.trend"
         :direction="card.direction || 'up'"
+        :loaded="isLoaded('stat-' + i)"
       />
     </div>
 
     <!-- Transactions + Sales chart row -->
     <div class="grid grid-cols-2 gap-4 mb-4">
       <!-- Recent Transactions -->
-      <RecentTransactionsTable :rows="recentTransactions" />
+      <RecentTransactionsTable :rows="recentTransactions" :loaded="isLoaded('transactions')" />
 
       <!-- Your Sales bar chart -->
-      <SalesBarChart />
+      <SalesBarChart :loaded="isLoaded('sales')" />
     </div>
 
     <!-- Donut charts row -->
@@ -36,18 +37,20 @@
         center-label="Total"
         discover-text="Discover more methods"
         :tabs="[{ label: '7d' }, { label: '30d' }]"
+        :loaded="isLoaded('payment-methods')"
       />
       <DonutChartCard
         title="Sales by Channels"
         :segments="channelSegments"
         total="SGD 18,470"
         center-label="Total"
+        :loaded="isLoaded('channels')"
       />
     </div>
 
     <!-- Recent Payouts table -->
     <div class="mb-5">
-      <RecentPayoutsTable :rows="recentPayouts" />
+      <RecentPayoutsTable :rows="recentPayouts" :loaded="isLoaded('payouts')" />
     </div>
 
     <!-- Product intro carousel (Explore HitPay), dismissible — reveals on first load -->
@@ -87,6 +90,9 @@ import RecentTransactionsTable from './RecentTransactionsTable.vue'
 import SalesBarChart from './SalesBarChart.vue'
 import DonutChartCard from './DonutChartCard.vue'
 import RecentPayoutsTable from './RecentPayoutsTable.vue'
+import { useDashboardData } from '../../composables/useDashboardData.js'
+
+const { isLoaded } = useDashboardData()
 
 const productIntroDismissed = ref(false)
 

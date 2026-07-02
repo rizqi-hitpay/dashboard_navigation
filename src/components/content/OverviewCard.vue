@@ -30,7 +30,7 @@
             :fill="downColor"
           />
         </svg>
-        <span class="text-[13px] text-[#03102f] leading-none" style="font-family: 'Reddit Mono', monospace; font-weight: 400;"><TickerNumber :value="trend" /></span>
+        <span class="text-[13px] text-[#03102f] leading-none" style="font-family: 'Reddit Mono', monospace; font-weight: 400;"><TickerNumber :value="trend" :loaded="loaded" /></span>
       </div>
     </div>
 
@@ -39,7 +39,7 @@
       <span
         class="text-[24px] text-[#03102f] truncate leading-none"
         style="font-family: 'Reddit Mono', monospace; font-weight: 500;"
-      ><TickerNumber :value="value" /></span>
+      ><TickerNumber :value="value" :loaded="loaded" /></span>
     </div>
   </div>
 </template>
@@ -53,6 +53,7 @@ defineProps({
   trend:     { type: String, default: '' },
   direction: { type: String, default: 'up' },
   showInfo:  { type: Boolean, default: false },
+  loaded:    { type: Boolean, default: false },
 })
 
 const upColor   = '#2BC37D'
