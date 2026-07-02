@@ -25,7 +25,17 @@
 
         <!-- Main content -->
         <main class="flex-1 bg-white overflow-hidden min-w-0" style="box-shadow: 0px 3px 22px 0px rgba(38,42,50,0.08), 0px 1px 1px 0px rgba(0,0,0,0.08);">
-          <router-view />
+          <!-- Initial load: several APIs fire on entry, so show one blank
+               state with a centered loader instead of piecemeal content.
+               Hand-off to content: loader fades out, content rises in. -->
+          <Transition name="dash-load" mode="out-in">
+            <div v-if="dashboardLoading" class="flex h-full w-full items-center justify-center bg-white">
+              <DashboardLoader />
+            </div>
+            <div v-else class="h-full w-full">
+              <router-view />
+            </div>
+          </Transition>
         </main>
       </div>
 
@@ -43,16 +53,23 @@
       </div>
 
     </div>
-  </div>
 
-  <!-- Intro modal -->
-  <VideoIntroModal v-model="introModalOpen" />
+    <!-- Intro modal (teleports to body; lives inside the root div so the
+         layout stays single-root and can be animated by the page transition).
+         Held back until the initial dashboard load finishes. -->
+    <VideoIntroModal
+      :model-value="introModalOpen && !dashboardLoading"
+      @update:model-value="introModalOpen = $event"
+    />
+  </div>
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import NavRail from '../navigation/NavRail.vue'
 import VideoIntroModal from '../modals/VideoIntroModal.vue'
+import DashboardLoader from '../content/DashboardLoader.vue'
+import { useDashboardLoading } from '../../composables/useDashboardLoading.js'
 import { introModalOpen } from '../../composables/useIntroModal.js'
 import Sidebar from '../navigation/Sidebar.vue'
 import CommerceSidebar from '../navigation/CommerceSidebar.vue'
@@ -64,6 +81,16 @@ import { agentPanelOpen } from '../../composables/useAgentPanel.js'
 import { sidebarCollapsed } from '../../composables/useSidebarCollapsed.js'
 import { settingsOpen } from '../../composables/useSettingsPanel.js'
 import AskAgentPanel from '../content/AskAgentPanel.vue'
+
+// Initial dashboard load — fake API round-trip on every dashboard entry,
+// timed to one full cycle of the water loader (3s)
+const { dashboardLoading } = useDashboardLoading()
+let loadTimer = null
+onMounted(() => {
+  dashboardLoading.value = true
+  loadTimer = setTimeout(() => { dashboardLoading.value = false }, 3000)
+})
+onUnmounted(() => clearTimeout(loadTimer))
 
 // Direction-aware sidebar transition
 const sidebarTransition = ref('sidebar')
@@ -90,6 +117,16 @@ const sidebarKey = computed(() => {
 </script>
 
 <style scoped>
+/* Loading → content hand-off (see /motion): pure cross-fade — loader leaves
+   fast, content fades in on the decelerate curve. */
+.dash-load-enter-active { transition: opacity 300ms cubic-bezier(0.32, 0.72, 0, 1); }
+.dash-load-leave-active { transition: opacity 150ms ease; }
+.dash-load-enter-from,
+.dash-load-leave-to { opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .dash-load-enter-active, .dash-load-leave-active { transition: none; }
+}
+
 /* Enter: slide in from left + fade — ease-out for instant responsiveness feel */
 .sidebar-enter-active {
   transition: opacity 180ms ease-out, transform 180ms ease-out;
