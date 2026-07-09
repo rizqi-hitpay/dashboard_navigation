@@ -254,17 +254,67 @@
                   </div>
 
                   <!-- amount -->
-                  <div class="bg-[#03102f] flex gap-[8px] items-center px-[12px] py-[8px] rounded-[8px] w-full">
-                    <span class="flex-1 font-medium text-[12px] text-[#cbcdd4] leading-[1.5]">Amount</span>
-                    <div class="flex gap-[8px] items-center">
-                      <div class="flex gap-[2px] items-center">
-                        <span class="font-medium text-[12px] text-[#cbcdd4] leading-[1.5]">SGD</span>
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M4 6.5L8 10.5L12 6.5" stroke="#cbcdd4" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
+                  <div class="relative w-full mt-[12px]">
+                    <label for="bill-amount" class="amount-field relative bg-white border border-[#2465de] flex gap-[8px] items-center px-[12px] py-[8px] rounded-[8px] w-full cursor-text">
+                      <span class="flex-1 font-medium text-[12px] text-[#61667c] leading-[1.5]">Amount</span>
+                      <div class="flex gap-[8px] items-start">
+                        <button type="button" class="flex gap-[2px] items-center pt-[4px] rounded-[4px] transition-opacity duration-150 hover:opacity-70" @click.prevent="toggleCurrencyMenu">
+                          <span class="font-medium text-[12px] text-[#61667c] leading-[1.5]">{{ currency }}</span>
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 6.5L8 10.5L12 6.5" stroke="#61667c" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+                          </svg>
+                        </button>
+                        <input
+                          id="bill-amount"
+                          :value="amountInput"
+                          type="text"
+                          inputmode="decimal"
+                          class="amount-input"
+                          :style="{ width: amountWidth }"
+                          @input="onAmountInput"
+                          @focus="onAmountFocus"
+                          @blur="formatAmount"
+                        />
                       </div>
-                      <span class="text-[24px] text-white leading-[1.35]" style="font-family: 'Reddit Mono', ui-monospace, monospace;">300.00</span>
-                    </div>
+                    </label>
+
+                    <!-- currency dropdown -->
+                    <div v-if="currencyMenuOpen" class="fixed inset-0 z-20" @click="currencyMenuOpen = false" />
+                    <Transition name="currency-menu">
+                      <div
+                        v-if="currencyMenuOpen"
+                        class="absolute right-0 top-[calc(100%+4px)] z-30 w-[180px] bg-white border border-[#e5e6ea] rounded-[8px] flex flex-col gap-[4px] p-[8px]"
+                        style="box-shadow: 0px 3px 11px 0px rgba(38,42,50,0.09);"
+                        @keydown.esc="currencyMenuOpen = false"
+                      >
+                        <div
+                          class="flex gap-[8px] h-[36px] items-center px-[8px] bg-white border border-[#e5e6ea] rounded-[8px] w-full shrink-0"
+                          style="box-shadow: 0px 1px 3px 0px rgba(0,0,0,0.04), 0px 1.5px 1.5px 0px rgba(0,0,0,0.09);"
+                        >
+                          <svg class="shrink-0" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="7.25" cy="7.25" r="4.5" stroke="#61667c" stroke-width="1.3" />
+                            <path d="M10.75 10.75L13.5 13.5" stroke="#61667c" stroke-width="1.3" stroke-linecap="round" />
+                          </svg>
+                          <input ref="currencySearchEl" v-model="currencySearch" type="text" placeholder="Search" class="currency-search" />
+                        </div>
+                        <div class="flex flex-col gap-[4px] pb-[8px] w-full max-h-[228px] overflow-y-auto">
+                          <button
+                            v-for="c in filteredCurrencies"
+                            :key="c"
+                            type="button"
+                            class="flex gap-[8px] items-center p-[8px] rounded-[4px] w-full text-left transition-colors duration-150 hover:bg-[#f5f6f9]"
+                            :class="c === currency ? 'bg-[#f5f6f9]' : ''"
+                            @click="selectCurrency(c)"
+                          >
+                            <span class="flex-1 font-normal text-[14px] text-[#03102f] leading-[1.5]">{{ c }}</span>
+                            <svg v-if="c === currency" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M3.5 8.5L6.5 11.5L12.5 4.5" stroke="#2465de" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                          </button>
+                          <p v-if="!filteredCurrencies.length" class="p-[8px] font-normal text-[12px] text-[#9295a5] leading-[1.5]">No results</p>
+                        </div>
+                      </div>
+                    </Transition>
                   </div>
                 </div>
 
@@ -499,7 +549,7 @@
                 <!-- Amount to pay -->
                 <div class="flex items-center justify-between px-[12px] py-[8px] border-b border-[#e5e6ea] w-full">
                   <span class="font-medium text-[12px] text-[#61667c] leading-[1.5]">Amount to pay</span>
-                  <span class="font-semibold text-[14px] text-[#03102f] leading-[1.4]" style="font-family: 'Reddit Mono', ui-monospace, monospace;">SGD 300.00</span>
+                  <span class="font-semibold text-[14px] text-[#03102f] leading-[1.4]" style="font-family: 'Reddit Mono', ui-monospace, monospace;">{{ amountToPayText }}</span>
                 </div>
                 <!-- Paying with -->
                 <div class="flex flex-col gap-[2px] items-start py-[8px] border-b border-[#e5e6ea] w-full">
@@ -537,7 +587,7 @@
               <div class="flex gap-[8px] items-center px-[12px] py-[8px] rounded-[4px] bg-[#03102f] w-full">
                 <span class="flex-1 font-medium text-[12px] text-[#cbcdd4] leading-[1.5]">You will pay</span>
                 <span class="flex gap-[8px] items-baseline">
-                  <span class="font-medium text-[12px] text-[#cbcdd4] leading-[1.5]">SGD</span>
+                  <span class="font-medium text-[12px] text-[#cbcdd4] leading-[1.5]">{{ currency }}</span>
                   <span class="text-[24px] text-white leading-[1.35]" style="font-family: 'Reddit Mono', ui-monospace, monospace;">{{ youWillPayText }}</span>
                 </span>
               </div>
@@ -864,7 +914,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import PaymentMethodModal from '../modals/PaymentMethodModal.vue'
 import TotalFeesModal from '../modals/TotalFeesModal.vue'
@@ -1072,10 +1122,50 @@ const reviewPayOptions = {
   bank: { name: 'Bank transfer', feeAmount: 3.5, icon: bankGlyph },
   cards: { name: 'Cards', feeAmount: 20, icon: cardGlyph },
 }
-const BILL_AMOUNT = 300 // "Amount to pay"
 const HITPAY_FEE = 0.5 // fixed HitPay processing fee
 const TRANSFER_FEE = 0.5 // fixed transfer/rail fee
 const money = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+// "Amount to pay" — editable in the bill details form
+const amountInput = ref('300.00')
+const billAmount = computed(() => parseFloat(String(amountInput.value).replace(/[^0-9.]/g, '')) || 0)
+const amountWidth = computed(() => Math.max(String(amountInput.value).length, 1) + 'ch')
+const amountToPayText = computed(() => `${currency.value} ${money(billAmount.value)}`)
+function onAmountInput(e) {
+  // digits and a single decimal point only
+  let clean = e.target.value.replace(/[^0-9.]/g, '')
+  const dot = clean.indexOf('.')
+  if (dot !== -1) clean = clean.slice(0, dot + 1) + clean.slice(dot + 1).replace(/\./g, '')
+  amountInput.value = clean
+  if (e.target.value !== clean) e.target.value = clean
+}
+function onAmountFocus(e) {
+  // drop thousands separators and select the number so typing replaces it
+  amountInput.value = amountInput.value.replace(/,/g, '')
+  nextTick(() => e.target.select())
+}
+function formatAmount() {
+  amountInput.value = money(billAmount.value)
+}
+
+// Currency selector dropdown
+const CURRENCIES = ['SGD', 'USD', 'EUR', 'GBP', 'IDR', 'INR', 'THB', 'MYR', 'PHP', 'JPY']
+const currency = ref('SGD')
+const currencyMenuOpen = ref(false)
+const currencySearch = ref('')
+const currencySearchEl = ref(null)
+const filteredCurrencies = computed(() => CURRENCIES.filter((c) => c.includes(currencySearch.value.trim().toUpperCase())))
+function toggleCurrencyMenu() {
+  currencyMenuOpen.value = !currencyMenuOpen.value
+  if (currencyMenuOpen.value) {
+    currencySearch.value = ''
+    nextTick(() => currencySearchEl.value?.focus())
+  }
+}
+function selectCurrency(c) {
+  currency.value = c
+  currencyMenuOpen.value = false
+}
 
 const reviewPay = computed(() => {
   const o = reviewPayOptions[reviewPayId.value]
@@ -1083,7 +1173,7 @@ const reviewPay = computed(() => {
 })
 const totalFeesAmount = computed(() => reviewPay.value.feeAmount + HITPAY_FEE + TRANSFER_FEE)
 const totalFeesText = computed(() => `SGD ${money(totalFeesAmount.value)}`)
-const youWillPayText = computed(() => money(BILL_AMOUNT + totalFeesAmount.value))
+const youWillPayText = computed(() => money(billAmount.value + totalFeesAmount.value))
 
 // Total fees breakdown modal
 const totalFeesModalOpen = ref(false)
@@ -1282,7 +1372,8 @@ const payPasswordVisible = ref(false)
 @media (prefers-reduced-motion: reduce) {
   .aba-control,
   .btn-secondary,
-  .btn-primary { transition: none; }
+  .btn-primary,
+  .amount-field { transition: none; }
 }
 
 /* ── Invoice details input rows ──
@@ -1313,6 +1404,59 @@ const payPasswordVisible = ref(false)
   text-align: right;
 }
 .inv-input::placeholder { color: #9295a5; }
+
+.currency-search {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #03102f;
+}
+.currency-search::placeholder { color: #9295a5; }
+
+.currency-menu-enter-active {
+  transition: opacity 170ms ease-out, transform 170ms ease-out;
+  transform-origin: top right;
+  will-change: opacity, transform;
+}
+.currency-menu-leave-active {
+  transition: opacity 120ms ease-in, transform 120ms ease-in;
+  transform-origin: top right;
+  will-change: opacity, transform;
+}
+.currency-menu-enter-from,
+.currency-menu-leave-to {
+  opacity: 0;
+  transform: scale(0.95) translateY(-6px);
+}
+
+.amount-field {
+  /* default: primary/200 3px halo + inset top shadow */
+  box-shadow: 0px 0px 0px 3px #b3cdfe, inset 0px 2px 4px 0px rgba(0, 0, 0, 0.24);
+  transition: box-shadow 150ms ease;
+}
+.amount-field:focus-within {
+  /* focus: halo removed, inset shadow stays */
+  box-shadow: 0px 0px 0px 0px #b3cdfe, inset 0px 2px 4px 0px rgba(0, 0, 0, 0.24);
+}
+
+.amount-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0;
+  font-family: 'Reddit Mono', ui-monospace, monospace;
+  font-weight: 500;
+  font-size: 24px;
+  line-height: 1.35;
+  color: #03102f;
+  text-align: right;
+  min-width: 1ch;
+  max-width: 220px;
+}
 
 .inv-textarea {
   width: 100%;
