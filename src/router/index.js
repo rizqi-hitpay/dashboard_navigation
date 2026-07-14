@@ -5,6 +5,7 @@ import AddBillPage from '../components/pages/AddBillPage.vue'
 import BillDetailsPage from '../components/pages/BillDetailsPage.vue'
 import BillViewPage from '../components/pages/BillViewPage.vue'
 import VendorsPage from '../components/pages/VendorsPage.vue'
+import VendorDetailsPage from '../components/pages/VendorDetailsPage.vue'
 import BillPaySettingsPage from '../components/pages/BillPaySettingsPage.vue'
 import MotionGuidelinePage from '../components/pages/MotionGuidelinePage.vue'
 import PlaceholderPage from '../components/pages/PlaceholderPage.vue'
@@ -16,6 +17,7 @@ const routes = [
   { path: '/bills/details', name: 'bill-details', component: BillDetailsPage },
   { path: '/bills/view', name: 'bill-view', component: BillViewPage },
   { path: '/vendors', name: 'vendors', component: VendorsPage },
+  { path: '/vendors/details', name: 'vendor-details', component: VendorDetailsPage },
   { path: '/settings', name: 'settings', component: BillPaySettingsPage },
   { path: '/motion', name: 'motion', component: MotionGuidelinePage, meta: { fullPage: true } },
   // Any other link falls back to a "coming soon" placeholder
