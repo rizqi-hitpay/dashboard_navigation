@@ -9,24 +9,29 @@
       <!-- Main card: sidebar + content -->
       <div class="flex flex-1 rounded-[8px] overflow-hidden min-w-0 border border-[#E5E6EA] relative" style="box-shadow: 0px 3px 22px 0px rgba(37,41,49,0.08);">
 
-        <!-- Persistent sidebar shell -->
-        <div
-          class="bg-[#fcfcfd] flex flex-col h-full shrink-0 overflow-hidden"
-          :style="{
-            width: sidebarCollapsed ? '56px' : '220px',
-            transition: 'width 250ms cubic-bezier(0.4, 0, 0.2, 1)',
-          }"
-        >
-          <Transition :name="sidebarTransition" mode="out-in">
-            <component :is="sidebarComponent" :key="sidebarKey" />
-          </Transition>
-          <SidebarAccountWidget />
-        </div>
+        <!-- Finance requires the shared passcode -->
+        <FinanceGate v-if="financeLocked" />
 
-        <!-- Main content -->
-        <main class="flex-1 bg-white overflow-hidden min-w-0" style="box-shadow: 0px 3px 22px 0px rgba(38,42,50,0.08), 0px 1px 1px 0px rgba(0,0,0,0.08);">
-          <router-view />
-        </main>
+        <template v-else>
+          <!-- Persistent sidebar shell -->
+          <div
+            class="bg-[#fcfcfd] flex flex-col h-full shrink-0 overflow-hidden"
+            :style="{
+              width: sidebarCollapsed ? '56px' : '220px',
+              transition: 'width 250ms cubic-bezier(0.4, 0, 0.2, 1)',
+            }"
+          >
+            <Transition :name="sidebarTransition" mode="out-in">
+              <component :is="sidebarComponent" :key="sidebarKey" />
+            </Transition>
+            <SidebarAccountWidget />
+          </div>
+
+          <!-- Main content -->
+          <main class="flex-1 bg-white overflow-hidden min-w-0" style="box-shadow: 0px 3px 22px 0px rgba(38,42,50,0.08), 0px 1px 1px 0px rgba(0,0,0,0.08);">
+            <router-view />
+          </main>
+        </template>
       </div>
 
       <!-- Sidekick: own card, 4px gap handled by parent, slides in by width -->
@@ -64,6 +69,11 @@ import { agentPanelOpen } from '../../composables/useAgentPanel.js'
 import { sidebarCollapsed } from '../../composables/useSidebarCollapsed.js'
 import { settingsOpen } from '../../composables/useSettingsPanel.js'
 import AskAgentPanel from '../content/AskAgentPanel.vue'
+import FinanceGate from './FinanceGate.vue'
+import { financeUnlocked } from '../../composables/useFinanceAuth.js'
+
+// Finance (product 2) is gated behind the shared passcode
+const financeLocked = computed(() => activeProduct.value === 2 && !financeUnlocked.value)
 
 // Direction-aware sidebar transition
 const sidebarTransition = ref('sidebar')
