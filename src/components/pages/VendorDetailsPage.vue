@@ -270,18 +270,37 @@
       <div v-else-if="activeSection === 'Details'" class="flex flex-col w-full px-[24px] pt-[24px] pb-[12px]">
         <div class="flex flex-col w-full rounded-[12px] bg-[#f8f9fc] p-[4px]">
 
-          <!-- Top: title + Edit -->
+          <!-- Top: title + Edit (read) / Cancel + Save (edit) -->
           <div class="flex items-center gap-[8px] w-full">
             <div class="flex flex-1 flex-col gap-[2px] items-start justify-center min-w-px p-[16px]">
               <p class="text-[16px] font-medium text-[#03102f] leading-[1.4] whitespace-nowrap">Details</p>
             </div>
-            <div class="flex flex-col items-start px-[16px] shrink-0">
+            <div v-if="!detailsEditing" class="flex flex-col items-start px-[16px] shrink-0">
               <button
                 type="button"
                 class="flex items-center justify-center gap-[6px] h-[28px] p-[8px] rounded-[8px] transition-colors duration-150 hover:bg-[#f0f1f5]"
+                @click="startEditDetails"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M11.2 2.6a1.4 1.4 0 012 2L5.4 12.4l-2.7.7.7-2.7 7.8-7.8z" stroke="#61667c" stroke-width="1.2" stroke-linejoin="round" /></svg>
                 <span class="text-[12px] font-medium text-[#61667c] leading-[1.5] whitespace-nowrap">Edit</span>
+              </button>
+            </div>
+            <div v-else class="flex items-start gap-[8px] px-[16px] shrink-0">
+              <button
+                type="button"
+                class="flex items-center justify-center h-[28px] w-[59px] p-[8px] rounded-[8px] border border-[#f2f2f4] transition-[filter] duration-150 hover:brightness-95 active:translate-y-[1px]"
+                style="background: linear-gradient(to bottom, #ffffff, #f2f2f2); box-shadow: 0px 1.5px 0px 0px #e5e5e5;"
+                @click="detailsEditing = false"
+              >
+                <span class="text-[12px] font-medium text-[#61667c] leading-[1.5] whitespace-nowrap" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.08);">Cancel</span>
+              </button>
+              <button
+                type="button"
+                class="flex items-center justify-center h-[28px] w-[59px] p-[8px] rounded-[8px] border border-[#2465de] transition-[filter] duration-150 hover:brightness-105 active:translate-y-[1px]"
+                style="background: linear-gradient(to bottom, #4179e2, #1f5bcc); box-shadow: 0px 1.5px 0px 0px #1d5fd9;"
+                @click="saveEditDetails"
+              >
+                <span class="text-[12px] font-medium text-white leading-[1.5] whitespace-nowrap" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.12);">Save</span>
               </button>
             </div>
           </div>
@@ -292,7 +311,9 @@
             style="filter: drop-shadow(0px 1px 2px rgba(0,0,0,0.06)) drop-shadow(0px 1px 0.5px rgba(0,0,0,0.06));"
           >
             <div class="flex flex-col w-full px-[16px]">
-              <div class="flex flex-wrap items-start w-full rounded-[8px] px-[16px]">
+
+              <!-- Read view -->
+              <div v-if="!detailsEditing" class="flex flex-wrap items-start w-full rounded-[8px] px-[16px]">
                 <div class="flex flex-1 items-start gap-[24px] min-w-px">
                   <div
                     v-for="(group, gi) in detailGroups"
@@ -310,14 +331,76 @@
                   </div>
                 </div>
               </div>
+
+              <!-- Edit view: shared design-system inputs -->
+              <div v-else class="flex flex-col gap-[16px] w-full px-[16px] py-[12px]">
+                <FieldRows :rows="editRows" :values="editValues" />
+                <div class="flex flex-col items-center w-full">
+                  <div class="h-px w-[120px] bg-[#e5e6ea]" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Other sections: not part of this design -->
-      <div v-else class="flex items-center justify-center w-full py-[64px]">
-        <p class="text-[13px] font-normal text-[#8093b8] leading-[1.5]">{{ activeSection }} is not part of this prototype yet</p>
+      <!-- Timeline -->
+      <div v-else class="flex flex-col w-full px-[24px] pt-[24px] pb-[12px]">
+        <div class="flex flex-col w-full rounded-[12px] bg-[#f8f9fc] p-[4px]">
+
+          <!-- Top: title -->
+          <div class="flex items-center gap-[8px] w-full">
+            <div class="flex flex-1 flex-col gap-[2px] items-start justify-center min-w-px p-[16px]">
+              <p class="text-[16px] font-medium text-[#03102f] leading-[1.4] whitespace-nowrap">Timeline</p>
+            </div>
+          </div>
+
+          <!-- Events card -->
+          <div
+            class="flex flex-col w-full rounded-[8px] bg-white py-[16px]"
+            style="filter: drop-shadow(0px 1px 2px rgba(0,0,0,0.06)) drop-shadow(0px 1px 0.5px rgba(0,0,0,0.06));"
+          >
+            <div class="flex flex-col w-full px-[16px]">
+              <div class="flex flex-col w-full rounded-[8px] px-[16px]">
+                <div
+                  v-for="(event, ei) in timelineEvents"
+                  :key="ei"
+                  class="relative flex items-start gap-[4px] py-[8px] w-full"
+                >
+                  <!-- Connector to the next dot -->
+                  <div
+                    v-if="ei < timelineEvents.length - 1"
+                    class="absolute left-[11px] w-px bg-[#e5e6ea]"
+                    style="top: 23px; bottom: -16px;"
+                  />
+                  <!-- Dot (first event = active state) -->
+                  <svg class="relative shrink-0" width="23" height="23" viewBox="0 0 23 23" fill="none">
+                    <template v-if="ei === 0">
+                      <circle cx="11.5" cy="11.5" r="7" stroke="#2465de" stroke-width="1.5" />
+                      <circle cx="11.5" cy="11.5" r="3.5" fill="#2465de" />
+                    </template>
+                    <circle v-else cx="11.5" cy="11.5" r="3.5" fill="#9295a5" />
+                  </svg>
+                  <!-- Content -->
+                  <div class="flex flex-1 items-start gap-[4px] min-w-px">
+                    <div class="flex flex-1 items-center gap-[8px] min-w-px">
+                      <span
+                        class="flex items-center justify-center min-h-[24px] min-w-[32px] px-[8px] py-[2px] rounded-[24px] shrink-0"
+                        :style="{ background: timelineChip(event.tone).bg }"
+                      >
+                        <span class="text-[12px] font-medium leading-[1.5] text-center whitespace-nowrap" :style="{ color: timelineChip(event.tone).text }">{{ event.chip }}</span>
+                      </span>
+                      <p class="flex-1 min-w-px text-[12px] font-normal text-[#61667c] leading-[1.5] whitespace-nowrap overflow-hidden text-ellipsis">{{ event.desc }}</p>
+                    </div>
+                    <div class="flex items-center justify-end h-[24px] shrink-0">
+                      <p class="text-[12px] font-normal text-[#61667c] leading-[1.5] whitespace-nowrap">{{ event.date }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -325,10 +408,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { getVendor } from '../../composables/useVendors.js'
 import { statusStyle } from '../../composables/useBills.js'
+import FieldRows from '../forms/FieldRows.vue'
 
 const route = useRoute()
 
@@ -358,23 +442,102 @@ const stats = [
   { label: 'Outstanding', value: 'SGD 1,200.00', warning: true },
 ]
 
-// Details tab: two label/value columns (kept consistent with the info grid above)
-const detailGroups = [
+// Details tab: editable record (kept consistent with the info grid above)
+const details = reactive({
+  legalName: vendor.name,
+  entityType: 'Company',
+  email: vendor.email,
+  phone: '+60 2183 177',
+  taxId: '2121997790',
+  address: '123 Marina Bay Sands, Singapore 018956',
+  notes: 'Main utilities provider. Monthly billing cycle. Invoice usually arrives 1st of month.',
+})
+
+const detailGroups = computed(() => [
   [
-    { label: 'Legal name', value: vendor.name },
-    { label: 'Entity type', value: 'Company' },
-    { label: 'Email', value: vendor.email },
-    { label: 'Phone', value: '+60 2183 177' },
+    { label: 'Legal name', value: details.legalName },
+    { label: 'Entity type', value: details.entityType },
+    { label: 'Email', value: details.email },
+    { label: 'Phone', value: details.phone },
   ],
   [
-    { label: 'Tax ID', value: '2121997790' },
-    { label: 'Address', value: '123 Marina Bay Sands, Singapore 018956' },
-    { label: 'Notes', value: 'Main utilities provider. Monthly billing cycle. Invoice usually arrives 1st of month.' },
+    { label: 'Tax ID', value: details.taxId },
+    { label: 'Address', value: details.address },
+    { label: 'Notes', value: details.notes },
   ],
-]
+])
+
+// Edit mode: shared FieldRows inputs, values keyed by field label
+const detailsEditing = ref(false)
+const editValues = reactive({})
+
+const editRows = computed(() => [
+  [
+    { label: 'Legal name', placeholder: 'Select legal name', options: [details.legalName, `${vendor.name} Pte Ltd`] },
+    { label: 'Entity type', placeholder: 'Select entity type', options: ['Individual', 'Sole-proprietorship', 'Company', 'Partnership'] },
+  ],
+  [
+    { label: 'Email address', placeholder: 'Select email address', options: [details.email, details.email.replace(/^[^@]+/, 'billing')], helper: 'Used for matching incoming invoices from Bill Inbox' },
+    { label: 'Phone number', type: 'phone', placeholder: '877 1261 8181' },
+  ],
+  [
+    { label: 'Tax ID', placeholder: 'Enter tax ID' },
+    { label: 'Address', placeholder: 'Enter address' },
+  ],
+  [
+    { label: 'Notes (optional)', placeholder: 'Internal notes about this vendor' },
+  ],
+])
+
+function startEditDetails() {
+  Object.assign(editValues, {
+    'Legal name': details.legalName,
+    'Entity type': details.entityType,
+    'Email address': details.email,
+    'Phone number': details.phone.replace(/^\+\d+\s*/, ''),
+    'Tax ID': details.taxId,
+    'Address': details.address,
+    'Notes (optional)': details.notes,
+  })
+  detailsEditing.value = true
+}
+
+function saveEditDetails() {
+  const dialCode = details.phone.match(/^\+\d+/)?.[0] ?? '+65'
+  Object.assign(details, {
+    legalName: editValues['Legal name'],
+    entityType: editValues['Entity type'],
+    email: editValues['Email address'],
+    phone: `${dialCode} ${editValues['Phone number']}`.trim(),
+    taxId: editValues['Tax ID'],
+    address: editValues['Address'],
+    notes: editValues['Notes (optional)'],
+  })
+  detailsEditing.value = false
+}
 
 const sectionTabs = ['Bills', 'Payment Information', 'Details', 'Timeline']
 const activeSection = ref('Bills')
+
+// Timeline tab: newest first; the top event renders the active (ringed) dot
+const timelineEvents = [
+  { tone: 'success', chip: 'Payment completed', desc: 'FS-2025-003 — SGD 7,200.00 to UOB ****8832', date: 'By System at 13 Apr 2024 at 08:34' },
+  { tone: 'info', chip: 'Vendor matched', desc: 'to bill FS-2025-003 via bank account match', date: 'By System at 12 Apr 2024 at 14:23' },
+  { tone: 'success', chip: 'Payment completed', desc: 'FS-2025-002 — SGD 5,800.00 to UOB ****8832', date: 'By System at 28 Mar 2024 at 09:51' },
+  { tone: 'error', chip: 'Payment Failed', desc: 'Unable to verify FS-2025-002 — SGD 5,800.00 to UOB ****8832', date: 'By System at 19 Mar 2024 at 18:02' },
+  { tone: 'info', chip: 'Payment method linked', desc: 'FAST / SGD ****8832 (UOB Bank)', date: 'By Thaisa Almeida at 12 Mar 2024 at 11:45' },
+  { tone: 'neutral', chip: 'Vendor created', desc: 'migrated from beneficiary', date: 'By Thaisa Almeida at 09 Mar 2024 at 16:59' },
+]
+
+function timelineChip(tone) {
+  const map = {
+    success: { bg: '#e6f9f0', text: '#238b5b' },
+    info: { bg: '#f5f6f9', text: '#002771' },
+    error: { bg: '#f9e9e9', text: '#c20a1c' },
+    neutral: { bg: '#f2f2f4', text: '#484d61' },
+  }
+  return map[tone] ?? map.neutral
+}
 
 const billTabs = ['All', 'Completed', 'Pending', 'Overdue', 'Draft']
 const activeBillTab = ref('All')
