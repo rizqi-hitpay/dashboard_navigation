@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col w-[320px] shrink-0 h-full bg-[#fcfcfd] border-l border-[#e5e6ea]">
+  <div class="flex flex-col w-full md:w-[320px] shrink-0 h-full bg-[#fcfcfd] md:border-l md:border-[#e5e6ea]">
 
     <!-- Header: title + progress -->
     <div class="relative flex flex-col gap-[4px] w-full shrink-0 bg-white border-b border-[#e5e6ea]" style="padding: 8px 12px 12px;">

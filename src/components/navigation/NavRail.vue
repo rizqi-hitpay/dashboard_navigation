@@ -1,5 +1,5 @@
 <template>
-  <div class="w-[81px] flex flex-col h-full bg-[#f8f9fc] shrink-0 py-2">
+  <div class="w-[81px] hidden md:flex flex-col h-full bg-[#f8f9fc] shrink-0 py-2">
     <!-- Logo -->
     <div class="relative flex justify-center items-center h-[56px] px-2">
       <img :src="logoIcon" alt="HitPay" class="w-8 h-8" />

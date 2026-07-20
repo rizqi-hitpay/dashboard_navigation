@@ -24,8 +24,9 @@
 
         <!-- Content -->
         <div class="flex flex-col flex-1 gap-[4px] items-start min-w-0">
-          <div class="flex gap-[8px] items-center w-full">
-            <p class="text-[14px] font-medium text-[#03102f] leading-[1.5] whitespace-nowrap">{{ req.title }}</p>
+          <!-- Mobile: chip stacks above the title (which can wrap); desktop: inline, single line -->
+          <div class="flex flex-col-reverse md:flex-row gap-[4px] md:gap-[8px] md:items-center w-full">
+            <p class="text-[14px] font-medium text-[#03102f] leading-[1.5] md:whitespace-nowrap">{{ req.title }}</p>
             <RfiStatusChip :status="req.status" />
           </div>
           <div class="flex gap-[40px] items-center w-full">

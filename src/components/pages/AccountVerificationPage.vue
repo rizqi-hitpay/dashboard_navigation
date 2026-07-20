@@ -4,39 +4,39 @@
     <!-- Inner -->
     <div class="flex flex-1 flex-col items-start w-full min-h-0 pt-[4px]">
 
-      <!-- Page title -->
-      <div class="flex gap-[32px] items-center px-[24px] py-[12px] w-full shrink-0">
+      <!-- Page title: desktop only — mobile carries context via the pill tabs below -->
+      <div class="hidden md:flex gap-[32px] items-center px-[24px] py-[12px] w-full shrink-0">
         <p class="font-medium text-[18px] text-[#03102f] leading-[1.35] whitespace-nowrap">Account Verification</p>
       </div>
 
       <!-- Content -->
-      <div class="flex flex-1 w-full min-h-0 px-[24px] py-[12px]">
-        <div class="flex gap-[40px] items-start w-full h-full rounded-[8px]">
+      <div class="flex flex-1 w-full min-h-0 px-[16px] py-[16px] md:px-[24px] md:py-[12px]">
+        <div class="flex flex-col md:flex-row gap-[8px] md:gap-[40px] items-stretch md:items-start w-full h-full rounded-[8px] min-h-0">
 
-          <!-- Sub-submenu -->
-          <div class="flex flex-col gap-[8px] items-start w-[280px] shrink-0 pb-[24px]">
+          <!-- Sub-submenu: horizontal pill row on mobile, vertical list on desktop -->
+          <div class="flex flex-wrap md:flex-col gap-[8px] items-start w-full md:w-[280px] shrink-0 pb-0 md:pb-[24px]">
             <button
               v-for="tab in tabs"
               :key="tab"
-              class="flex gap-[8px] items-center w-full rounded-[8px] text-left cursor-pointer transition-colors duration-150"
+              class="flex gap-[8px] items-center w-auto md:w-full rounded-[8px] text-left cursor-pointer transition-colors duration-150 shrink-0"
               style="padding: 4px 8px; min-height: 29px;"
               :class="activeTab === tab ? 'bg-[rgba(0,39,113,0.04)]' : 'hover:bg-[rgba(0,39,113,0.04)]'"
               @click="selectTab(tab)"
             >
               <span
-                class="flex-1 text-[14px] leading-[1.5] truncate"
+                class="text-[14px] leading-[1.5] truncate md:flex-1"
                 :style="{ color: activeTab === tab ? '#002771' : '#61667c', fontWeight: activeTab === tab ? 500 : 400 }"
               >{{ tab }}</span>
               <span
                 v-if="tab === 'Additional information' && actionNeeded"
-                class="inline-flex items-center justify-center shrink-0 text-[12px] font-medium text-[#bd8400]"
+                class="inline-flex items-center justify-center shrink-0 text-[12px] font-medium text-[#bd8400] whitespace-nowrap"
                 style="background: #fff9ec; min-height: 24px; min-width: 32px; padding: 2px 8px; border-radius: 24px;"
               >Action needed</span>
             </button>
           </div>
 
           <!-- Panel -->
-          <div class="flex flex-col flex-1 h-full min-w-0 min-h-0">
+          <div class="flex flex-col flex-1 md:h-full min-w-0 min-h-0">
 <!-- Additional information: list ↔ chat -->
             <RfiChatView
               v-if="activeTab === 'Additional information' && activeRequest"

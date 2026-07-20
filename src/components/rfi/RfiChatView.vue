@@ -13,7 +13,7 @@
           </button>
           <p class="flex-1 min-w-0 text-[16px] font-medium text-[#03102f] leading-[1.4] truncate">{{ request.title }}</p>
         </div>
-        <div class="flex gap-[12px] items-start w-full" style="padding-left: 24px;">
+        <div class="flex flex-wrap items-start w-full" style="padding-left: 24px; column-gap: 12px; row-gap: 4px;">
           <div class="flex gap-[4px] items-center shrink-0">
             <img :src="userIcon" width="14" height="14" alt="" />
             <p class="text-[12px] leading-[1.5] whitespace-nowrap">
@@ -36,12 +36,19 @@
             </p>
           </div>
         </div>
+        <!-- Mobile: status chip sits on its own row below the meta, matching the phone layout -->
+        <div class="flex md:hidden items-start w-full" style="padding-left: 24px; padding-top: 4px;">
+          <RfiStatusChip :status="request.status" />
+        </div>
       </div>
-      <RfiStatusChip :status="request.status" />
+      <div class="hidden md:block shrink-0">
+        <RfiStatusChip :status="request.status" />
+      </div>
     </div>
 
-    <!-- White chat card -->
+    <!-- White chat card: hidden on mobile while the checklist is open full-screen -->
     <div
+      v-show="!mobileChecklistActive"
       class="bg-white flex flex-1 min-h-0 rounded-[8px] w-full overflow-hidden"
       style="filter: drop-shadow(0px 1px 2px rgba(0,0,0,0.06)) drop-shadow(0px 1px 0.5px rgba(0,0,0,0.06));"
     >
@@ -213,10 +220,11 @@
       </div>
 
       <!-- Required checklist panel: slides in by width, chat gives up space
-           (motion guideline: "panel push" — 280ms standard curve) -->
+           (motion guideline: "panel push" — 280ms standard curve). Desktop only —
+           mobile has no room for a side panel, see the full-screen swap below. -->
       <div
         v-if="request.checklist"
-        class="rfi-checklist-push shrink-0 h-full overflow-hidden"
+        class="hidden md:block rfi-checklist-push shrink-0 h-full overflow-hidden"
         :class="{ 'is-open': request.checklist.open }"
         :style="{ width: request.checklist.open ? '320px' : '0px' }"
       >
@@ -228,12 +236,25 @@
         />
       </div>
     </div>
+
+    <!-- Mobile: checklist takes over the full screen instead of pushing beside the chat -->
+    <div
+      v-if="mobileChecklistActive"
+      class="md:hidden flex flex-col flex-1 min-h-0 rounded-[8px] w-full bg-[#fcfcfd] border border-[#e5e6ea] overflow-hidden"
+    >
+      <RfiChecklistPanel
+        :checklist="request.checklist"
+        @close="request.checklist.open = false"
+        @submit="submitChecklist(request.id)"
+      />
+    </div>
   </div>
 </template>
 
 <script setup>
 import { computed, nextTick, ref, watch } from 'vue'
 import { markReadyForReview, sendMessage, submitChecklist } from '../../composables/useRfi.js'
+import { isMobile } from '../../composables/useViewport.js'
 import RfiStatusChip from './RfiStatusChip.vue'
 import RfiChecklistPanel from './RfiChecklistPanel.vue'
 import listCheckIcon from '../../assets/icons/rfi-list-check.svg'
@@ -264,6 +285,9 @@ const chatScroll = ref(null)
 
 // Composer only while compliance is waiting on the merchant
 const composerVisible = computed(() => props.request.status === 'requesting')
+
+// On mobile the checklist replaces the chat entirely instead of pushing beside it
+const mobileChecklistActive = computed(() => isMobile.value && !!(props.request.checklist && props.request.checklist.open))
 
 // Mock file picker: alternate between the two sample documents
 function onAttach() {
