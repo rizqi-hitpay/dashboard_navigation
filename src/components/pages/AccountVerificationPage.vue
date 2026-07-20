@@ -13,11 +13,16 @@
       <div class="flex flex-1 w-full min-h-0 px-[16px] py-[16px] md:px-[24px] md:py-[12px]">
         <div class="flex flex-col md:flex-row gap-[8px] md:gap-[40px] items-stretch md:items-start w-full h-full rounded-[8px] min-h-0">
 
-          <!-- Sub-submenu: horizontal pill row on mobile, vertical list on desktop -->
-          <div class="flex flex-wrap md:flex-col gap-[8px] items-start w-full md:w-[280px] shrink-0 pb-0 md:pb-[24px]">
+          <!-- Sub-submenu: single horizontally-scrollable pill row on mobile
+               (scrollbar hidden, active tab scrolled into view), vertical list on desktop -->
+          <div
+            ref="tabScroll"
+            class="flex md:flex-col gap-[8px] items-center md:items-start w-full md:w-[280px] shrink-0 pb-0 md:pb-[24px] overflow-x-auto md:overflow-x-visible hide-scrollbar"
+          >
             <button
               v-for="tab in tabs"
               :key="tab"
+              :aria-current="activeTab === tab ? 'page' : undefined"
               class="flex gap-[8px] items-center w-auto md:w-full rounded-[8px] text-left cursor-pointer transition-colors duration-150 shrink-0"
               style="padding: 4px 8px; min-height: 29px;"
               :class="activeTab === tab ? 'bg-[rgba(0,39,113,0.04)]' : 'hover:bg-[rgba(0,39,113,0.04)]'"
@@ -60,7 +65,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { activeRfiId, closeRfi, hasActionNeeded, openRfi, rfiRequests } from '../../composables/useRfi.js'
 import RfiRequestList from '../rfi/RfiRequestList.vue'
 import RfiChatView from '../rfi/RfiChatView.vue'
@@ -72,14 +77,39 @@ const activeTab = ref('Additional information')
 const activeRequest = computed(() => rfiRequests.find((r) => r.id === activeRfiId.value) || null)
 const actionNeeded = computed(() => hasActionNeeded())
 
+const tabScroll = ref(null)
+
 function selectTab(tab) {
   activeTab.value = tab
   closeRfi()
 }
 
+// On mobile the tab row scrolls horizontally — bring the active tab into view
+// on load so it's the first thing visible (with the previous tab peeking).
+function scrollActiveTabIntoView() {
+  const container = tabScroll.value
+  if (!container) return
+  const active = container.querySelector('[aria-current="page"]')
+  if (!active) return
+  const cRect = container.getBoundingClientRect()
+  const aRect = active.getBoundingClientRect()
+  container.scrollLeft += aRect.left - cRect.left - 40
+}
+
 // Deep links land here with the settings sidebar closed — open it
 onMounted(() => {
   settingsOpen.value = true
+  nextTick(scrollActiveTabIntoView)
 })
 </script>
+
+<style scoped>
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+</style>
 
