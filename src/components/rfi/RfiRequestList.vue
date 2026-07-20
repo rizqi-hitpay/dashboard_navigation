@@ -24,13 +24,16 @@
 
         <!-- Content -->
         <div class="flex flex-col flex-1 gap-[4px] items-start min-w-0">
-          <!-- Mobile: chip stacks above the title (which can wrap); desktop: inline, single line -->
-          <div class="flex flex-col-reverse md:flex-row gap-[4px] md:gap-[8px] md:items-center w-full">
+          <!-- Top — mobile: chip sits above the title on its own line and hugs its
+               content (items-start); desktop: title + chip inline on a single line -->
+          <div class="flex flex-col-reverse md:flex-row gap-[8px] items-start md:items-center w-full">
             <p class="text-[14px] font-medium text-[#03102f] leading-[1.5] md:whitespace-nowrap">{{ req.title }}</p>
             <RfiStatusChip :status="req.status" />
           </div>
-          <div class="flex gap-[40px] items-center w-full">
-            <p class="flex-1 min-w-0 h-[16px] text-[12px] text-[#61667c] leading-[1.5] overflow-hidden text-ellipsis whitespace-nowrap">{{ req.preview }}</p>
+          <!-- Bottom — mobile: preview and last-update stack on separate lines;
+               desktop: inline with the date pushed to the right -->
+          <div class="flex flex-col md:flex-row gap-[8px] md:gap-[40px] items-start md:items-center w-full">
+            <p class="w-full md:flex-1 min-w-0 h-[16px] text-[12px] text-[#61667c] leading-[1.5] overflow-hidden text-ellipsis whitespace-nowrap">{{ req.preview }}</p>
             <p
               class="text-[10px] font-medium uppercase whitespace-nowrap shrink-0"
               :style="{ letterSpacing: '0.3px', lineHeight: '18px', color: req.overdue ? '#eaa00c' : '#9295a5' }"
