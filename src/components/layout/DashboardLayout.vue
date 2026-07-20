@@ -3,11 +3,11 @@
     <!-- Left nav rail: 81px -->
     <NavRail />
 
-    <!-- Content area: 8px padding top/right/bottom, 4px gap between cards -->
-    <div class="flex flex-1 overflow-hidden min-w-0" style="padding: 8px 8px 8px 0; gap: 4px;">
+    <!-- Content area: full-bleed on mobile; 8px padding top/right/bottom + 4px card gap on desktop -->
+    <div class="flex flex-1 overflow-hidden min-w-0 gap-0 md:gap-[4px] p-0 md:py-[8px] md:pr-[8px]">
 
-      <!-- Main card: mobile header + sidebar + content -->
-      <div class="flex flex-col md:flex-row flex-1 rounded-[8px] overflow-hidden min-w-0 border border-[#E5E6EA] relative" style="box-shadow: 0px 3px 22px 0px rgba(37,41,49,0.08);">
+      <!-- Main card: full-screen on mobile (no rounding/border/shadow), floating card on desktop -->
+      <div class="flex flex-col md:flex-row flex-1 overflow-hidden min-w-0 relative md:rounded-[8px] border-0 md:border md:border-[#E5E6EA] md:shadow-[0px_3px_22px_0px_rgba(37,41,49,0.08)]">
 
         <!-- Mobile-only top bar: hamburger opens the nav drawer below -->
         <MobileTopBar class="flex md:hidden" @menu="mobileNavOpen = true" />
