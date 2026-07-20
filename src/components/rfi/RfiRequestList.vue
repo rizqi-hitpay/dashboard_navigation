@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col flex-1 min-h-0 w-full bg-[#f8f9fc] rounded-[12px] p-[4px]">
+  <div class="flex flex-col flex-1 min-h-0 w-full bg-[#f8f9fc] rounded-none md:rounded-[12px] p-[4px]">
 
     <!-- Title -->
     <div class="flex flex-col gap-[2px] items-start justify-center p-[16px] w-full shrink-0">

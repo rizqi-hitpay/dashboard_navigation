@@ -9,15 +9,16 @@
         <p class="font-medium text-[18px] text-[#03102f] leading-[1.35] whitespace-nowrap">Account Verification</p>
       </div>
 
-      <!-- Content -->
-      <div class="flex flex-1 w-full min-h-0 px-[16px] py-[16px] md:px-[24px] md:py-[12px]">
-        <div class="flex flex-col md:flex-row gap-[8px] md:gap-[40px] items-stretch md:items-start w-full h-full rounded-[8px] min-h-0">
+      <!-- Content — mobile: no side padding so the grey list container is full-bleed
+           (the tab row carries its own 16px inset); desktop: 24/12 page padding -->
+      <div class="flex flex-1 w-full min-h-0 pt-[16px] md:px-[24px] md:py-[12px]">
+        <div class="flex flex-col md:flex-row gap-[16px] md:gap-[40px] items-stretch md:items-start w-full h-full min-h-0">
 
           <!-- Sub-submenu: single horizontally-scrollable pill row on mobile
                (scrollbar hidden, active tab scrolled into view), vertical list on desktop -->
           <div
             ref="tabScroll"
-            class="flex md:flex-col gap-[8px] items-center md:items-start w-full md:w-[280px] shrink-0 pb-0 md:pb-[24px] overflow-x-auto md:overflow-x-visible hide-scrollbar"
+            class="flex md:flex-col gap-[8px] items-center md:items-start w-full md:w-[280px] shrink-0 px-[16px] md:px-0 pb-0 md:pb-[24px] overflow-x-auto md:overflow-x-visible hide-scrollbar"
           >
             <button
               v-for="tab in tabs"

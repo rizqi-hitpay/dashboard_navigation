@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col flex-1 min-h-0 w-full bg-[#f8f9fc] rounded-[12px] p-[4px]">
+  <div class="flex flex-col flex-1 min-h-0 w-full bg-[#f8f9fc] rounded-none md:rounded-[12px] p-[4px]">
 
     <!-- Header -->
     <div class="flex gap-[16px] items-start w-full shrink-0" style="padding: 12px 16px 16px 0;">
