@@ -78,12 +78,27 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { settingsOpen } from '../../composables/useSettingsPanel.js'
 
 const router = useRouter()
-const activeItem = ref('Business Details')
+const route = useRoute()
+
+// Highlight the item matching the current /settings/<slug> route
+function labelFromRoute() {
+  const match = route.path.match(/^\/settings\/([^/]+)/)
+  if (!match) return 'Business Details'
+  const found = sections.flatMap((s) => s.items).find(
+    (item) => item.label.toLowerCase().replace(/[^a-z0-9]+/g, '-') === match[1],
+  )
+  return found ? found.label : 'Business Details'
+}
+
+const activeItem = ref(null)
+onMounted(() => {
+  activeItem.value = labelFromRoute()
+})
 
 function selectSetting(item) {
   activeItem.value = item.label
@@ -95,8 +110,8 @@ const sections = [
   {
     header: 'Account',
     items: [
-      { label: 'Business Details', warning: true },
-      { label: 'Account Verification' },
+      { label: 'Business Details' },
+      { label: 'Account Verification', warning: true },
       { label: 'Bank Accounts' },
     ],
   },

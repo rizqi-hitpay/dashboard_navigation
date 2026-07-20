@@ -87,8 +87,8 @@
 </template>
 
 <script setup>
-import { ref, computed, useTemplateRef } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, watch, useTemplateRef } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import NavBadge from './NavBadge.vue'
 import NavTooltip from './NavTooltip.vue'
 import chevronIcon from '../../assets/icons/icon-chevron-right.svg'
@@ -127,6 +127,21 @@ const activeSub = ref(
 function slug(s) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 }
+
+// Keep the active sub-item in sync with the route, so arriving via other
+// entry points (e.g. the bills toolbar gear → /settings) highlights correctly.
+const route = useRoute()
+watch(
+  () => route.path,
+  (path) => {
+    const match = props.submenuItems.find((i) => {
+      const url = i.url || '/' + slug(i.label)
+      return path === url || path.startsWith(url + '/')
+    })
+    if (match) activeSub.value = match.label
+  },
+  { immediate: true }
+)
 
 function toggle() {
   if (props.expandable) { isOpen.value = !isOpen.value; return }

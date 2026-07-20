@@ -282,13 +282,23 @@
 
 <script setup>
 import { ref, reactive, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import FieldRows from '../forms/FieldRows.vue'
 import ApprovalRulesSection from '../content/ApprovalRulesSection.vue'
 import BillInboxSection from '../content/BillInboxSection.vue'
 import IntegrationsSection from '../content/IntegrationsSection.vue'
 
 const menuItems = ['Categories', 'Approval rules', 'Bill Inbox', 'Integrations']
-const activeMenu = ref('Categories')
+
+// Deep-linkable sections, e.g. /settings?section=bill-inbox
+const sectionSlugs = {
+  'categories': 'Categories',
+  'approval-rules': 'Approval rules',
+  'bill-inbox': 'Bill Inbox',
+  'integrations': 'Integrations',
+}
+const route = useRoute()
+const activeMenu = ref(sectionSlugs[route.query.section] ?? 'Categories')
 
 const stats = [
   { label: 'Total categories', value: '16' },
