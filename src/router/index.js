@@ -8,6 +8,8 @@ import VendorsPage from '../components/pages/VendorsPage.vue'
 import VendorDetailsPage from '../components/pages/VendorDetailsPage.vue'
 import BillPaySettingsPage from '../components/pages/BillPaySettingsPage.vue'
 import AccountVerificationPage from '../components/pages/AccountVerificationPage.vue'
+import AccountVerificationWithChatPage from '../components/pages/AccountVerificationWithChatPage.vue'
+import AccountVerificationFullScreenPage from '../components/pages/AccountVerificationFullScreenPage.vue'
 import MotionGuidelinePage from '../components/pages/MotionGuidelinePage.vue'
 import PlaceholderPage from '../components/pages/PlaceholderPage.vue'
 
@@ -21,6 +23,8 @@ const routes = [
   { path: '/vendors/details', name: 'vendor-details', component: VendorDetailsPage },
   { path: '/settings', name: 'settings', component: BillPaySettingsPage },
   { path: '/settings/account-verification', name: 'account-verification', component: AccountVerificationPage },
+  { path: '/settings/account-verification-with-chat', name: 'account-verification-with-chat', component: AccountVerificationWithChatPage },
+  { path: '/settings/account-verification-full-screen', name: 'account-verification-full-screen', component: AccountVerificationFullScreenPage, meta: { fullPage: true } },
   { path: '/motion', name: 'motion', component: MotionGuidelinePage, meta: { fullPage: true } },
   // Any other link falls back to a "coming soon" placeholder
   { path: '/:pathMatch(.*)*', name: 'placeholder', component: PlaceholderPage },
