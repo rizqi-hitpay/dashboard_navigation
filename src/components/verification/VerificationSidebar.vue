@@ -19,7 +19,7 @@
         :class="active ? 'bg-[rgba(0,39,113,0.04)]' : 'hover:bg-[rgba(0,39,113,0.04)]'"
         @click="$emit('select-header')"
       >
-        <span class="text-[14px] font-medium leading-[1.5] whitespace-nowrap text-[#002771]">Additional documents</span>
+        <span class="text-[14px] font-medium leading-[1.5] whitespace-nowrap text-[#002771]">Request for information</span>
         <span
           v-if="badge === 'warning'"
           class="inline-flex items-center justify-center shrink-0 rounded-[4px] bg-[#f8f9fc]"

@@ -7,18 +7,27 @@
     >
       <div
         v-if="title"
-        class="flex flex-col gap-[2px] p-[16px] w-full"
-        :class="titleCenter ? 'items-center text-center' : 'items-start text-left'"
+        class="flex items-start gap-[16px] p-[16px] w-full"
+        :class="titleCenter ? 'justify-center text-center' : 'justify-between text-left'"
       >
-        <p
-          class="font-medium text-[#03102f]"
-          :class="titleLarge ? 'text-[18px] leading-[1.35]' : 'text-[16px] leading-[1.4]'"
-        >{{ title }}</p>
-        <p
-          v-if="subtitle"
-          class="text-[#61667c]"
-          :class="titleLarge ? 'text-[14px] leading-[1.5]' : 'text-[12px] leading-[1.5]'"
-        >{{ subtitle }}</p>
+        <div class="flex flex-col gap-[2px]" :class="titleCenter ? 'items-center' : 'items-start'">
+          <p
+            class="font-medium text-[#03102f]"
+            :class="titleLarge ? 'text-[18px] leading-[1.35]' : 'text-[16px] leading-[1.4]'"
+          >{{ title }}</p>
+          <p
+            v-if="subtitle"
+            class="text-[#61667c]"
+            :class="titleLarge ? 'text-[14px] leading-[1.5]' : 'text-[12px] leading-[1.5]'"
+          >{{ subtitle }}</p>
+        </div>
+        <span
+          v-if="titleChip"
+          class="inline-flex items-center justify-center rounded-[24px] shrink-0"
+          :style="{ background: titleChip.bg, minHeight: '24px', minWidth: '32px', padding: '2px 8px' }"
+        >
+          <span class="text-[12px] font-medium leading-[1.5] whitespace-nowrap" :style="{ color: titleChip.color }">{{ titleChip.label }}</span>
+        </span>
       </div>
       <div
         class="bg-white flex flex-col gap-[24px] items-start justify-center pt-[16px] w-full"
@@ -45,6 +54,7 @@
 defineProps({
   title: { type: String, default: '' },
   subtitle: { type: String, default: '' },
+  titleChip: { type: Object, default: null }, // { label, bg, color }
   width: { type: Number, default: 764 },
   titleLarge: { type: Boolean, default: false },
   titleCenter: { type: Boolean, default: false },

@@ -22,12 +22,13 @@ import loadingIcon from '../../assets/icons/rfi-status-loading.svg'
 import docCheckIcon from '../../assets/icons/rfi-status-doc-check.svg'
 import xIcon from '../../assets/icons/rfi-status-x.svg'
 import checkIcon from '../../assets/icons/rfi-status-check.svg'
+import backwardIcon from '../../assets/icons/rfi-status-backward.svg'
 
 const props = defineProps({
   status: { type: String, required: true },
 })
 
-const icons = { loading: loadingIcon, 'doc-check': docCheckIcon, x: xIcon, check: checkIcon }
+const icons = { loading: loadingIcon, 'doc-check': docCheckIcon, x: xIcon, check: checkIcon, backward: backwardIcon }
 
 const meta = computed(() => RFI_STATUS[props.status])
 const icon = computed(() => icons[meta.value.icon])

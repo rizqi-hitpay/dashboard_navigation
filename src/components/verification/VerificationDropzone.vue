@@ -1,66 +1,148 @@
 <template>
   <div class="flex flex-col gap-[8px] items-start w-full">
-    <p class="text-[12px] font-medium text-[#61667c] leading-[1.5]">{{ label }}</p>
+    <p v-if="label" class="text-[12px] font-medium text-[#61667c] leading-[1.5]">{{ label }}</p>
 
+    <!-- Empty state -->
     <button
-      v-if="files.length < mockFiles.length"
-      class="flex flex-col gap-[4px] items-center justify-center w-full h-[140px] bg-white border border-[#e5e6ea] rounded-[8px] cursor-pointer hover:border-[#2465de] transition-colors"
-      style="box-shadow: 0px 1px 3px 0px rgba(0,0,0,0.04), 0px 1.5px 1.5px 0px rgba(0,0,0,0.09);"
-      @click="addNext"
+      v-if="!files.length"
+      class="dropzone-surface flex flex-col gap-[8px] items-center justify-center w-full h-[112px] bg-white border border-[#e5e6ea] rounded-[8px] cursor-pointer outline-none transition-colors"
+      @click="addFiles"
     >
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-[#9295a5]">
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M11.5 4C8.85134 4 6.73903 6.38087 7.02729 8.99923C7.08294 9.50471 6.75509 9.9678 6.26851 10.0896C4.96468 10.4159 4 11.5965 4 13C4 14.6569 5.34315 16 7 16H8C8.55228 16 9 16.4477 9 17C9 17.5523 8.55228 18 8 18H7C4.23858 18 2 15.7614 2 13C2 10.9486 3.23468 9.18749 5.00053 8.41614C5.04543 4.86494 7.93814 2 11.5 2C14.2856 2 16.66 3.75154 17.5856 6.21198C20.13 6.90766 22 9.23462 22 12C22 15.3137 19.3137 18 16 18C15.4477 18 15 17.5523 15 17C15 16.4477 15.4477 16 16 16C18.2091 16 20 14.2091 20 12C20 10.0145 18.5524 8.36524 16.6552 8.05324C16.2653 7.98913 15.9477 7.70323 15.8441 7.32051C15.326 5.40663 13.576 4 11.5 4ZM13 12.4162L14.2934 13.7077C14.6843 14.0979 15.3174 14.0974 15.7077 13.7066C16.0979 13.3157 16.0974 12.6826 15.7066 12.2923L12.8832 9.47341C12.3952 8.98618 11.6048 8.98618 11.1168 9.47341L8.29345 12.2923C7.90262 12.6826 7.90212 13.3157 8.29234 13.7066C8.68256 14.0974 9.31572 14.0979 9.70655 13.7077L11 12.4162V21C11 21.5523 11.4477 22 12 22C12.5523 22 13 21.5523 13 21V12.4162Z" fill="currentColor"/>
-      </svg>
-      <p class="text-[12px] text-[#9295a5] leading-[1.5] text-center">Select documents or drag here</p>
-      <p class="text-[12px] text-[#9295a5] leading-[1.5] text-center">File max 5MB</p>
+      <div class="relative h-[42px] w-[51px] shrink-0">
+        <img :src="paperIcon" width="28" height="35" class="absolute" style="left: 4px; top: 3px; transform: rotate(-11deg);" alt="" />
+        <img :src="paperIcon" width="28" height="35" class="absolute" style="left: 12px; top: 3px; transform: rotate(1deg);" alt="" />
+        <img :src="paperIcon" width="28" height="35" class="absolute" style="left: 19px; top: 4px; transform: rotate(13deg);" alt="" />
+      </div>
+      <p class="text-[12px] text-[#2465de] leading-[1.5] text-center underline">Choose files from your computer or drag here</p>
     </button>
 
-    <div v-if="files.length" class="flex flex-col gap-[8px] items-start w-full">
-      <div
-        v-for="(file, i) in files"
-        :key="file.name"
-        class="flex gap-[8px] items-center w-full bg-white border border-[#e5e6ea] rounded-[8px]"
-        style="padding: 4px 4px 4px 8px; filter: drop-shadow(0px 1px 1.5px rgba(0,0,0,0.04)) drop-shadow(0px 1.5px 0.75px rgba(0,0,0,0.09));"
-      >
-        <div class="flex flex-1 gap-[8px] items-center min-w-0">
-          <img :src="fileIcons[file.kind]" width="24" height="24" alt="" class="shrink-0" />
-          <p class="text-[12px] text-[#61667c] leading-[1.5] whitespace-nowrap truncate">{{ file.name }}</p>
-        </div>
-        <button
-          class="flex h-[28px] w-[36px] items-center justify-center rounded-[8px] shrink-0 cursor-pointer hover:bg-[rgba(220,53,69,0.06)] transition-colors"
-          @click="removeAt(i)"
+    <!-- Filled state: uploaded file list + a slim row to add more -->
+    <div
+      v-else
+      class="dropzone-surface flex flex-col gap-[8px] items-center w-full bg-white border border-[#e5e6ea] rounded-[8px]"
+      style="padding: 8px 8px 16px;"
+    >
+      <div class="flex flex-col gap-[4px] items-start w-full">
+        <div
+          v-for="(file, i) in files"
+          :key="file.name"
+          class="flex gap-[8px] items-center w-full bg-white border rounded-[8px] p-[8px]"
+          :class="stateOf(file) === 'error' ? 'border-[#dc3545]' : 'border-[#e5e6ea]'"
         >
-          <img :src="binIcon" width="16" height="16" alt="Remove" />
-        </button>
+          <VerificationFileTypeIcon :kind="file.kind" />
+
+          <div class="flex flex-1 flex-col items-start min-w-0">
+            <p class="text-[12px] text-[#03102f] leading-[1.5] w-full truncate">{{ file.name }}</p>
+
+            <!-- Uploading -->
+            <div v-if="stateOf(file) === 'uploading'" class="flex gap-[4px] items-center w-full">
+              <div class="flex-1 h-[5px] min-w-0 bg-[#f2f2f4] rounded-[16px] relative overflow-hidden">
+                <div class="absolute inset-y-0 left-0 bg-[#2465de] rounded-[16px] transition-all duration-150" :style="{ width: progressOf(file) + '%' }"></div>
+              </div>
+              <p class="text-[10px] text-[#03102f] leading-[1.5] whitespace-nowrap">{{ progressOf(file) }}%</p>
+            </div>
+
+            <!-- Error -->
+            <p v-else-if="stateOf(file) === 'error'" class="text-[10px] font-medium text-[#dc3545] uppercase w-full" style="letter-spacing: 0.3px; line-height: 18px;">Can't upload this file</p>
+
+            <!-- Done -->
+            <p v-else class="text-[10px] font-medium text-[#61667c] uppercase w-full" style="letter-spacing: 0.3px; line-height: 18px;">{{ file.size || '—' }}</p>
+          </div>
+
+          <button
+            class="flex items-center justify-center shrink-0 cursor-pointer hover:opacity-70 transition-opacity"
+            style="width: 14px; height: 14px;"
+            @click="removeAt(i)"
+          >
+            <img :src="stateOf(file) === 'done' ? binIcon : removeXIcon" width="14" height="14" alt="Remove" />
+          </button>
+        </div>
       </div>
+
+      <button class="dropzone-trigger text-[12px] text-[#2465de] leading-[1.5] text-center underline cursor-pointer outline-none" @click="addFiles">
+        Choose files from your computer or drag here
+      </button>
     </div>
   </div>
 </template>
 
 <script setup>
+import { reactive } from 'vue'
+import VerificationFileTypeIcon from './VerificationFileTypeIcon.vue'
+import paperIcon from '../../assets/icons/rfi-paper-generic.svg'
 import binIcon from '../../assets/icons/rfi-bin.svg'
-import filePdfIcon from '../../assets/icons/rfi-file-pdf-24.svg'
-import fileCsvIcon from '../../assets/icons/rfi-file-csv-24.svg'
+import removeXIcon from '../../assets/icons/rfi-file-remove-x.svg'
 
 const props = defineProps({
-  label: { type: String, required: true },
+  label: { type: String, default: '' },
   files: { type: Array, required: true }, // v-model:files
-  mockFiles: { type: Array, required: true },
+  mockFiles: { type: Array, required: true }, // [{ name, kind, size, forceError? }]
 })
 
 const emit = defineEmits(['update:files'])
 
-const fileIcons = { pdf: filePdfIcon, csv: fileCsvIcon, svg: filePdfIcon }
+// Transient upload-progress UI state, keyed by file name — not part of the v-model
+const uploadStates = reactive({})
 
-function addNext() {
-  const next = props.mockFiles[props.files.length]
-  if (!next) return
-  emit('update:files', [...props.files, { ...next }])
+function stateOf(file) {
+  return uploadStates[file.name]?.status || 'done'
+}
+
+function progressOf(file) {
+  return uploadStates[file.name]?.progress ?? 0
+}
+
+function simulateUpload(file) {
+  if (file.forceError) {
+    uploadStates[file.name] = { progress: 0, status: 'uploading' }
+    setTimeout(() => {
+      uploadStates[file.name].status = 'error'
+    }, 500)
+    return
+  }
+
+  uploadStates[file.name] = { progress: 0, status: 'uploading' }
+  const start = Date.now()
+  const duration = 600 + Math.random() * 500
+  const timer = setInterval(() => {
+    const pct = Math.min(100, Math.round(((Date.now() - start) / duration) * 100))
+    uploadStates[file.name].progress = pct
+    if (pct >= 100) {
+      clearInterval(timer)
+      uploadStates[file.name].status = 'done'
+    }
+  }, 80)
+}
+
+// Adds every remaining mock file at once — simulates a multi-file picker selection
+function addFiles() {
+  const remaining = props.mockFiles.filter((m) => !props.files.some((f) => f.name === m.name))
+  if (!remaining.length) return
+  const added = remaining.map((m) => ({ ...m }))
+  emit('update:files', [...props.files, ...added])
+  added.forEach(simulateUpload)
 }
 
 function removeAt(i) {
+  const [removed] = props.files.slice(i, i + 1)
   const next = [...props.files]
   next.splice(i, 1)
   emit('update:files', next)
+  if (removed) delete uploadStates[removed.name]
 }
 </script>
+
+<style scoped>
+.dropzone-surface {
+  box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.04), 0px 1.5px 1.5px 0px rgba(0, 0, 0, 0.09);
+  transition: box-shadow 150ms ease, border-color 150ms ease;
+}
+
+button.dropzone-surface:hover,
+button.dropzone-surface:focus-visible,
+.dropzone-surface:has(.dropzone-trigger:hover),
+.dropzone-surface:has(.dropzone-trigger:focus-visible) {
+  border-color: #2465de;
+  box-shadow: 0 0 0 3px #b3cdfe, inset 0px 2px 4px 0px rgba(0, 0, 0, 0.24);
+}
+</style>
