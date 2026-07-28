@@ -22,7 +22,7 @@
       class="dropzone-surface flex flex-col gap-[8px] items-center w-full bg-white border border-[#e5e6ea] rounded-[8px]"
       style="padding: 8px 8px 16px;"
     >
-      <div class="flex flex-col gap-[4px] items-start w-full">
+      <div class="flex flex-col gap-[4px] items-start w-full pb-[8px]">
         <div
           v-for="(file, i) in files"
           :key="file.name"
