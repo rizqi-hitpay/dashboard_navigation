@@ -36,7 +36,7 @@
                   <RfiStatusChip :status="req.status" />
                 </div>
                 <div class="flex gap-[2px] items-center text-[10px] font-medium uppercase whitespace-nowrap" style="letter-spacing: 0.3px; line-height: 18px;">
-                  <span :style="{ color: req.overdue ? '#eaa00c' : '#9295a5' }">{{ req.overdue ? `Overdue: ${req.due}` : `Due date: ${req.due}` }}</span>
+                  <span :style="{ color: req.overdue ? '#eaa00c' : '#9295a5' }">{{ dateLabelFor(req) }}</span>
                   <template v-if="req.itemsNote">
                     <span style="color: #9295a5;">・</span>
                     <span :style="{ color: req.itemsAttention ? '#eaa00c' : '#61667c' }">{{ req.itemsNote }}</span>
@@ -68,6 +68,14 @@ const badgeState = computed(() => {
   if (rfiRequests.some((r) => r.status === 'under_review')) return 'in_review'
   return null
 })
+
+// Closed statuses have nothing left due — show when the request was closed instead
+const CLOSED_STATUSES = ['rejected', 'completed', 'expired']
+
+function dateLabelFor(req) {
+  if (CLOSED_STATUSES.includes(req.status)) return `Closed: ${req.due}`
+  return req.overdue ? `Overdue: ${req.due}` : `Due date: ${req.due}`
+}
 
 function openRequest(id) {
   router.push({ name: 'account-verification-full-screen', query: { rfi: id } })

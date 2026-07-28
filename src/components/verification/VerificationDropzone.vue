@@ -9,9 +9,9 @@
       @click="addFiles"
     >
       <div class="relative h-[42px] w-[51px] shrink-0">
-        <img :src="paperIcon" width="28" height="35" class="absolute" style="left: 4px; top: 3px; transform: rotate(-11deg);" alt="" />
-        <img :src="paperIcon" width="28" height="35" class="absolute" style="left: 12px; top: 3px; transform: rotate(1deg);" alt="" />
-        <img :src="paperIcon" width="28" height="35" class="absolute" style="left: 19px; top: 4px; transform: rotate(13deg);" alt="" />
+        <img :src="paperIcon" width="36" height="43" class="paper-icon paper-1 absolute" alt="" />
+        <img :src="paperIcon" width="36" height="43" class="paper-icon paper-2 absolute" alt="" />
+        <img :src="paperIcon" width="36" height="43" class="paper-icon paper-3 absolute" alt="" />
       </div>
       <p class="text-[12px] text-[#2465de] leading-[1.5] text-center underline">Choose files from your computer or drag here</p>
     </button>
@@ -144,5 +144,45 @@ button.dropzone-surface:focus-visible,
 .dropzone-surface:has(.dropzone-trigger:focus-visible) {
   border-color: #2465de;
   box-shadow: 0 0 0 3px #b3cdfe, inset 0px 2px 4px 0px rgba(0, 0, 0, 0.24);
+}
+
+/* Fanned paper icon folds together into a tight stack on hover/focus — back-out curve.
+   Position converges AND rotation increases per paper, matching Figma's Icon component
+   exactly (source: node 6870:2238). Each <img> is the full 36x43 asset (paper + drop-shadow
+   margin) at native scale — these offsets place its visible paper edge, not the image's own
+   top-left corner. */
+.paper-1 { left: 0px; top: 0px; transform: rotate(-11deg); }
+.paper-2 { left: 8px; top: 0px; transform: rotate(1deg); }
+.paper-3 { left: 15px; top: 1px; transform: rotate(13deg); }
+
+.paper-icon {
+  transition: left 240ms cubic-bezier(0.34, 1.3, 0.64, 1),
+              top 240ms cubic-bezier(0.34, 1.3, 0.64, 1),
+              transform 240ms cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+
+button.dropzone-surface:hover .paper-1,
+button.dropzone-surface:focus-visible .paper-1 {
+  left: 8px;
+  top: 0px;
+  transform: rotate(-25deg);
+}
+button.dropzone-surface:hover .paper-2,
+button.dropzone-surface:focus-visible .paper-2 {
+  left: 8px;
+  top: 0px;
+  transform: rotate(-2deg);
+}
+button.dropzone-surface:hover .paper-3,
+button.dropzone-surface:focus-visible .paper-3 {
+  left: 7px;
+  top: 1px;
+  transform: rotate(20deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paper-icon {
+    transition: none;
+  }
 }
 </style>

@@ -50,7 +50,8 @@
                 v-for="item in checklistItems"
                 :key="item.key"
                 type="button"
-                class="group flex flex-col gap-[4px] items-start w-full text-left bg-white border border-[#e5e6ea] rounded-[8px] px-[12px] py-[8px] cursor-pointer hover:bg-[#fcfcfd] transition-colors duration-150"
+                class="group flex flex-col gap-[4px] items-start w-full text-left bg-white border rounded-[8px] px-[12px] py-[8px] cursor-pointer hover:bg-[#fcfcfd] hover:border-[#e5e6ea] transition-colors duration-150"
+                :class="item.error ? 'border-[#dc3545]' : 'border-[#e5e6ea]'"
                 @click="step = item.key"
               >
                 <div class="flex items-center justify-between gap-[8px] w-full">
@@ -297,13 +298,20 @@ Marcus Lee, Compliance Officer, HitPay`
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-function formatDueDisplay(dateStr) {
+function formatDueDisplay(dateStr, prefix) {
   const [d, m, y] = dateStr.split('/')
-  return `Due ${parseInt(d, 10)} ${MONTHS[parseInt(m, 10) - 1]} ${y}`
+  return `${prefix} ${parseInt(d, 10)} ${MONTHS[parseInt(m, 10) - 1]} ${y}`
 }
 
+// Closed statuses have nothing left due — show when the request was closed instead
+const CLOSED_STATUSES = ['rejected', 'completed', 'expired']
+
 const requestCode = computed(() => activeRequest.value?.code || 'RFI-1039')
-const dueDisplay = computed(() => formatDueDisplay(activeRequest.value?.due || '20/07/2026'))
+const dueDisplay = computed(() => {
+  const r = activeRequest.value
+  const prefix = r && CLOSED_STATUSES.includes(r.status) ? 'Closed' : 'Due'
+  return formatDueDisplay(r?.due || '20/07/2026', prefix)
+})
 
 const MOCK = {
   salesReport: [
