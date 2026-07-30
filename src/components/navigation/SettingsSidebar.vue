@@ -111,7 +111,8 @@ const sections = [
     header: 'Account',
     items: [
       { label: 'Business Details' },
-      { label: 'Account Verification', warning: true },
+      { label: 'Account Verification' },
+      { label: 'Request for Information', warning: true },
       { label: 'Bank Accounts' },
     ],
   },

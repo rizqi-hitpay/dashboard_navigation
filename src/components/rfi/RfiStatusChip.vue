@@ -18,17 +18,16 @@
 <script setup>
 import { computed } from 'vue'
 import { RFI_STATUS } from '../../composables/useRfi.js'
-import loadingIcon from '../../assets/icons/rfi-status-loading.svg'
+import alertIcon from '../../assets/icons/rfi-status-alert.svg'
 import docCheckIcon from '../../assets/icons/rfi-status-doc-check.svg'
 import xIcon from '../../assets/icons/rfi-status-x.svg'
 import checkIcon from '../../assets/icons/rfi-status-check.svg'
-import backwardIcon from '../../assets/icons/rfi-status-backward.svg'
 
 const props = defineProps({
   status: { type: String, required: true },
 })
 
-const icons = { loading: loadingIcon, 'doc-check': docCheckIcon, x: xIcon, check: checkIcon, backward: backwardIcon }
+const icons = { alert: alertIcon, 'doc-check': docCheckIcon, x: xIcon, check: checkIcon }
 
 const meta = computed(() => RFI_STATUS[props.status])
 const icon = computed(() => icons[meta.value.icon])

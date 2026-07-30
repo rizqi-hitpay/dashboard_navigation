@@ -8,7 +8,7 @@ export const RFI_STATUS = {
     label: 'Action required',
     bg: '#fff9ec',
     color: '#bd8400',
-    icon: 'loading',
+    icon: 'alert',
   },
   under_review: {
     label: 'Under review',
@@ -17,10 +17,10 @@ export const RFI_STATUS = {
     icon: 'doc-check',
   },
   follow_up: {
-    label: 'Follow-up requested',
-    bg: '#edfbfd',
-    color: '#0495a9',
-    icon: 'backward',
+    label: 'Action required',
+    bg: '#fff9ec',
+    color: '#bd8400',
+    icon: 'alert',
   },
   rejected: {
     label: 'Rejected',

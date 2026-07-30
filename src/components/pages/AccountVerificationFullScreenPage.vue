@@ -471,7 +471,7 @@ function onLastStepNext() {
 }
 
 function onClose() {
-  router.push(activeRequest.value ? '/settings/account-verification' : '/')
+  router.push(activeRequest.value ? '/settings/request-for-information' : '/')
 }
 </script>
 
