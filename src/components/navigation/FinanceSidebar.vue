@@ -47,7 +47,7 @@
           :icon="item.icon"
           :label="item.label"
           :url="item.url"
-          :active="activeItem === item.label"
+          :active="activeItem === (item.id || item.label)"
           :expandable="item.expandable"
           :submenu-items="item.submenuItems || []"
           @click="handleItemClick(item)"
@@ -67,40 +67,33 @@ import { sidebarExpanded, sidebarPinned, sidebarCollapsed } from '../../composab
 import { activeItems } from '../../composables/useSidebarActiveItem.js'
 
 import plusIcon from '../../assets/icons/icon-plus.svg'
-import gridIcon from '../../assets/icons/icon-grid.svg'
-import circleArrowIcon from '../../assets/icons/icon-circle-arrow.svg'
 import dollarPaperIcon from '../../assets/icons/icon-dollar-paper.svg'
-import sendMoneyIcon from '../../assets/icons/icon-send-money.svg'
-import walletIcon from '../../assets/icons/icon-wallet.svg'
-import cashIcon from '../../assets/icons/icon-cash.svg'
-import safeAlertIcon from '../../assets/icons/icon-safe-alert.svg'
-import safeIcon from '../../assets/icons/icon-safe.svg'
-import taxIcon from '../../assets/icons/icon-tax.svg'
-import doubleArrowIcon from '../../assets/icons/icon-double-arrow.svg'
 import paperRollIcon from '../../assets/icons/icon-paper-roll.svg'
-import document2Icon from '../../assets/icons/icon-document-2.svg'
-import refreshIcon from '../../assets/icons/icon-refresh.svg'
+import groupIcon from '../../assets/icons/icon-group.svg'
 import settingIcon from '../../assets/icons/icon-setting.svg'
-import sparkleIcon from '../../assets/icons/icon-sparkle.svg'
+import sendMoneyIcon from '../../assets/icons/icon-send-money.svg'
+import usersIcon from '../../assets/icons/icon-users.svg'
+import documentIcon from '../../assets/icons/icon-document.svg'
+import bankCardIcon from '../../assets/icons/icon-bank-card.svg'
+import transactionIcon from '../../assets/icons/icon-transaction.svg'
+import wallet3Icon from '../../assets/icons/icon-wallet-3.svg'
 
 const activeItem = activeItems.finance
 const plusOpen = ref(false)
 const plusBtnRef = useTemplateRef('plusBtnRef')
 
 function handleItemClick(item) {
+  // The Others → Settings row drills into the settings sidebar instead of routing
+  if (item.drilldown) {
+    if (sidebarCollapsed.value) sidebarCollapsed.value = false
+    settingsOpen.value = true
+    return
+  }
   // Navigation is handled by SidebarMenuItem (via :url / auto-slug); just track active state.
-  activeItem.value = item.label
+  activeItem.value = item.id || item.label
 }
 
 watch(plusOpen, (open) => { sidebarPinned.value = open })
-
-watch(activeItem, (val) => {
-  if (val === 'Settings') {
-    if (sidebarCollapsed.value) sidebarCollapsed.value = false
-    settingsOpen.value = true
-    activeItem.value = null
-  }
-})
 
 const plusItems = [
   { label: 'Bill',       shortcut: ['c', 'b'] },
@@ -111,48 +104,41 @@ const plusItems = [
 const sections = [
   {
     items: [
-      { icon: gridIcon, label: 'Overview' },
-      { icon: circleArrowIcon, label: 'Cash flow' },
+      { icon: dollarPaperIcon, label: 'Fee invoice' },
     ],
   },
   {
-    header: 'Tools',
+    header: 'Bill Pay',
     headerColor: '#8093b8',
     items: [
-      {
-        icon: dollarPaperIcon,
-        label: 'Bill Pay',
-        url: '/bills',
-        submenuItems: [
-          { label: 'Bill', url: '/bills' },
-          { label: 'Vendors', url: '/vendors' },
-          { label: 'Settings', url: '/settings' },
-        ],
-      },
-      { icon: sendMoneyIcon, label: 'Send Money' },
-      { icon: walletIcon, label: 'Employee Spend' },
-      { icon: cashIcon, label: 'Payroll' },
-      { icon: safeAlertIcon, label: 'Chargeback & Disputes' },
-      { icon: safeIcon, label: 'Approval Rules' },
+      { icon: paperRollIcon, label: 'Bills', url: '/bills' },
+      { icon: groupIcon, label: 'Vendors', url: '/vendors' },
+      { icon: settingIcon, label: 'Settings', id: 'bill-pay-settings', url: '/settings' },
     ],
   },
   {
-    header: 'Accounting',
+    header: 'Send Money',
     headerColor: '#8093b8',
     items: [
-      { icon: taxIcon, label: 'Fee Invoice' },
-      { icon: doubleArrowIcon, label: 'Reconciliation' },
-      { icon: paperRollIcon, label: 'Statements' },
-      { icon: document2Icon, label: 'Tax Reports' },
-      { icon: refreshIcon, label: 'Accounting Sync' },
+      { icon: sendMoneyIcon, label: 'Summary' },
+      { icon: usersIcon, label: 'Beneficiaries' },
+      { icon: documentIcon, label: 'Transfer History' },
+    ],
+  },
+  {
+    header: 'Cards',
+    headerColor: '#8093b8',
+    items: [
+      { icon: bankCardIcon, label: 'Cards' },
+      { icon: transactionIcon, label: 'Transactions', url: '/cards/transactions' },
+      { icon: wallet3Icon, label: 'Balance', url: '/cards/balance' },
     ],
   },
   {
     header: 'Others',
-    headerColor: '#a6b3cd',
+    headerColor: '#8093b8',
     items: [
-      { icon: sparkleIcon, label: 'Motion Guide', url: '/motion' },
-      { icon: settingIcon, label: 'Settings', expandable: true },
+      { icon: settingIcon, label: 'Settings', expandable: true, drilldown: true },
     ],
   },
 ]

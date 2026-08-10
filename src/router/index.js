@@ -5,6 +5,10 @@ import AddBillPage from '../components/pages/AddBillPage.vue'
 import BillDetailsPage from '../components/pages/BillDetailsPage.vue'
 import BillViewPage from '../components/pages/BillViewPage.vue'
 import VendorsPage from '../components/pages/VendorsPage.vue'
+import CardsPage from '../components/pages/CardsPage.vue'
+import TransactionsPage from '../components/pages/TransactionsPage.vue'
+import BalancePage from '../components/pages/BalancePage.vue'
+import CardDetailsPage from '../components/pages/CardDetailsPage.vue'
 import VendorDetailsPage from '../components/pages/VendorDetailsPage.vue'
 import BillPaySettingsPage from '../components/pages/BillPaySettingsPage.vue'
 import RequestForInformationPage from '../components/pages/RequestForInformationPage.vue'
@@ -22,6 +26,10 @@ const routes = [
   { path: '/bills/view', name: 'bill-view', component: BillViewPage },
   { path: '/vendors', name: 'vendors', component: VendorsPage },
   { path: '/vendors/details', name: 'vendor-details', component: VendorDetailsPage },
+  { path: '/cards', name: 'cards', component: CardsPage },
+  { path: '/cards/transactions', name: 'card-transactions', component: TransactionsPage },
+  { path: '/cards/balance', name: 'card-balance', component: BalancePage },
+  { path: '/cards/details', name: 'card-details', component: CardDetailsPage },
   { path: '/settings', name: 'settings', component: BillPaySettingsPage },
   { path: '/settings/account-verification', name: 'account-verification', component: AccountVerificationWithChatPage, alias: '/settings/account-verification-with-chat' },
   { path: '/settings/request-for-information', name: 'request-for-information', component: RequestForInformationPage },

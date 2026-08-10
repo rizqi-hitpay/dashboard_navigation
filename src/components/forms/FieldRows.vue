@@ -15,6 +15,7 @@
       <span class="flex items-center" style="height: 20px; gap: 2px;">
         <span class="text-[12px] font-medium text-[#61667c]" style="line-height: 1.5;">{{ field.label }}</span>
         <span v-if="field.required" class="text-[14px] text-[#dc3545]" style="line-height: 20px; letter-spacing: 0.035px;">*</span>
+        <img v-if="field.labelInfo" :src="questionIcon" width="16" height="16" alt="" class="shrink-0" style="margin-left: 6px;" />
       </span>
 
       <!-- Select -->
@@ -47,14 +48,26 @@
         />
       </div>
 
-      <!-- Text input -->
+      <!-- Textarea (multiline) -->
+      <div v-else-if="field.type === 'textarea'" class="aba-control aba-control--area">
+        <textarea
+          v-model="values[field.label]"
+          :placeholder="field.placeholder"
+          class="aba-input aba-textarea"
+          rows="3"
+        />
+      </div>
+
+      <!-- Text input (optional dial-style prefix, e.g. "SGD"; optional calendar trailing icon) -->
       <div v-else class="aba-control">
+        <span v-if="field.prefix" class="aba-prefix">{{ field.prefix }}</span>
         <input
           v-model="values[field.label]"
           type="text"
           :placeholder="field.placeholder"
           class="aba-input"
         />
+        <img v-if="field.type === 'date'" :src="calendarIcon" width="16" height="16" alt="" class="shrink-0" style="margin-right: 8px;" />
       </div>
 
       <!-- Helper -->
@@ -64,6 +77,9 @@
 </template>
 
 <script setup>
+import questionIcon from '../../assets/icons/icon-question-circle.svg'
+import calendarIcon from '../../assets/icons/icon-calendar.svg'
+
 defineProps({
   // Array of rows, each an array of 1–2 field configs
   rows: { type: Array, required: true },
@@ -137,6 +153,34 @@ defineProps({
 }
 .aba-input::placeholder {
   color: #9295a5;
+}
+
+/* Currency/unit prefix segment (Figma: Input / Type=Trailing dropdown, e.g. "SGD") */
+.aba-prefix {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  min-width: 24px;
+  padding: 0 8px;
+  border-right: 1px solid #e5e6ea;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #61667c;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Multiline variant — control grows with content, min 100px (Figma: Billing address) */
+.aba-control--area {
+  height: auto;
+  min-height: 100px;
+  align-items: stretch;
+}
+.aba-textarea {
+  height: auto;
+  padding: 8px;
+  resize: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
