@@ -5,14 +5,24 @@
       <!-- Page title + actions -->
       <div class="flex h-[60px] items-center justify-between gap-[32px] px-[24px] w-full shrink-0">
         <p class="font-medium text-[18px] text-[#03102f] leading-[1.35] whitespace-nowrap">Card transactions</p>
-        <button
-          type="button"
-          class="flex items-center justify-center gap-[8px] h-[36px] px-[12px] rounded-[8px] border border-[#f2f2f4] transition-[filter] duration-150 hover:brightness-95 active:translate-y-[1px]"
-          style="background: linear-gradient(to bottom, #ffffff, #f2f2f2); box-shadow: 0px 1.5px 0px 0px #e5e5e5;"
-        >
-          <img :src="downloadIcon" width="16" height="16" alt="" class="shrink-0" />
-          <span class="text-[14px] font-medium text-[#61667c] leading-[1.5] whitespace-nowrap" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.08);">Export</span>
-        </button>
+        <div class="flex items-center gap-[8px] shrink-0">
+          <button
+            type="button"
+            class="flex items-center justify-center gap-[8px] h-[36px] px-[12px] rounded-[8px] border border-[#f2f2f4] transition-[filter] duration-150 hover:brightness-95 active:translate-y-[1px]"
+            style="background: linear-gradient(to bottom, #ffffff, #f2f2f2); box-shadow: 0px 1.5px 0px 0px #e5e5e5;"
+          >
+            <img :src="downloadIcon" width="16" height="16" alt="" class="shrink-0" />
+            <span class="text-[14px] font-medium text-[#61667c] leading-[1.5] whitespace-nowrap" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.08);">Export</span>
+          </button>
+          <button
+            type="button"
+            class="flex items-center justify-center h-[36px] px-[12px] rounded-[8px] border border-[#2465de] transition-[filter] duration-150 hover:brightness-105 active:translate-y-[1px]"
+            style="background: linear-gradient(to bottom, #4179e2, #1f5bcc); box-shadow: 0px 1.5px 0px 0px #1d5fd9;"
+            @click="matchOpen = true"
+          >
+            <span class="text-[14px] font-medium text-white leading-[1.5] whitespace-nowrap" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.12);">Match receipts</span>
+          </button>
+        </div>
       </div>
 
       <!-- Content -->
@@ -407,6 +417,25 @@
       </template>
     </div>
 
+    <!-- Match receipts flow (Figma: 165:50653) -->
+    <MatchReceiptsModal :open="matchOpen" @close="matchOpen = false" @matched="onReceiptsMatched" />
+
+    <!-- Success snackbar (same recipe as CardsPage) -->
+    <Teleport to="body">
+      <div class="fixed top-[24px] inset-x-0 z-[80] flex justify-center pointer-events-none">
+        <Transition name="snackbar">
+          <div
+            v-if="toast"
+            class="flex items-center gap-[8px] p-[12px] rounded-[8px] bg-[#e6f9f0] border border-[#b3eed2] pointer-events-auto"
+            style="filter: drop-shadow(0px 8px 6px rgba(42,50,82,0.04));"
+          >
+            <img :src="snackbarCheckIcon" width="24" height="24" alt="" class="shrink-0" />
+            <span class="text-[14px] font-normal text-[#03102f] leading-[1.5] whitespace-nowrap">{{ toast }}</span>
+          </div>
+        </Transition>
+      </div>
+    </Teleport>
+
   </div>
 </template>
 
@@ -415,6 +444,8 @@ import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { cards } from '../../composables/useCards.js'
 import VerificationDropzone from '../verification/VerificationDropzone.vue'
+import MatchReceiptsModal from '../modals/MatchReceiptsModal.vue'
+import snackbarCheckIcon from '../../assets/icons/icon-snackbar-check.svg'
 import filterIcon from '../../assets/icons/icon-filter.svg'
 import downloadIcon from '../../assets/icons/icon-download.svg'
 import sparkleAiIcon from '../../assets/icons/icon-sparkle-ai.svg'
@@ -573,7 +604,7 @@ function openTxn(txn) {
   drawerDraft.category = txn.category
   drawerDraft.glCode = txn.glCode
   drawerDraft.notes = txn.notes || ''
-  attachFiles.value = []
+  attachFiles.value = txn.attachments ? [...txn.attachments] : []
 }
 
 function saveTxn() {
@@ -581,8 +612,37 @@ function saveTxn() {
     category: drawerDraft.category,
     glCode: drawerDraft.glCode,
     notes: drawerDraft.notes,
+    attachments: [...attachFiles.value],
   })
   selectedTxn.value = null
+}
+
+// ── Match receipts (Figma: 165:50653) ──
+// Each uploaded receipt auto-matches to a transaction; the drawer then shows
+// it under Attachments for that transaction
+const matchOpen = ref(false)
+
+function onReceiptsMatched(receipts) {
+  matchOpen.value = false
+  receipts.forEach((file, i) => {
+    const txn = transactions[i]
+    if (!txn) return
+    const existing = txn.attachments || []
+    // ai flag renders the sparkle badge on the attachment row (Figma: 165:50655)
+    if (!existing.some((f) => f.name === file.name)) txn.attachments = [...existing, { ...file, ai: true }]
+  })
+  const n = Math.min(receipts.length, transactions.length)
+  showToast(`${n} transaction${n === 1 ? '' : 's'} updated successfully`)
+}
+
+// Snackbar — same one-shot toast recipe as CardsPage
+const toast = ref('')
+let toastTimer = null
+
+function showToast(message) {
+  toast.value = message
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => { toast.value = '' }, 3200)
 }
 
 // "- USD 32.77" → { currency: 'USD', value: 32.77 }
@@ -728,10 +788,18 @@ function openCard() {
   transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Snackbar motion — same as CardsPage */
+.snackbar-enter-active { transition: opacity 200ms ease-out, transform 200ms ease-out; }
+.snackbar-leave-active { transition: opacity 150ms ease-in, transform 150ms ease-in; }
+.snackbar-enter-from,
+.snackbar-leave-to { opacity: 0; transform: translateY(-16px); }
+
 @media (prefers-reduced-motion: reduce) {
   .txn-drawer,
   .filter-pop-enter-active, .filter-pop-leave-active,
+  .snackbar-enter-active, .snackbar-leave-active,
   .txd-control, .txd-textarea { transition: none; }
   .filter-pop-enter-from { transform: none; }
+  .snackbar-enter-from, .snackbar-leave-to { transform: none; }
 }
 </style>

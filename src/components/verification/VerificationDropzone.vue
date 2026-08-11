@@ -49,6 +49,17 @@
             <p v-else class="text-[10px] font-medium text-[#61667c] uppercase w-full" style="letter-spacing: 0.3px; line-height: 18px;">{{ file.size || '—' }}</p>
           </div>
 
+          <!-- AI badge — file arrived via the Match receipts auto-match flow -->
+          <img
+            v-if="file.ai && stateOf(file) === 'done'"
+            :src="sparkleIcon"
+            width="14"
+            height="14"
+            alt=""
+            title="Matched automatically via Match receipts"
+            class="shrink-0"
+          />
+
           <button
             class="flex items-center justify-center shrink-0 cursor-pointer hover:opacity-70 transition-opacity"
             style="width: 14px; height: 14px;"
@@ -72,6 +83,7 @@ import VerificationFileTypeIcon from './VerificationFileTypeIcon.vue'
 import paperIcon from '../../assets/icons/rfi-paper-generic.svg'
 import binIcon from '../../assets/icons/rfi-bin.svg'
 import removeXIcon from '../../assets/icons/rfi-file-remove-x.svg'
+import sparkleIcon from '../../assets/icons/icon-sparkle-2.svg'
 
 const props = defineProps({
   label: { type: String, default: '' },
