@@ -12,14 +12,6 @@
       }"
     >
       <span v-if="sidebarExpanded" class="text-[14px] font-medium text-[#03102f]">HitPay Labs</span>
-      <button
-        class="flex items-center justify-center w-6 h-6 rounded border border-[#e5e6ea] transition-colors duration-150 hover:bg-[#f0f1f5]"
-      >
-        <img
-          :src="plusIcon" alt="add" class="w-4 h-4"
-          style="filter: invert(27%) sepia(90%) saturate(1285%) hue-rotate(200deg) brightness(95%) contrast(97%);"
-        />
-      </button>
     </div>
 
     <!-- Scrollable menu -->
@@ -77,7 +69,6 @@ import { sidebarExpanded } from '../../composables/useSidebarCollapsed.js'
 import { activeItems } from '../../composables/useSidebarActiveItem.js'
 import { labsFewApps } from '../../composables/useLabsPreview.js'
 
-import plusIcon from '../../assets/icons/icon-plus.svg'
 import gridIcon from '../../assets/icons/icon-grid-labs.svg'
 import check2Icon from '../../assets/icons/icon-check-2.svg'
 import peopleIcon from '../../assets/icons/icon-people-labs.svg'

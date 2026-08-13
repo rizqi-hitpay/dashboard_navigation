@@ -15,7 +15,10 @@
           :key="i"
           class="flex items-center gap-[16px] w-full rounded-[8px] cursor-pointer transition-colors duration-150 hover:bg-[#fcfcfd]"
         >
-          <img :src="appIconImg" width="64" height="64" alt="" class="shrink-0 rounded-[16px]" />
+          <!-- Same 133.33% crop as the directory card, at 64px (Figma: 1:16899) -->
+          <div class="relative shrink-0 size-[64px] rounded-[16px] overflow-hidden">
+            <img :src="appIconImg" alt="" class="absolute max-w-none" style="width: 133.33%; height: 129.73%; left: -16.67%; top: -13.51%;" />
+          </div>
           <!-- Each line sits in a 20px box like the design (content block = 60px in a 64px row) -->
           <div class="flex flex-1 min-w-0 flex-col">
             <p class="flex items-center h-[20px] text-[13px] font-medium text-[#03102f] leading-[1.5] w-full whitespace-nowrap overflow-hidden text-ellipsis">{{ app.name }}</p>

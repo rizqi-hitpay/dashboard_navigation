@@ -20,9 +20,11 @@
             @click="openApp(app)"
           >
             <img :src="app.image" alt="" class="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.02]" />
+            <!-- rounded-b + own overflow clip: Safari's backdrop-filter ignores the
+                 ancestor's rounded overflow-hidden, poking square corners out -->
             <div
-              class="absolute inset-x-0 bottom-0 flex items-center gap-[8px] h-[64px] px-[16px] py-[8px]"
-              style="background: rgba(255,255,255,0.88); backdrop-filter: blur(4px);"
+              class="absolute inset-x-0 bottom-0 flex items-center gap-[8px] h-[64px] px-[16px] py-[8px] rounded-b-[7px] overflow-hidden"
+              style="background: rgba(255,255,255,0.88); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);"
             >
               <div class="flex flex-1 min-w-0 flex-col gap-[4px]">
                 <div class="flex items-center gap-[8px] w-full">
@@ -31,7 +33,9 @@
                 </div>
                 <p class="text-[12px] font-normal text-[#61667c] leading-[1.5] w-full whitespace-nowrap overflow-hidden text-ellipsis">{{ app.desc }}</p>
               </div>
-              <img :src="appIconImg" width="40" height="40" alt="" class="shrink-0 rounded-[10px]" />
+              <div class="relative shrink-0 size-[40px] rounded-[10px] overflow-hidden">
+                <img :src="appIconImg" alt="" class="absolute max-w-none" style="width: 133.33%; height: 129.73%; left: -16.67%; top: -13.51%;" />
+              </div>
             </div>
           </div>
         </div>
@@ -58,7 +62,11 @@
               :key="i"
               class="flex items-center gap-[8px] h-[40px] w-full rounded-[8px] cursor-pointer transition-colors duration-150 hover:bg-[#fcfcfd]"
             >
-              <img :src="appIconImg" width="40" height="40" alt="" class="shrink-0 rounded-[10px]" />
+              <!-- The icon asset carries transparent padding; the design crops it by
+                   scaling to 133.33% inside the box (Figma: 1:11881) -->
+              <div class="relative shrink-0 size-[40px] rounded-[10px] overflow-hidden">
+                <img :src="appIconImg" alt="" class="absolute max-w-none" style="width: 133.33%; height: 129.73%; left: -16.67%; top: -13.51%;" />
+              </div>
               <div class="flex flex-1 min-w-0 flex-col">
                 <p class="flex items-center h-[20px] text-[13px] font-medium text-[#03102f] leading-[1.5] w-full whitespace-nowrap overflow-hidden text-ellipsis">{{ app.name }}</p>
                 <p class="flex items-center h-[20px] text-[10px] font-medium uppercase text-[#61667c] tracking-[0.3px] w-full whitespace-nowrap overflow-hidden text-ellipsis" style="line-height: 18px;">By {{ app.author }}</p>
