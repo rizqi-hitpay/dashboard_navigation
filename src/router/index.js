@@ -15,6 +15,10 @@ import RequestForInformationPage from '../components/pages/RequestForInformation
 import AccountVerificationWithChatPage from '../components/pages/AccountVerificationWithChatPage.vue'
 import AccountVerificationFullScreenPage from '../components/pages/AccountVerificationFullScreenPage.vue'
 import SettingsEmptyStatePage from '../components/pages/SettingsEmptyStatePage.vue'
+import UsagePage from '../components/pages/UsagePage.vue'
+import LabsPage from '../components/pages/LabsPage.vue'
+import LabsCategoryPage from '../components/pages/LabsCategoryPage.vue'
+import LabsAppPage from '../components/pages/LabsAppPage.vue'
 import MotionGuidelinePage from '../components/pages/MotionGuidelinePage.vue'
 import PlaceholderPage from '../components/pages/PlaceholderPage.vue'
 
@@ -34,6 +38,10 @@ const routes = [
   { path: '/settings/account-verification', name: 'account-verification', component: AccountVerificationWithChatPage, alias: '/settings/account-verification-with-chat' },
   { path: '/settings/request-for-information', name: 'request-for-information', component: RequestForInformationPage },
   { path: '/settings/account-verification-full-screen', name: 'account-verification-full-screen', component: AccountVerificationFullScreenPage, meta: { fullPage: true } },
+  { path: '/settings/usage', name: 'settings-usage', component: UsagePage },
+  { path: '/labs', name: 'labs', component: LabsPage },
+  { path: '/labs/app/to-do-list', name: 'labs-app-todo', component: LabsAppPage },
+  { path: '/labs/:category', name: 'labs-category', component: LabsCategoryPage },
   // Settings menus without real content yet → per-menu empty state
   { path: '/settings/:slug', name: 'settings-empty', component: SettingsEmptyStatePage },
   { path: '/motion', name: 'motion', component: MotionGuidelinePage, meta: { fullPage: true } },

@@ -117,6 +117,13 @@ const sections = [
     ],
   },
   {
+    header: 'Billing',
+    items: [
+      { label: 'Usage' },
+      { label: 'Billing' },
+    ],
+  },
+  {
     header: 'Team',
     items: [
       { label: 'Staff' },
