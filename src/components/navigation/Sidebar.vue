@@ -48,7 +48,7 @@
           :label="item.label"
           :url="item.url"
           :active="activeItem === item.label"
-          :expandable="item.expandable"
+          :expandable="item.expandable && !(item.label === 'Labs' && labsFewApps)"
           :default-open="item.defaultOpen"
           :submenu-items="item.submenuItems || []"
           @click="activeItem = item.label"
@@ -61,11 +61,13 @@
 
 <script setup>
 import { ref, watch, useTemplateRef } from 'vue'
+import { useRouter } from 'vue-router'
 import SidebarMenuItem from './SidebarMenuItem.vue'
 import PlusMenu from './PlusMenu.vue'
 import { settingsOpen } from '../../composables/useSettingsPanel.js'
 import { sidebarExpanded, sidebarPinned, sidebarCollapsed } from '../../composables/useSidebarCollapsed.js'
 import { activeItems } from '../../composables/useSidebarActiveItem.js'
+import { labsFewApps } from '../../composables/useLabsPreview.js'
 
 import plusIcon from '../../assets/icons/icon-plus.svg'
 import gridIcon from '../../assets/icons/icon-grid.svg'
@@ -82,7 +84,9 @@ import repeatIcon from '../../assets/icons/icon-repeat.svg'
 import qrCodeIcon from '../../assets/icons/icon-qr-code.svg'
 import codeIcon from '../../assets/icons/icon-code.svg'
 import puzzleIcon from '../../assets/icons/icon-puzzle.svg'
+import labIcon from '../../assets/icons/icon-lab.svg'
 import settingIcon from '../../assets/icons/icon-setting.svg'
+const router = useRouter()
 const activeItem = activeItems.payments
 const plusOpen = ref(false)
 const plusBtnRef = useTemplateRef('plusBtnRef')
@@ -94,6 +98,13 @@ watch(activeItem, (val) => {
     if (sidebarCollapsed.value) sidebarCollapsed.value = false
     settingsOpen.value = true
     activeItem.value = null
+  }
+  // Labs drills down like Settings — the sidebar swaps by route. In the
+  // 2-apps preview the Payments sidebar stays, so Labs keeps its highlight
+  if (val === 'Labs') {
+    if (sidebarCollapsed.value) sidebarCollapsed.value = false
+    router.push('/labs')
+    if (!labsFewApps.value) activeItem.value = null
   }
 })
 
@@ -149,6 +160,7 @@ const sections = [
     items: [
       { icon: codeIcon, label: 'Developers' },
       { icon: puzzleIcon, label: 'Integrations' },
+      { icon: labIcon, label: 'Labs', expandable: true },
       { icon: bankCardIcon, label: 'Payment Methods' },
       { icon: settingIcon, label: 'Settings', expandable: true },
     ],

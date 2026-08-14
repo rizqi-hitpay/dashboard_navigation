@@ -12,9 +12,8 @@
         <!-- Mobile-only top bar: hamburger opens the nav drawer below -->
         <MobileTopBar class="flex md:hidden" @menu="mobileNavOpen = true" />
 
-        <!-- Finance and Labs require the shared passcode -->
+        <!-- Finance requires the shared passcode -->
         <FinanceGate v-if="financeLocked" />
-        <LabsGate v-else-if="labsLocked" />
 
         <template v-else>
           <!-- Persistent sidebar shell: desktop only, mobile uses the drawer -->
@@ -98,13 +97,11 @@ import { settingsOpen } from '../../composables/useSettingsPanel.js'
 import AskAgentPanel from '../content/AskAgentPanel.vue'
 import FinanceGate from './FinanceGate.vue'
 import { financeUnlocked } from '../../composables/useFinanceAuth.js'
-import LabsGate from './LabsGate.vue'
-import { labsUnlocked } from '../../composables/useLabsAuth.js'
 import LabsSidebar from '../navigation/LabsSidebar.vue'
+import { labsFewApps } from '../../composables/useLabsPreview.js'
 
-// Finance (product 2) and Labs (product 3) are gated behind shared passcodes
+// Finance (product 2) is gated behind the shared passcode
 const financeLocked = computed(() => activeProduct.value === 2 && !financeUnlocked.value)
-const labsLocked = computed(() => activeProduct.value === 3 && !labsUnlocked.value)
 
 // Mobile nav drawer (hamburger in MobileTopBar) — auto-closes on navigation
 const mobileNavOpen = ref(false)
@@ -122,16 +119,24 @@ watch(activeProduct, () => {
   settingsOpen.value = false
 })
 
+// Labs lives under Payments and swaps the sidebar by route (like a drill-down).
+// With only 2 apps in the catalog there are no categories to browse, so the
+// Payments sidebar stays put (Figma: 1:17127)
+const onLabsRoute = computed(
+  () => route.path.startsWith('/labs') && activeProduct.value === 0 && !labsFewApps.value,
+)
+
 const sidebarComponent = computed(() => {
   if (settingsOpen.value) return SettingsSidebar
   if (activeProduct.value === 1) return CommerceSidebar
   if (activeProduct.value === 2) return FinanceSidebar
-  if (activeProduct.value === 3) return LabsSidebar
+  if (onLabsRoute.value) return LabsSidebar
   return Sidebar
 })
 
 const sidebarKey = computed(() => {
   if (settingsOpen.value) return 'settings'
+  if (onLabsRoute.value) return 'labs'
   return activeProduct.value
 })
 </script>

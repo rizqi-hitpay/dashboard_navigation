@@ -46,8 +46,6 @@ import bag2LineIcon from '../../assets/icons/icon-bag-2.svg'
 import bag2BulkIcon from '../../assets/icons/icon-bag-2-bulk.svg'
 import note2LineIcon from '../../assets/icons/icon-note-2.svg'
 import note2BulkIcon from '../../assets/icons/icon-note-2-bulk.svg'
-import cubeIcon from '../../assets/icons/icon-3dcube.svg'
-import cubeBulkIcon from '../../assets/icons/icon-3dcube-bulk.svg'
 import aiChatIcon from '../../assets/icons/icon-ai-chat.svg'
 import aiChatBulkIcon from '../../assets/icons/icon-ai-chat-bulk.svg'
 import giftIcon from '../../assets/icons/icon-gift.svg'
@@ -69,7 +67,6 @@ const productItems = [
   { icon: moneyLineIcon, iconActive: moneyBulkIcon, label: 'Payments' },
   { icon: bag2LineIcon, iconActive: bag2BulkIcon, label: 'Commerce' },
   { icon: note2LineIcon, iconActive: note2BulkIcon, label: 'Finance' },
-  { icon: cubeIcon, iconActive: cubeBulkIcon, label: 'Labs' },
 ]
 
 const bottomItems = [

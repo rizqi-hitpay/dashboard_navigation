@@ -1,16 +1,25 @@
 <template>
   <div class="flex flex-col flex-1 min-h-0 overflow-hidden">
     <!-- HitPay Labs sidebar (Figma: HitPay-Labs 1:11649) -->
-    <!-- Title bar -->
+    <!-- Title bar — back returns to the Payments sidebar -->
     <div
-      class="flex items-center shrink-0"
-      :class="sidebarExpanded ? 'justify-between' : 'justify-center'"
+      class="flex items-center shrink-0 gap-2"
+      :class="sidebarExpanded ? 'justify-start' : 'justify-center'"
       :style="{
         minHeight: '48px',
         borderBottom: '1px solid #f0f1f5',
         padding: sidebarExpanded ? '8px 16px' : '0',
       }"
     >
+      <button
+        class="shrink-0 hover:opacity-70 transition-opacity"
+        style="width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;"
+        @click="goBack"
+      >
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M11 13.5L6.5 9l4.5-4.5" stroke="#4c689c" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
       <span v-if="sidebarExpanded" class="text-[14px] font-medium text-[#03102f]">HitPay Labs</span>
     </div>
 
@@ -90,16 +99,10 @@ const visibleMenuItems = computed(() =>
   labsFewApps.value ? menuItems.filter((m) => m.label === 'All apps') : menuItems,
 )
 
-// Arriving at Labs (rail click or unlock) lands on the app directory;
-// deep links to /labs/* keep their page and highlight the matching item
+// Deep links to /labs/* highlight the matching item
 const route = useRoute()
 const router = useRouter()
 onMounted(() => {
-  if (!route.path.startsWith('/labs')) {
-    activeItem.value = 'All apps'
-    router.push('/labs')
-    return
-  }
   if (route.path === '/labs/app/to-do-list') {
     activeItem.value = 'To-do list'
     return
@@ -107,5 +110,11 @@ onMounted(() => {
   const match = menuItems.find((m) => m.url === route.path)
   if (match) activeItem.value = match.label
 })
+
+// Leaving Labs returns to the Payments overview
+function goBack() {
+  activeItems.payments.value = 'Overview'
+  router.push('/')
+}
 
 </script>
