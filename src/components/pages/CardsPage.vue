@@ -16,8 +16,105 @@
         </button>
       </div>
 
+      <Transition name="cards-fade" mode="out-in">
+
+      <!-- Empty state (Figma: 266:18620) -->
+      <div v-if="isEmpty" key="empty" class="bg-white flex flex-1 flex-col gap-[40px] items-center justify-center min-h-[600px] px-[24px] py-[12px] w-full">
+
+        <!-- Paper card — hovering fans the card stack out (Figma: 75:15391) -->
+        <div
+          class="empty-hero bg-white border border-[#e5e6ea] flex flex-col items-center justify-end p-[32px] rounded-[12px] shrink-0 w-full max-w-[900px]"
+          style="filter: drop-shadow(0px 16px 16px rgba(0,0,0,0.05));"
+        >
+          <div class="flex gap-[24px] items-center justify-center w-full shrink-0">
+
+            <!-- Left: copy + CTA -->
+            <div class="flex flex-1 flex-col gap-[24px] items-start justify-center min-w-px">
+              <div class="flex flex-col gap-[8px] items-start w-full shrink-0">
+                <p class="font-medium text-[18px] text-[#03102f] leading-[1.35] w-full">Spend management</p>
+                <p class="font-normal text-[16px] text-[#61667c] leading-[1.4] w-full">You can pay your vendors and suppliers directly from HitPay using the HitPay balance</p>
+              </div>
+              <div class="flex items-start justify-center pt-[12px] shrink-0">
+                <button
+                  type="button"
+                  class="flex items-center justify-center h-[36px] px-[12px] rounded-[8px] border border-[#2465de] transition-[filter] duration-150 hover:brightness-105 active:translate-y-[1px]"
+                  style="background: linear-gradient(to bottom, #4179e2, #1f5bcc); box-shadow: 0px 1.5px 0px 0px #1d5fd9;"
+                  @click="createCardOpen = true"
+                >
+                  <span class="text-[14px] font-medium text-white leading-[1.5] whitespace-nowrap" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.12);">Create your first card</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Right: floating card illustration (Figma: 266:18956) -->
+            <div class="relative hidden md:block w-[411px] h-[184px] shrink-0 overflow-hidden rounded-[8px]">
+              <!-- Blurred backdrop crossfades to the warm/mint variant on hover (Figma: 75:15400) -->
+              <img :src="emptyBlurImg" alt="" aria-hidden="true" class="empty-blur empty-blur--idle absolute pointer-events-none select-none max-w-none" style="width: 820px; height: 590px; left: -115px; top: -96px;" />
+              <img :src="emptyBlurHoverImg" alt="" aria-hidden="true" class="empty-blur empty-blur--hover absolute pointer-events-none select-none max-w-none" style="width: 820px; height: 590px; left: -115px; top: -96px;" />
+              <!-- Back cards — tucked behind the front card, fan out on hover (Figma: 75:15404) -->
+              <div
+                v-for="fan in ['empty-fan--a', 'empty-fan--b']"
+                :key="fan"
+                class="empty-fan absolute left-1/2 top-[48px] w-[144px] h-[88px] bg-white rounded-[10px] border border-white"
+                :class="fan"
+                style="box-shadow: 0px 1px 2px 0px rgba(0,0,0,0.05), 0px 5px 24px 0px rgba(38,42,50,0.06);"
+              >
+                <img :src="emptyLogoImg" alt="" class="absolute left-[7px] top-[7px]" width="23" height="15" />
+                <img :src="emptyChipImg" alt="" class="absolute right-[7px] top-[7px]" width="19" height="14" />
+                <div class="absolute left-[7px] top-[53px] w-[86px] h-[5px] rounded-full bg-[#61667c]" />
+                <div class="absolute left-[7px] top-[66px] w-[23px] h-[5px] rounded-full bg-[#e5e6ea]" />
+                <div class="absolute left-[33px] top-[66px] w-[23px] h-[5px] rounded-full bg-[#e5e6ea]" />
+                <div class="absolute left-[59px] top-[66px] w-[23px] h-[5px] rounded-full bg-[#e5e6ea]" />
+              </div>
+
+              <!-- Card with a gradient border that circles around it (Figma: 266:18994) -->
+              <div
+                class="card-ring absolute left-1/2 -translate-x-1/2 top-[48px] w-[147px] h-[91px] rounded-[11.5px] overflow-hidden"
+                style="box-shadow: 0px 1px 2px 0px rgba(0,0,0,0.05), 0px 5px 24px 0px rgba(38,42,50,0.06);"
+              >
+                <div class="card-ring__spin absolute left-1/2 top-1/2" aria-hidden="true" />
+                <div class="absolute inset-[1.5px] bg-white rounded-[10px]">
+                  <img :src="emptyLogoImg" alt="" class="absolute left-[7px] top-[7px]" width="23" height="15" />
+                  <img :src="emptyChipImg" alt="" class="absolute right-[7px] top-[7px]" width="19" height="14" />
+                  <div class="absolute left-[7px] top-[53px] w-[86px] h-[5px] rounded-full bg-[#61667c]" />
+                  <div class="absolute left-[7px] top-[66px] w-[23px] h-[5px] rounded-full bg-[#e5e6ea]" />
+                  <div class="absolute left-[33px] top-[66px] w-[23px] h-[5px] rounded-full bg-[#e5e6ea]" />
+                  <div class="absolute left-[59px] top-[66px] w-[23px] h-[5px] rounded-full bg-[#e5e6ea]" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- How it works — same recipe as BillsPage -->
+        <div class="flex flex-col gap-[16px] items-center pb-[24px] shrink-0 w-full max-w-[1084px]">
+          <div class="flex items-center justify-center px-[32px] w-full shrink-0">
+            <p class="flex-1 font-medium text-[16px] text-[#03102f] text-center leading-[1.4] min-w-px">How it works</p>
+          </div>
+          <div class="flex h-[158px] items-start w-full max-w-[960px] px-[2px] rounded-[8px] border border-[#e5e6ea] shrink-0">
+            <div
+              v-for="(step, i) in steps"
+              :key="step.title"
+              class="flex flex-1 h-full items-start min-w-px overflow-hidden pt-[32px] pb-[8px] px-[32px]"
+              :class="i < steps.length - 1 ? 'border-r border-[#e5e6ea]' : ''"
+            >
+              <div class="flex flex-1 flex-col gap-[12px] items-start min-w-px">
+                <div class="bg-[#f5f6f9] flex flex-col items-center justify-center p-[8px] rounded-[8px] shrink-0 size-[38px]">
+                  <p class="font-medium text-[16px] text-[#03102f] text-center leading-[1.4] w-full">{{ i + 1 }}</p>
+                </div>
+                <div class="flex flex-col gap-[2px] items-start w-full shrink-0">
+                  <p class="font-medium text-[14px] text-[#000501] leading-[1.5]">{{ step.title }}</p>
+                  <p class="font-normal text-[12px] text-[#61667c] opacity-75 leading-[1.5] w-full">{{ step.desc }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
       <!-- Content -->
-      <div class="flex flex-col gap-[24px] w-full px-[24px] pt-[12px] pb-[12px]">
+      <div v-else key="filled" class="flex flex-col gap-[24px] w-full px-[24px] pt-[12px] pb-[12px]">
 
         <!-- Table card -->
         <div class="w-full rounded-[8px] border border-[#e5e6ea] overflow-hidden bg-white">
@@ -128,6 +225,28 @@
         </div>
 
       </div>
+      </Transition>
+    </div>
+
+    <!-- Floating preview switcher: empty state ↔ cards list (same recipe as BillsPage) -->
+    <div
+      v-if="!createCardOpen"
+      class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-[4px] p-[4px] rounded-full bg-white border border-[#e5e6ea]"
+      style="box-shadow: 0px 8px 24px rgba(3,16,47,0.16);"
+    >
+      <span class="px-[8px] text-[11px] font-medium text-[#8093b8] select-none">Preview</span>
+      <button
+        type="button"
+        class="px-[12px] h-[28px] rounded-full text-[12px] font-medium transition-colors duration-150"
+        :class="isEmpty ? 'bg-[#2465de] text-white' : 'text-[#61667c] hover:bg-[#f0f1f5]'"
+        @click="isEmpty = true"
+      >Empty state</button>
+      <button
+        type="button"
+        class="px-[12px] h-[28px] rounded-full text-[12px] font-medium transition-colors duration-150"
+        :class="!isEmpty ? 'bg-[#2465de] text-white' : 'text-[#61667c] hover:bg-[#f0f1f5]'"
+        @click="isEmpty = false"
+      >With cards</button>
     </div>
 
     <!-- Create card page — fills the main content area so the sidebar stays visible -->
@@ -264,6 +383,19 @@ import CreateCardPage from './CreateCardPage.vue'
 import mastercardLogo from '../../assets/icons/logo-mastercard.svg'
 import filterIcon from '../../assets/icons/icon-filter.svg'
 import snackbarCheckIcon from '../../assets/icons/icon-snackbar-check.svg'
+import emptyBlurImg from '../../assets/images/cards-empty-blur.svg'
+import emptyBlurHoverImg from '../../assets/images/cards-empty-blur-hover.svg'
+import emptyChipImg from '../../assets/images/cards-empty-chip.svg'
+import emptyLogoImg from '../../assets/images/cards-empty-logo.svg'
+
+// Preview switcher: true = empty/onboarding state, false = cards list (Figma: 266:18620)
+const isEmpty = ref(true)
+
+const steps = [
+  { title: 'Upload invoice', desc: 'Upload a file or enter detail manually' },
+  { title: 'Review and approve', desc: 'Route bill for approve if required' },
+  { title: 'Pay or schedule', desc: 'Pay instantly or set future date' },
+]
 
 // Toolbar segmented controls — canceled cards only show under their own tab,
 // which only appears once at least one card has been canceled
@@ -385,6 +517,7 @@ let toastTimer = null
 function onCardCreated({ nickname, holder, number }) {
   addCard({ nickname, holder, number })
   createCardOpen.value = false
+  isEmpty.value = false // a card now exists — show the list
   showToast(`${nickname} has been created successfully`)
 }
 
@@ -483,6 +616,69 @@ onUnmounted(() => clearTimeout(toastTimer))
 .full-page-leave-to   { opacity: 0; transform: translateY(12px); }
 
 /* Snackbar motion — same as the Approval Rules success snackbar */
+/* Gradient ring circling the empty-state card — a conic gradient (coral →
+   violet → blue, sampled from the design) on an oversized layer that rotates
+   behind the white card face, leaving only the 1.5px rim visible */
+.card-ring__spin {
+  width: 220px;
+  height: 220px;
+  margin: -110px 0 0 -110px;
+  background: conic-gradient(
+    from 0deg,
+    #ffffff 0deg,
+    #ffffff 30deg,
+    #f8837d 80deg,
+    #e2a2ce 115deg,
+    #8b93e6 145deg,
+    #5b74e8 175deg,
+    #ffffff 230deg,
+    #ffffff 360deg
+  );
+  animation: card-ring-spin 5s linear infinite;
+  will-change: transform;
+}
+@keyframes card-ring-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-ring__spin { animation: none; }
+}
+
+/* Blurred backdrop: grey-and-blue at rest, mint-and-amber on hover */
+.empty-blur {
+  transition: opacity 400ms ease;
+}
+.empty-blur--hover { opacity: 0; }
+.empty-hero:hover .empty-blur--idle { opacity: 0; }
+.empty-hero:hover .empty-blur--hover { opacity: 1; }
+
+/* Back cards start hidden exactly behind the front card, then fan out on
+   hover with the springy back-out curve (Figma: 75:15391 hover state) */
+.empty-fan {
+  transform: translateX(-50%);
+  transition: transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+}
+.empty-hero:hover .empty-fan--a {
+  transform: translateX(calc(-50% - 9px)) translateY(-15px) rotate(-13.91deg);
+}
+.empty-hero:hover .empty-fan--b {
+  transform: translateX(calc(-50% + 9px)) translateY(15px) rotate(13.95deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .empty-fan { transition: none; }
+}
+
+/* Empty ↔ cards-list state swap (preview switcher, same as BillsPage) */
+.cards-fade-enter-active { transition: opacity 220ms ease-out, transform 220ms ease-out; }
+.cards-fade-leave-active { transition: opacity 130ms ease-in, transform 130ms ease-in; }
+.cards-fade-enter-from { opacity: 0; transform: translateY(8px); }
+.cards-fade-leave-to { opacity: 0; transform: translateY(-6px); }
+@media (prefers-reduced-motion: reduce) {
+  .cards-fade-enter-active, .cards-fade-leave-active { transition: none; }
+  .cards-fade-enter-from, .cards-fade-leave-to { transform: none; }
+}
+
 .snackbar-enter-active { transition: opacity 200ms ease-out, transform 200ms ease-out; }
 .snackbar-leave-active { transition: opacity 150ms ease-in, transform 150ms ease-in; }
 .snackbar-enter-from,
