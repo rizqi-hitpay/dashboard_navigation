@@ -69,7 +69,15 @@
                       <FieldRows :rows="spendingLimitRows" :values="values" />
                     </div>
                   </div>
-                  <FieldRows :rows="merchantTypeRows" :values="values" />
+                  <!-- Merchant types — multi-select per DES-912 feedback (Figma: 270:19170) -->
+                  <div class="flex flex-col gap-[4px] w-full">
+                    <span class="text-[12px] font-medium text-[#61667c] leading-[1.5]">Restrict to merchant types</span>
+                    <MultiSelect
+                      v-model="merchantTypes"
+                      :options="MERCHANT_TYPES"
+                      placeholder="Select merchant type"
+                    />
+                  </div>
                   <FieldRows :rows="expirationRows" :values="values" />
                 </div>
               </div>
@@ -199,6 +207,7 @@
 <script setup>
 import { computed, reactive, ref, onMounted, onUnmounted } from 'vue'
 import FieldRows from '../forms/FieldRows.vue'
+import MultiSelect from '../forms/MultiSelect.vue'
 import mastercardMutedLogo from '../../assets/icons/logo-mastercard-muted.svg'
 import mastercardCardLogo from '../../assets/icons/logo-mastercard-card.svg'
 import hitpayLogogram from '../../assets/icons/logo-hitpay.svg'
@@ -246,15 +255,16 @@ const spendingLimitRows = [
     { label: 'Per card', prefix: 'SGD', labelInfo: true, placeholder: 'No limit' },
   ],
 ]
-const merchantTypeRows = [
-  [{ label: 'Restrict to merchant types', placeholder: 'Select merchant type', options: ['Automotive', 'Travel', 'Dining', 'Retail', 'Software'], value: 'Automotive' }],
-]
+// Merchant types accept several values at once (DES-912 feedback)
+const MERCHANT_TYPES = ['Automotive', 'Travel', 'Dining', 'Retail', 'Software']
+const merchantTypes = ref(['Automotive'])
+
 const expirationRows = [
   [{ label: 'Expiration date', type: 'date', placeholder: 'MM/YYYY', value: '08/2030' }],
 ]
 
 const values = reactive(Object.fromEntries(
-  [...fieldRows, ...spendingLimitRows, ...merchantTypeRows, ...expirationRows]
+  [...fieldRows, ...spendingLimitRows, ...expirationRows]
     .flat()
     .map(f => [f.label, f.value ?? ''])
 ))

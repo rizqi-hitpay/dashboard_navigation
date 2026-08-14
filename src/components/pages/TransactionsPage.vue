@@ -193,13 +193,7 @@
         >
           <div class="flex flex-col gap-[4px]">
             <span class="text-[12px] font-medium text-[#61667c] leading-[1.5]">Card</span>
-            <div class="txd-control">
-              <select v-model="fDraft.card" class="txd-select">
-                <option value="">All cards</option>
-                <option v-for="c in cardOptions" :key="c" :value="c">{{ c }}</option>
-              </select>
-              <svg class="txd-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.4714 10.4715C8.21107 10.7318 7.78893 10.7318 7.5286 10.4715L3.75736 6.7002C3.49701 6.43988 3.49701 6.01777 3.75736 5.75742C4.01771 5.49707 4.43982 5.49707 4.70017 5.75742L8 9.05727L11.2998 5.75742C11.5602 5.49707 11.9823 5.49707 12.2427 5.75742C12.503 6.01777 12.503 6.43988 12.2427 6.7002L8.4714 10.4715Z" fill="#61667C"/></svg>
-            </div>
+            <MultiSelect v-model="fDraft.cards" :options="cardOptions" placeholder="All cards" />
           </div>
 
           <div class="flex flex-col gap-[4px]">
@@ -214,46 +208,22 @@
 
           <div class="flex flex-col gap-[4px]">
             <span class="text-[12px] font-medium text-[#61667c] leading-[1.5]">Category</span>
-            <div class="txd-control">
-              <select v-model="fDraft.category" class="txd-select">
-                <option value="">All categories</option>
-                <option v-for="c in CATEGORIES" :key="c" :value="c">{{ c }}</option>
-              </select>
-              <svg class="txd-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.4714 10.4715C8.21107 10.7318 7.78893 10.7318 7.5286 10.4715L3.75736 6.7002C3.49701 6.43988 3.49701 6.01777 3.75736 5.75742C4.01771 5.49707 4.43982 5.49707 4.70017 5.75742L8 9.05727L11.2998 5.75742C11.5602 5.49707 11.9823 5.49707 12.2427 5.75742C12.503 6.01777 12.503 6.43988 12.2427 6.7002L8.4714 10.4715Z" fill="#61667C"/></svg>
-            </div>
+            <MultiSelect v-model="fDraft.categories" :options="CATEGORIES" placeholder="All categories" />
           </div>
 
           <div class="flex flex-col gap-[4px]">
             <span class="text-[12px] font-medium text-[#61667c] leading-[1.5]">GL Code</span>
-            <div class="txd-control">
-              <select v-model="fDraft.glCode" class="txd-select">
-                <option value="">All GL code</option>
-                <option v-for="g in GL_CODES" :key="g" :value="g">{{ g }}</option>
-              </select>
-              <svg class="txd-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.4714 10.4715C8.21107 10.7318 7.78893 10.7318 7.5286 10.4715L3.75736 6.7002C3.49701 6.43988 3.49701 6.01777 3.75736 5.75742C4.01771 5.49707 4.43982 5.49707 4.70017 5.75742L8 9.05727L11.2998 5.75742C11.5602 5.49707 11.9823 5.49707 12.2427 5.75742C12.503 6.01777 12.503 6.43988 12.2427 6.7002L8.4714 10.4715Z" fill="#61667C"/></svg>
-            </div>
+            <MultiSelect v-model="fDraft.glCodes" :options="GL_CODES" placeholder="All GL code" />
           </div>
 
           <div class="flex flex-col gap-[4px]">
             <span class="text-[12px] font-medium text-[#61667c] leading-[1.5]">Status</span>
-            <div class="txd-control">
-              <select v-model="fDraft.status" class="txd-select">
-                <option value="">All statuses</option>
-                <option v-for="(meta, key) in STATUS" :key="key" :value="key">{{ meta.label }}</option>
-              </select>
-              <svg class="txd-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.4714 10.4715C8.21107 10.7318 7.78893 10.7318 7.5286 10.4715L3.75736 6.7002C3.49701 6.43988 3.49701 6.01777 3.75736 5.75742C4.01771 5.49707 4.43982 5.49707 4.70017 5.75742L8 9.05727L11.2998 5.75742C11.5602 5.49707 11.9823 5.49707 12.2427 5.75742C12.503 6.01777 12.503 6.43988 12.2427 6.7002L8.4714 10.4715Z" fill="#61667C"/></svg>
-            </div>
+            <MultiSelect v-model="fDraft.statuses" :options="statusOptions" placeholder="All statuses" :searchable="false" />
           </div>
 
           <div class="flex flex-col gap-[4px]">
             <span class="text-[12px] font-medium text-[#61667c] leading-[1.5]">Merchant</span>
-            <div class="txd-control">
-              <select v-model="fDraft.merchant" class="txd-select">
-                <option value="">All merchant</option>
-                <option v-for="m in merchantOptions" :key="m" :value="m">{{ m }}</option>
-              </select>
-              <svg class="txd-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.4714 10.4715C8.21107 10.7318 7.78893 10.7318 7.5286 10.4715L3.75736 6.7002C3.49701 6.43988 3.49701 6.01777 3.75736 5.75742C4.01771 5.49707 4.43982 5.49707 4.70017 5.75742L8 9.05727L11.2998 5.75742C11.5602 5.49707 11.9823 5.49707 12.2427 5.75742C12.503 6.01777 12.503 6.43988 12.2427 6.7002L8.4714 10.4715Z" fill="#61667C"/></svg>
-            </div>
+            <MultiSelect v-model="fDraft.merchants" :options="merchantOptions" placeholder="All merchant" />
           </div>
 
           <div class="flex flex-col gap-[4px]">
@@ -444,6 +414,7 @@ import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { cards } from '../../composables/useCards.js'
 import VerificationDropzone from '../verification/VerificationDropzone.vue'
+import MultiSelect from '../forms/MultiSelect.vue'
 import MatchReceiptsModal from '../modals/MatchReceiptsModal.vue'
 import snackbarCheckIcon from '../../assets/icons/icon-snackbar-check.svg'
 import filterIcon from '../../assets/icons/icon-filter.svg'
@@ -494,11 +465,11 @@ const filteredTransactions = computed(() => {
 
   const f = appliedFilters.value
   if (!f) return list
-  if (f.card) list = list.filter((t) => t.card.split(' (')[0] === f.card)
-  if (f.category) list = list.filter((t) => t.category === f.category)
-  if (f.glCode) list = list.filter((t) => t.glCode === f.glCode)
-  if (f.status) list = list.filter((t) => t.status === f.status)
-  if (f.merchant) list = list.filter((t) => t.merchant === f.merchant)
+  if (f.cards.length) list = list.filter((t) => f.cards.includes(t.card.split(' (')[0]))
+  if (f.categories.length) list = list.filter((t) => f.categories.includes(t.category))
+  if (f.glCodes.length) list = list.filter((t) => f.glCodes.includes(t.glCode))
+  if (f.statuses.length) list = list.filter((t) => f.statuses.includes(t.status))
+  if (f.merchants.length) list = list.filter((t) => f.merchants.includes(t.merchant))
   const from = parseFilterAmount(f.amountFrom)
   const to = parseFilterAmount(f.amountTo)
   if (from != null) list = list.filter((t) => txnValue(t) >= from)
@@ -510,12 +481,15 @@ const filteredTransactions = computed(() => {
 const filterOpen = ref(false)
 const filterPos = ref({ left: 0, top: 0 })
 
-const emptyFilters = () => ({ card: '', dateFrom: '', dateTo: '', category: '', glCode: '', status: '', merchant: '', amountFrom: '', amountTo: '' })
+// The five dropdowns accept multiple values (DES-912 feedback)
+const MULTI_KEYS = ['cards', 'categories', 'glCodes', 'statuses', 'merchants']
+const emptyFilters = () => ({ cards: [], dateFrom: '', dateTo: '', categories: [], glCodes: [], statuses: [], merchants: [], amountFrom: '', amountTo: '' })
 const fDraft = reactive(emptyFilters())
 const appliedFilters = ref(null)
 
 const cardOptions = computed(() => [...new Set(transactions.map((t) => t.card.split(' (')[0]))])
 const merchantOptions = computed(() => [...new Set(transactions.map((t) => t.merchant))])
+const statusOptions = Object.entries(STATUS).map(([value, meta]) => ({ value, label: meta.label, dot: meta.color }))
 
 function txnValue(t) {
   return parseFloat(t.amount.replace('- ', '').split(' ')[1].replace(/,/g, ''))
@@ -547,9 +521,12 @@ function toggleFilter() {
   requestAnimationFrame(positionFilter)
 }
 
+const hasFilters = (f) => Object.entries(f).some(([k, v]) => (Array.isArray(v) ? v.length : v !== ''))
+
 function applyFilters() {
-  const hasAny = Object.values(fDraft).some((v) => v !== '')
-  appliedFilters.value = hasAny ? { ...fDraft } : null
+  const snapshot = { ...fDraft }
+  for (const k of MULTI_KEYS) snapshot[k] = [...fDraft[k]]
+  appliedFilters.value = hasFilters(snapshot) ? snapshot : null
   filterOpen.value = false
 }
 
@@ -557,23 +534,24 @@ const filterChips = computed(() => {
   const f = appliedFilters.value
   if (!f) return []
   const chips = []
-  if (f.card) chips.push({ key: 'card', label: `Card: ${f.card}` })
+  // One chip per input; multiple values are comma-separated
+  if (f.cards.length) chips.push({ key: 'cards', label: `Card: ${f.cards.join(', ')}` })
   if (f.dateFrom || f.dateTo) chips.push({ key: 'date', label: `Date: ${f.dateFrom || '…'} - ${f.dateTo || '…'}` })
-  if (f.category) chips.push({ key: 'category', label: `Category: ${f.category}` })
-  if (f.glCode) chips.push({ key: 'glCode', label: `GL Code: ${f.glCode}` })
-  if (f.status) chips.push({ key: 'status', label: `Status: ${STATUS[f.status].label}` })
-  if (f.merchant) chips.push({ key: 'merchant', label: `Merchant: ${f.merchant}` })
+  if (f.categories.length) chips.push({ key: 'categories', label: `Category: ${f.categories.join(', ')}` })
+  if (f.glCodes.length) chips.push({ key: 'glCodes', label: `GL Code: ${f.glCodes.join(', ')}` })
+  if (f.statuses.length) chips.push({ key: 'statuses', label: `Status: ${f.statuses.map((s) => STATUS[s].label).join(', ')}` })
+  if (f.merchants.length) chips.push({ key: 'merchants', label: `Merchant: ${f.merchants.join(', ')}` })
   if (f.amountFrom || f.amountTo) chips.push({ key: 'amount', label: `Amount: ${f.amountFrom || '0'} - ${f.amountTo || '∞'}` })
   return chips
 })
 
 function removeChip(chip) {
   const f = { ...appliedFilters.value }
+  for (const k of MULTI_KEYS) f[k] = [...appliedFilters.value[k]]
   if (chip.key === 'date') { f.dateFrom = ''; f.dateTo = '' }
   else if (chip.key === 'amount') { f.amountFrom = ''; f.amountTo = '' }
-  else f[chip.key] = ''
-  const hasAny = Object.values(f).some((v) => v !== '')
-  appliedFilters.value = hasAny ? f : null
+  else f[chip.key] = []   // clears every value from that input
+  appliedFilters.value = hasFilters(f) ? f : null
   Object.assign(fDraft, f)
 }
 

@@ -264,50 +264,16 @@
           style="box-shadow: 0px 1px 3px 0px rgba(0,0,0,0.1), 0px 3px 22px 0px rgba(38,42,50,0.09);"
           :style="{ left: filterPos.left + 'px', top: filterPos.top + 'px' }"
         >
-          <!-- Card holder -->
+          <!-- Card holder (multi — DES-912 feedback) -->
           <div class="flex flex-col gap-[4px]">
             <span class="text-[12px] font-medium text-[#61667c] leading-[1.5]">Card holder (Staff)</span>
-            <div class="flt-control">
-              <select v-model="draft.holder" class="flt-select" :class="{ 'flt-placeholder': !draft.holder }">
-                <option value="">Select staff</option>
-                <option v-for="h in holders" :key="h" :value="h">{{ h }}</option>
-              </select>
-              <svg class="flt-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.4714 10.4715C8.21107 10.7318 7.78893 10.7318 7.5286 10.4715L3.75736 6.7002C3.49701 6.43988 3.49701 6.01777 3.75736 5.75742C4.01771 5.49707 4.43982 5.49707 4.70017 5.75742L8 9.05727L11.2998 5.75742C11.5602 5.49707 11.9823 5.49707 12.2427 5.75742C12.503 6.01777 12.503 6.43988 12.2427 6.7002L8.4714 10.4715Z" fill="#61667C"/></svg>
-            </div>
+            <MultiSelect v-model="draft.holders" :options="holders" placeholder="Select staff" />
           </div>
 
           <!-- Status (multi) -->
-          <div class="flex flex-col gap-[4px] relative">
+          <div class="flex flex-col gap-[4px]">
             <span class="text-[12px] font-medium text-[#61667c] leading-[1.5]">Status</span>
-            <button type="button" class="flt-control flex items-center gap-[4px] px-[8px] text-left cursor-pointer flex-wrap" style="height: auto; min-height: 36px; padding-top: 4px; padding-bottom: 4px;" @click="statusMenuOpen = !statusMenuOpen">
-              <template v-if="draft.statuses.length">
-                <span
-                  v-for="s in draft.statuses"
-                  :key="s"
-                  class="inline-flex items-center gap-[4px] min-h-[22px] px-[6px] rounded-[24px] bg-[#f2f2f4] text-[12px] font-medium text-[#484d61] leading-[1.5] whitespace-nowrap"
-                >
-                  <span class="size-[6px] rounded-full shrink-0" :style="{ background: STATUS[s].color }" />
-                  {{ STATUS[s].label }}
-                  <span class="flex items-center justify-center cursor-pointer hover:opacity-70" @click.stop="toggleStatus(s)">
-                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.6" stroke="#9295a5" stroke-width="1.1" /><path d="M5.2 5.2l3.6 3.6M8.8 5.2l-3.6 3.6" stroke="#9295a5" stroke-width="1.1" stroke-linecap="round" /></svg>
-                  </span>
-                </span>
-              </template>
-              <span v-else class="text-[14px] text-[#9295a5] leading-[1.5]">All statuses</span>
-            </button>
-            <div v-if="statusMenuOpen" class="absolute top-full left-0 mt-[2px] w-full rounded-[8px] bg-white p-[4px] z-10" style="box-shadow: 0px 1px 3px 0px rgba(0,0,0,0.1), 0px 3px 22px 0px rgba(38,42,50,0.09);">
-              <button
-                v-for="(meta, key) in STATUS"
-                :key="key"
-                type="button"
-                class="flex items-center gap-[8px] p-[8px] rounded-[4px] w-full text-left hover:bg-[#f5f6f9] transition-colors duration-100"
-                @click="toggleStatus(key)"
-              >
-                <span class="size-[6px] rounded-full shrink-0" :style="{ background: meta.color }" />
-                <span class="flex-1 text-[12px] font-normal text-[#03102f] leading-[1.5]">{{ meta.label }}</span>
-                <svg v-if="draft.statuses.includes(key)" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.9 7.3l2.8 2.8 5.4-5.9" stroke="#2465de" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
-              </button>
-            </div>
+            <MultiSelect v-model="draft.statuses" :options="statusOptions" placeholder="All statuses" :searchable="false" />
           </div>
 
           <!-- Date created -->
@@ -380,6 +346,7 @@ import { useRouter } from 'vue-router'
 import { cards, addCard, pendingToast } from '../../composables/useCards.js'
 import calendarIcon from '../../assets/icons/icon-calendar.svg'
 import CreateCardPage from './CreateCardPage.vue'
+import MultiSelect from '../forms/MultiSelect.vue'
 import mastercardLogo from '../../assets/icons/logo-mastercard.svg'
 import filterIcon from '../../assets/icons/icon-filter.svg'
 import snackbarCheckIcon from '../../assets/icons/icon-snackbar-check.svg'
@@ -425,7 +392,7 @@ const filteredCards = computed(() => {
 
   const f = appliedFilters.value
   if (!f) return list
-  if (f.holder) list = list.filter((c) => c.holder === f.holder)
+  if (f.holders.length) list = list.filter((c) => f.holders.includes(c.holder))
   if (f.statuses.length) list = list.filter((c) => f.statuses.includes(c.status))
   const from = parseAmount(f.amountFrom)
   const to = parseAmount(f.amountTo)
@@ -439,11 +406,12 @@ const filterOpen = ref(false)
 const filterPos = ref({ left: 0, top: 0 })
 const statusMenuOpen = ref(false)
 
-const emptyFilters = () => ({ holder: '', statuses: [], dateFrom: '', dateTo: '', amountFrom: '', amountTo: '' })
+const emptyFilters = () => ({ holders: [], statuses: [], dateFrom: '', dateTo: '', amountFrom: '', amountTo: '' })
 const draft = reactive(emptyFilters())
 const appliedFilters = ref(null)
 
 const holders = computed(() => [...new Set(cards.map((c) => c.holder))])
+const statusOptions = Object.entries(STATUS).map(([value, meta]) => ({ value, label: meta.label, dot: meta.color }))
 
 function parseAmount(v) {
   const n = parseFloat(String(v).replace(/[^0-9.]/g, ''))
@@ -461,15 +429,9 @@ function toggleFilter(event) {
   filterOpen.value = true
 }
 
-function toggleStatus(key) {
-  const i = draft.statuses.indexOf(key)
-  if (i === -1) draft.statuses.push(key)
-  else draft.statuses.splice(i, 1)
-}
-
 function applyFilters() {
-  const hasAny = draft.holder || draft.statuses.length || draft.dateFrom || draft.dateTo || draft.amountFrom || draft.amountTo
-  appliedFilters.value = hasAny ? { ...draft, statuses: [...draft.statuses] } : null
+  const hasAny = draft.holders.length || draft.statuses.length || draft.dateFrom || draft.dateTo || draft.amountFrom || draft.amountTo
+  appliedFilters.value = hasAny ? { ...draft, holders: [...draft.holders], statuses: [...draft.statuses] } : null
   filterOpen.value = false
   statusMenuOpen.value = false
 }
@@ -478,27 +440,27 @@ const filterChips = computed(() => {
   const f = appliedFilters.value
   if (!f) return []
   const chips = []
-  if (f.holder) chips.push({ key: 'holder', label: `Card holder: ${f.holder}` })
-  for (const s of f.statuses) chips.push({ key: 'status:' + s, label: `Status: ${STATUS[s].label}` })
+  if (f.holders.length) chips.push({ key: 'holders', label: `Card holder: ${f.holders.join(', ')}` })
+  if (f.statuses.length) chips.push({ key: 'statuses', label: `Status: ${f.statuses.map((s) => STATUS[s].label).join(', ')}` })
   if (f.dateFrom || f.dateTo) chips.push({ key: 'date', label: `Date created: ${f.dateFrom || '…'} - ${f.dateTo || '…'}` })
   if (f.amountFrom || f.amountTo) chips.push({ key: 'amount', label: `Amount: ${f.amountFrom || '0'} - ${f.amountTo || '∞'}` })
   return chips
 })
 
 function removeChip(chip) {
-  const f = { ...appliedFilters.value, statuses: [...appliedFilters.value.statuses] }
-  if (chip.key === 'holder') f.holder = ''
-  else if (chip.key.startsWith('status:')) f.statuses = f.statuses.filter((s) => s !== chip.key.slice(7))
+  const f = { ...appliedFilters.value, holders: [...appliedFilters.value.holders], statuses: [...appliedFilters.value.statuses] }
+  if (chip.key === 'holders') f.holders = []
+  else if (chip.key === 'statuses') f.statuses = []
   else if (chip.key === 'date') { f.dateFrom = ''; f.dateTo = '' }
   else if (chip.key === 'amount') { f.amountFrom = ''; f.amountTo = '' }
-  const hasAny = f.holder || f.statuses.length || f.dateFrom || f.dateTo || f.amountFrom || f.amountTo
+  const hasAny = f.holders.length || f.statuses.length || f.dateFrom || f.dateTo || f.amountFrom || f.amountTo
   appliedFilters.value = hasAny ? f : null
-  Object.assign(draft, f, { statuses: [...f.statuses] })
+  Object.assign(draft, f, { holders: [...f.holders], statuses: [...f.statuses] })
 }
 
 function clearFilters() {
   appliedFilters.value = null
-  Object.assign(draft, emptyFilters(), { statuses: [] })
+  Object.assign(draft, emptyFilters(), { holders: [], statuses: [] })
 }
 
 // Row click → card details page
