@@ -16,6 +16,7 @@ import AccountVerificationWithChatPage from '../components/pages/AccountVerifica
 import AccountVerificationFullScreenPage from '../components/pages/AccountVerificationFullScreenPage.vue'
 import SettingsEmptyStatePage from '../components/pages/SettingsEmptyStatePage.vue'
 import UsagePage from '../components/pages/UsagePage.vue'
+import BillingPage from '../components/pages/BillingPage.vue'
 import LabsPage from '../components/pages/LabsPage.vue'
 import LabsCategoryPage from '../components/pages/LabsCategoryPage.vue'
 import LabsAppPage from '../components/pages/LabsAppPage.vue'
@@ -39,6 +40,7 @@ const routes = [
   { path: '/settings/request-for-information', name: 'request-for-information', component: RequestForInformationPage },
   { path: '/settings/account-verification-full-screen', name: 'account-verification-full-screen', component: AccountVerificationFullScreenPage, meta: { fullPage: true } },
   { path: '/settings/usage', name: 'settings-usage', component: UsagePage },
+  { path: '/settings/billing', name: 'settings-billing', component: BillingPage },
   { path: '/labs', name: 'labs', component: LabsPage },
   { path: '/labs/app/to-do-list', name: 'labs-app-todo', component: LabsAppPage },
   { path: '/labs/:category', name: 'labs-category', component: LabsCategoryPage },
