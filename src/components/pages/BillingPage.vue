@@ -16,7 +16,7 @@
         <div class="flex flex-col gap-[8px] w-full rounded-[8px] border border-[#e5e6ea] pt-[16px] px-[16px] pb-[8px]">
           <div class="flex items-center justify-between w-full">
             <p class="text-[16px] font-medium text-[#03102f] leading-[1.4] whitespace-nowrap">Monthly spend</p>
-            <div class="flex items-center gap-[12px]">
+            <div class="flex items-center gap-[12px] transition-opacity duration-200" :class="isEmpty ? 'opacity-0' : ''">
               <div v-for="l in legends" :key="l.label" class="flex items-center gap-[4px]">
                 <span class="size-[8px] rounded-full shrink-0" :style="{ background: l.color }"></span>
                 <p class="text-[12px] font-normal text-[#03102f] leading-[1.5] whitespace-nowrap">{{ l.label }}</p>
@@ -43,8 +43,8 @@
               </div>
             </div>
 
-            <!-- Bars -->
-            <div class="absolute bottom-[34px] left-0 right-[16px] pl-[56px] flex items-end justify-between">
+            <!-- Bars (all fade out in the empty preview — axes stay, Figma: 144:24631) -->
+            <div class="absolute bottom-[34px] left-0 right-[16px] pl-[56px] flex items-end justify-between transition-opacity duration-200" :class="isEmpty ? 'opacity-0 pointer-events-none' : ''">
               <div
                 v-for="(m, i) in months"
                 :key="m.label"
@@ -89,7 +89,7 @@
         </div>
 
         <!-- Breakdown -->
-        <div class="flex flex-col gap-[12px] items-start w-full">
+        <div v-if="!isEmpty" class="flex flex-col gap-[12px] items-start w-full">
           <p class="text-[16px] font-medium text-[#03102f] leading-[1.4] whitespace-nowrap">Breakdown</p>
           <div class="flex items-start w-full rounded-[8px] border border-[#e5e6ea] overflow-hidden">
 
@@ -181,7 +181,32 @@
         <!-- Payment details -->
         <div class="flex flex-col gap-[12px] items-start w-full">
           <p class="text-[16px] font-medium text-[#03102f] leading-[1.4] whitespace-nowrap">Payment details</p>
-          <div class="flex flex-col gap-[8px] w-full">
+
+          <!-- Empty state (Figma: Empty Page/Add New 144:25466) -->
+          <div v-if="isEmpty" class="flex flex-col items-center justify-center gap-[24px] w-full rounded-[8px] bg-[#f8f9fc] px-[16px] pt-[16px] pb-[24px]">
+            <div class="flex items-center justify-center px-[10px] w-full">
+              <div class="relative flex items-start p-[16px] rounded-full bg-[#fcfcfd] border border-[#f2f2f4]">
+                <img :src="bankCardEmptyIcon" width="32" height="32" alt="" />
+                <span class="absolute right-[-1px] top-[1px] size-[20px] rounded-full bg-[#9295a5] border border-[#f2f2f4]">
+                  <img :src="exclamationBadgeIcon" width="20" height="20" alt="" class="absolute inset-0" />
+                </span>
+              </div>
+            </div>
+            <div class="flex flex-col items-center gap-[8px] w-full text-center">
+              <p class="text-[16px] font-medium text-[#03102f] leading-[1.4] whitespace-nowrap">No card is attached.</p>
+              <p class="text-[14px] font-normal text-[#61667c] leading-[1.5] w-full">Please add your card here</p>
+            </div>
+            <button
+              type="button"
+              class="flex items-center justify-center h-[28px] min-w-[36px] p-[8px] rounded-[8px] border border-[#2465de] transition-[filter] duration-150 hover:brightness-105 active:translate-y-[1px]"
+              style="background: linear-gradient(to bottom, #4179e2, #1f5bcc); box-shadow: 0px 1.5px 0px 0px #1d5fd9;"
+              @click="openAddCard"
+            >
+              <span class="text-[12px] font-medium text-white leading-[1.5] whitespace-nowrap" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.12);">Add card</span>
+            </button>
+          </div>
+
+          <div v-if="!isEmpty" class="flex flex-col gap-[8px] w-full">
             <div
               v-for="card in cards"
               :key="card.key"
@@ -232,6 +257,7 @@
 
           <!-- Add new card -->
           <button
+            v-if="!isEmpty"
             type="button"
             class="flex items-center justify-center h-[28px] p-[8px] rounded-[8px] border border-[#f2f2f4] transition-[filter] duration-150 hover:brightness-95 active:translate-y-[1px]"
             style="background: linear-gradient(to bottom, #ffffff, #f2f2f2); box-shadow: 0px 1.5px 0px 0px rgba(0,0,0,0.1);"
@@ -287,6 +313,26 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Floating preview switcher: with data ↔ empty state (same recipe as CardsPage) -->
+    <div
+      class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-[4px] p-[4px] rounded-full bg-white border border-[#e5e6ea]"
+      style="box-shadow: 0px 8px 24px rgba(3,16,47,0.16);"
+    >
+      <span class="px-[8px] text-[11px] font-medium text-[#8093b8] select-none">Preview</span>
+      <button
+        type="button"
+        class="px-[12px] h-[28px] rounded-full text-[12px] font-medium transition-colors duration-150"
+        :class="!isEmpty ? 'bg-[#2465de] text-white' : 'text-[#61667c] hover:bg-[#f0f1f5]'"
+        @click="isEmpty = false"
+      >With data</button>
+      <button
+        type="button"
+        class="px-[12px] h-[28px] rounded-full text-[12px] font-medium transition-colors duration-150"
+        :class="isEmpty ? 'bg-[#2465de] text-white' : 'text-[#61667c] hover:bg-[#f0f1f5]'"
+        @click="isEmpty = true"
+      >Empty state</button>
     </div>
 
     <!-- Billing address modal (Figma: Modal 54:8672) -->
@@ -472,6 +518,11 @@ import bankCardGreyIcon from '../../assets/icons/icon-bank-card-grey.svg'
 import plusGreyIcon from '../../assets/icons/icon-plus-grey.svg'
 import tooltipArrowIcon from '../../assets/icons/icon-tooltip-arrow.svg'
 import snackbarCheckIcon from '../../assets/icons/icon-snackbar-check.svg'
+import bankCardEmptyIcon from '../../assets/icons/icon-bank-card-empty.svg'
+import exclamationBadgeIcon from '../../assets/icons/icon-exclamation-badge.svg'
+
+// Preview switcher: false = populated billing page, true = no-card empty state (Figma: 144:24505)
+const isEmpty = ref(false)
 
 // ── Monthly spend chart ──────────────────────────────────────────────
 const legends = [
@@ -564,7 +615,10 @@ function openEditCard(card) {
 
 function saveCard() {
   const editing = cardModal.value === 'edit'
-  if (!editing) addSavedCard({ number: newCard.number, expiry: newCard.expiry })
+  if (!editing) {
+    addSavedCard({ number: newCard.number, expiry: newCard.expiry })
+    isEmpty.value = false
+  }
   cardModal.value = null
   showToast(editing ? 'Card details updated' : 'Card added')
 }
