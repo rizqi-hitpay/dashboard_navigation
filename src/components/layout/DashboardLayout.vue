@@ -16,8 +16,10 @@
         <FinanceGate v-if="financeLocked" />
 
         <template v-else>
-          <!-- Persistent sidebar shell: desktop only, mobile uses the drawer -->
+          <!-- Persistent sidebar shell: desktop only, mobile uses the drawer.
+               Studio's initial state has no sidebar (Figma: 20:8569) -->
           <div
+            v-if="activeProduct !== 3"
             class="bg-[#fcfcfd] hidden md:flex flex-col h-full shrink-0 overflow-hidden"
             :style="{
               width: sidebarCollapsed ? '56px' : '220px',
@@ -80,7 +82,7 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import NavRail from '../navigation/NavRail.vue'
 import MobileTopBar from '../navigation/MobileTopBar.vue'
 import VideoIntroModal from '../modals/VideoIntroModal.vue'
@@ -106,6 +108,7 @@ const financeLocked = computed(() => activeProduct.value === 2 && !financeUnlock
 // Mobile nav drawer (hamburger in MobileTopBar) — auto-closes on navigation
 const mobileNavOpen = ref(false)
 const route = useRoute()
+const router = useRouter()
 watch(() => route.fullPath, () => { mobileNavOpen.value = false })
 
 // Direction-aware sidebar transition
@@ -114,9 +117,12 @@ watch(settingsOpen, (open) => {
   sidebarTransition.value = open ? 'settings' : 'sidebar'
 })
 
-// Reset settings when switching products
-watch(activeProduct, () => {
+// Reset settings when switching products. Studio has no sidebar, so entering
+// it routes to its page and leaving it returns to Overview.
+watch(activeProduct, (product, prev) => {
   settingsOpen.value = false
+  if (product === 3 && !route.path.startsWith('/studio')) router.push('/studio')
+  if (prev === 3 && product !== 3 && route.path.startsWith('/studio')) router.push('/')
 })
 
 // Labs lives under Payments and swaps the sidebar by route (like a drill-down).
