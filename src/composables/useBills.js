@@ -1,7 +1,7 @@
 // Shared Bill Pay data + chip styling, used by the bills list and the detail view.
 
 export const bills = [
-  { id: 1, recipient: 'Berry Sharp', invoice: 'INV-83177', amount: 'SGD 1,870.00', due: '2025-08-15', funding: 'Returned', status: 'Failed' },
+  { id: 1, recipient: 'Berry Sharp', invoice: 'INV-83177', amount: 'SGD 1,870.00', due: '2025-08-15', funding: 'Returned', status: 'Overdue' },
   { id: 2, recipient: 'David Tarigan', invoice: 'INV-98765', amount: 'SGD 870.00', due: '2025-11-05', funding: 'Collected', status: 'Pending' },
   { id: 3, recipient: 'Naomi Atkinson', invoice: 'N/A', amount: 'SGD 1,088.00', due: 'N/A', funding: 'Returned', status: 'Failed' },
   { id: 4, recipient: 'Naomi Atkinson', invoice: 'INV-67890', amount: 'SGD 1,088.00', due: '2025-09-10', funding: 'Awaiting funds', status: 'Need approval' },
@@ -35,6 +35,7 @@ export function statusStyle(status) {
     Failed: { bg: '#fdecec', text: '#d92d20' },
     Rejected: { bg: '#fdecec', text: '#d92d20' },
     Cancel: { bg: '#fdecec', text: '#d92d20' },
+    Overdue: { bg: '#fff4e5', text: '#bd8400' },
     Pending: { bg: '#fff4e5', text: '#bd8400' },
     Scheduled: { bg: '#fff4e5', text: '#bd8400' },
     'Need approval': { bg: '#f4ecfe', text: '#7e3ff2' },

@@ -10,8 +10,47 @@
           <div class="flex gap-[8px] items-center shrink-0">
             <p class="font-medium text-[18px] text-[#03102f] leading-[1.35] whitespace-nowrap">Bill Pay</p>
           </div>
+          <!-- Mail forwarder (hover: copy tooltip + Settings link, click to copy) -->
+          <div v-if="!isEmpty" class="group flex gap-[4px] items-center shrink-0">
+            <div
+              ref="emailChipEl"
+              class="flex gap-[4px] items-center cursor-pointer"
+              @mouseenter="emailTooltipVisible = true"
+              @mouseleave="onEmailChipLeave"
+              @click="copyForwardingEmail"
+            >
+              <img :src="mailForwardIcon" width="14" height="14" alt="" class="shrink-0" />
+              <span class="text-[12px] font-normal text-[#61667c] leading-[1.5] whitespace-nowrap">{{ forwardingEmail }}</span>
+            </div>
+            <a
+              href="#"
+              class="opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-150 text-[12px] font-normal text-[#2465de] leading-[1.5] underline whitespace-nowrap"
+              @click.prevent="$router.push({ path: '/settings', query: { section: 'bill-inbox' } })"
+            >Settings</a>
+          </div>
         </div>
       </div>
+
+      <!-- Copy tooltip (teleported: anchored above the mail forwarder) -->
+      <Teleport to="body">
+        <Transition name="email-tooltip">
+          <div
+            v-if="emailTooltipVisible"
+            class="fixed z-50 pointer-events-none"
+            :style="{ left: emailTooltipPos.left + 'px', top: emailTooltipPos.top + 'px' }"
+          >
+            <div class="relative -translate-x-1/2 -translate-y-full">
+              <div
+                class="flex items-center justify-center px-[8px] py-[4px] rounded-[4px] bg-[#fcfcfd]"
+                style="box-shadow: 0px 1px 3px 0px rgba(0,0,0,0.1), 0px 3px 22px 0px rgba(38,42,50,0.09);"
+              >
+                <p class="text-[12px] font-medium text-[#61667c] leading-[1.5] whitespace-nowrap text-center">{{ emailCopied ? 'Copied!' : 'Copy your bill forwarding email' }}</p>
+              </div>
+              <span class="email-tooltip__arrow" />
+            </div>
+          </div>
+        </Transition>
+      </Teleport>
 
       <!-- Content -->
       <Transition name="bills-fade" mode="out-in">
@@ -301,47 +340,6 @@
               >{{ t }}</button>
             </div>
             <div class="flex items-center gap-[8px] shrink-0">
-              <!-- Email forwarding chip + settings -->
-              <div class="flex items-center gap-[8px] pr-[8px]">
-                <div
-                  ref="emailChipEl"
-                  class="flex items-center justify-center gap-[8px] min-h-[24px] px-[8px] py-[2px] rounded-full bg-[#f2f2f4] cursor-pointer"
-                  @mouseenter="emailTooltipVisible = true"
-                  @mouseleave="onEmailChipLeave"
-                  @click="copyForwardingEmail"
-                >
-                  <svg class="shrink-0" width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3.5" width="12" height="9" rx="1.5" stroke="#484d61" stroke-width="1.2" /><path d="M2.5 4.5L8 8.5l5.5-4" stroke="#484d61" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                  <span class="text-[12px] font-medium text-[#484d61] leading-[1.5] whitespace-nowrap">{{ forwardingEmail }}</span>
-                </div>
-                <!-- Copy tooltip (teleported: the table card clips overflow) -->
-                <Teleport to="body">
-                  <Transition name="email-tooltip">
-                    <div
-                      v-if="emailTooltipVisible"
-                      class="fixed z-50 pointer-events-none"
-                      :style="{ left: emailTooltipPos.left + 'px', top: emailTooltipPos.top + 'px' }"
-                    >
-                      <div class="relative -translate-x-1/2 -translate-y-full">
-                        <div
-                          class="flex items-center justify-center px-[8px] py-[4px] rounded-[4px] bg-[#fcfcfd]"
-                          style="box-shadow: 0px 1px 3px 0px rgba(0,0,0,0.1), 0px 3px 22px 0px rgba(38,42,50,0.09);"
-                        >
-                          <p class="text-[12px] font-medium text-[#61667c] leading-[1.5] whitespace-nowrap text-center">{{ emailCopied ? 'Copied!' : 'Copy your bill forwarding email' }}</p>
-                        </div>
-                        <span class="email-tooltip__arrow" />
-                      </div>
-                    </div>
-                  </Transition>
-                </Teleport>
-                <button
-                  type="button"
-                  class="flex items-center justify-center size-[16px] shrink-0 cursor-pointer"
-                  aria-label="Email forwarding settings"
-                  @click="$router.push({ path: '/settings', query: { section: 'bill-inbox' } })"
-                >
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.60633 1.52835C10.2615 1.69046 10.8782 1.94933 11.4405 2.28869C11.6741 2.42965 11.7981 2.69869 11.7538 2.96785C11.6781 3.42719 11.7923 3.77848 12.007 3.99316C12.2217 4.20784 12.573 4.32205 13.0323 4.24636C13.3015 4.20201 13.5705 4.32611 13.7115 4.55967C14.0508 5.12194 14.3097 5.73869 14.4718 6.39379C14.5373 6.6587 14.4348 6.9368 14.213 7.0958C13.8345 7.36713 13.6667 7.6964 13.6667 8.00007C13.6667 8.30373 13.8345 8.633 14.213 8.90433C14.4348 9.06326 14.5373 9.3414 14.4718 9.60633C14.3097 10.2615 14.0508 10.8782 13.7114 11.4405C13.5705 11.6741 13.3015 11.7982 13.0323 11.7538C12.5729 11.6781 12.2217 11.7923 12.007 12.007C11.7923 12.2217 11.6781 12.573 11.7538 13.0323C11.7981 13.3015 11.6741 13.5705 11.4405 13.7115C10.8782 14.0508 10.2615 14.3097 9.60633 14.4718C9.3414 14.5373 9.06333 14.4348 8.90433 14.213C8.633 13.8345 8.30373 13.6667 8.00007 13.6667C7.6964 13.6667 7.36713 13.8345 7.0958 14.213C6.9368 14.4348 6.65871 14.5373 6.3938 14.4718C5.73868 14.3097 5.12191 14.0508 4.55964 13.7115C4.32609 13.5705 4.20197 13.3015 4.24633 13.0323C4.32201 12.573 4.2078 12.2217 3.99313 12.007C3.77845 11.7923 3.42717 11.6781 2.96785 11.7538C2.69869 11.7982 2.42966 11.6741 2.2887 11.4405C1.94933 10.8782 1.69046 10.2615 1.52835 9.60633C1.46279 9.3414 1.56531 9.06326 1.78713 8.90433C2.16566 8.633 2.3334 8.30373 2.3334 8.00007C2.3334 7.6964 2.16566 7.36713 1.78712 7.0958C1.56531 6.9368 1.46279 6.65871 1.52835 6.3938C1.69045 5.73869 1.94931 5.12194 2.28866 4.55968C2.42962 4.32612 2.69866 4.20201 2.96783 4.24637C3.42715 4.32206 3.77845 4.20785 3.99313 3.99317C4.20781 3.77848 4.32203 3.42719 4.24633 2.96786C4.20197 2.69869 4.32608 2.42965 4.55963 2.28869C5.12191 1.94933 5.73868 1.69046 6.3938 1.52835C6.65871 1.46279 6.9368 1.56531 7.0958 1.78713C7.36713 2.16566 7.6964 2.33339 8.00007 2.33339C8.30373 2.33339 8.633 2.16566 8.90433 1.78713C9.06333 1.56531 9.3414 1.46279 9.60633 1.52835ZM9.6746 2.93473C9.2368 3.37401 8.6614 3.66673 8.00007 3.66673C7.33873 3.66673 6.76327 3.37401 6.3255 2.93473C6.07585 3.01721 5.83432 3.11767 5.60243 3.23459C5.60341 3.85468 5.40347 4.46844 4.93594 4.93597C4.46841 5.4035 3.85465 5.60345 3.23458 5.60247C3.11766 5.83434 3.01721 6.07586 2.93473 6.3255C3.37401 6.76327 3.66673 7.33873 3.66673 8.00007C3.66673 8.6614 3.37401 9.2368 2.93473 9.6746C3.01721 9.92426 3.11767 10.1658 3.23461 10.3977C3.85467 10.3967 4.46841 10.5967 4.93593 11.0642C5.40345 11.5317 5.60339 12.1455 5.60243 12.7655C5.83432 12.8825 6.07585 12.9829 6.32551 13.0654C6.76327 12.6261 7.33873 12.3334 8.00007 12.3334C8.6614 12.3334 9.2368 12.6261 9.6746 13.0654C9.92427 12.9829 10.1658 12.8825 10.3977 12.7655C10.3967 12.1455 10.5967 11.5317 11.0642 11.0642C11.5317 10.5967 12.1455 10.3967 12.7655 10.3977C12.8825 10.1658 12.9829 9.92426 13.0654 9.6746C12.6261 9.2368 12.3334 8.6614 12.3334 8.00007C12.3334 7.33873 12.6261 6.76327 13.0654 6.3255C12.9829 6.07586 12.8825 5.83435 12.7655 5.60246C12.1455 5.60344 11.5317 5.4035 11.0642 4.93597C10.5967 4.46843 10.3967 3.85467 10.3977 3.2346C10.1658 3.11767 9.92427 3.01721 9.6746 2.93473ZM8.00007 5.33339C9.4728 5.33339 10.6667 6.5273 10.6667 8.00006C10.6667 9.4728 9.4728 10.6667 8.00007 10.6667C6.52731 10.6667 5.3334 9.4728 5.3334 8.00006C5.3334 6.5273 6.52731 5.33339 8.00007 5.33339ZM8.00007 6.66673C7.26367 6.66673 6.66673 7.26367 6.66673 8.00007C6.66673 8.73646 7.26367 9.3334 8.00007 9.3334C8.73647 9.3334 9.3334 8.73646 9.3334 8.00007C9.3334 7.26367 8.73647 6.66673 8.00007 6.66673Z" fill="#484d61" /></svg>
-                </button>
-              </div>
               <button
                 type="button"
                 class="flex items-center justify-center size-[28px] rounded-[8px] border border-[#f2f2f4] transition-[filter] duration-150 hover:brightness-95 active:translate-y-[1px]"
@@ -380,50 +378,41 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="b in filteredBills" :key="b.id" class="hover:bg-[#f8f9fc] transition-colors duration-150 cursor-pointer [&:last-child>td]:border-b-0" @click="viewBill(b)">
+                <tr v-for="b in filteredBills" :key="b.id" class="group hover:bg-[#f8f9fc] transition-colors duration-150 cursor-pointer [&:last-child>td]:border-b-0" @click="viewBill(b)">
                   <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-r border-[#e5e6ea] text-[13px] text-[#03102f] whitespace-nowrap">{{ b.recipient }}</td>
                   <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-r border-[#e5e6ea] text-[13px] text-[#03102f] whitespace-nowrap">{{ b.invoice }}</td>
                   <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-r border-[#e5e6ea] text-[13px] text-[#03102f] whitespace-nowrap" style="font-family: 'Reddit Mono', ui-monospace, monospace; font-weight: 500;">{{ b.amount }}</td>
-                  <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-r border-[#e5e6ea] text-[13px] text-[#03102f] whitespace-nowrap" style="font-family: 'Reddit Mono', ui-monospace, monospace;">{{ b.due }}</td>
-                  <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-r border-[#e5e6ea]">
+                  <td
+                    class="h-[44px] px-[12px] py-[8px] align-middle border-b border-r border-[#e5e6ea] text-[13px] whitespace-nowrap"
+                    :class="b.status === 'Overdue' ? 'text-[#bd8400]' : 'text-[#03102f]'"
+                    style="font-family: 'Reddit Mono', ui-monospace, monospace;"
+                  >{{ b.due }}</td>
+                  <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-[#e5e6ea]">
+                    <!-- Need approval: pill swaps to an Approve & Fund split button on row hover.
+                         Fixed-height flex wrapper so the swap never changes the row height. -->
+                    <!-- 27px = the td's exact content height (44 − 16 padding − 1 border), so the row stays 44px.
+                         The button is always in the layout (invisible when idle) so it reserves its width and
+                         the column never resizes; the pill overlays it when the row isn't hovered. -->
+                    <div v-if="b.status === 'Need approval'" class="relative flex items-center h-[27px]">
+                      <span
+                        class="invisible group-hover:visible inline-flex items-center h-[28px] rounded-[8px] border border-[#2465de] overflow-hidden"
+                        style="box-shadow: 0px 1.5px 0px 0px #1d5fd9;"
+                      >
+                        <button type="button" class="h-full pl-[12px] pr-[8px] text-[13px] font-medium text-white whitespace-nowrap" style="background: linear-gradient(to bottom, #4179e2, #1f5bcc); text-shadow: 0px 1px 1px rgba(0,0,0,0.12);" @click.stop>Approve &amp; Fund</button>
+                        <button type="button" class="h-full w-[24px] flex items-center justify-center border-l border-[rgba(255,255,255,0.25)]" style="background: linear-gradient(to bottom, #4179e2, #1f5bcc);" aria-label="More approve options" @click.stop>
+                          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 6.5l3 3 3-3" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                        </button>
+                      </span>
+                      <span
+                        class="group-hover:hidden absolute left-0 inline-flex items-center px-[10px] py-[3px] rounded-full text-[12px] font-medium whitespace-nowrap"
+                        :style="{ background: statusStyle(b.status).bg, color: statusStyle(b.status).text }"
+                      >{{ b.status }}</span>
+                    </div>
                     <span
-                      class="inline-flex items-center px-[10px] py-[3px] rounded-full text-[12px] font-medium whitespace-nowrap border bg-white"
-                      :style="{ borderColor: fundingStyle(b.funding).border, color: fundingStyle(b.funding).text }"
-                    >{{ b.funding }}</span>
-                  </td>
-                  <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-r border-[#e5e6ea]">
-                    <span
+                      v-else
                       class="inline-flex items-center px-[10px] py-[3px] rounded-full text-[12px] font-medium whitespace-nowrap"
                       :style="{ background: statusStyle(b.status).bg, color: statusStyle(b.status).text }"
                     >{{ b.status }}</span>
-                  </td>
-                  <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-[#e5e6ea] text-right whitespace-nowrap">
-                    <!-- Approve (split) for items needing approval -->
-                    <span
-                      v-if="b.status === 'Need approval'"
-                      class="inline-flex items-center h-[28px] rounded-[8px] border border-[#2465de] overflow-hidden align-middle"
-                      style="box-shadow: 0px 1.5px 0px 0px #1d5fd9;"
-                    >
-                      <button type="button" class="h-full pl-[12px] pr-[8px] text-[13px] font-medium text-white" style="background: linear-gradient(to bottom, #4179e2, #1f5bcc); text-shadow: 0px 1px 1px rgba(0,0,0,0.12);" @click.stop>Approve</button>
-                      <button type="button" class="h-full w-[24px] flex items-center justify-center border-l border-[rgba(255,255,255,0.25)]" style="background: linear-gradient(to bottom, #4179e2, #1f5bcc);" aria-label="More approve options" @click.stop>
-                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 6.5l3 3 3-3" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                      </button>
-                    </span>
-                    <!-- Send again for completed items -->
-                    <button
-                      v-else-if="b.status === 'Completed'"
-                      type="button"
-                      class="h-[28px] px-[12px] rounded-[8px] border border-[#f2f2f4] text-[13px] font-medium text-[#61667c] align-middle"
-                      style="background: linear-gradient(to bottom, #ffffff, #f2f2f2); box-shadow: 0px 1.5px 0px 0px #e5e5e5; text-shadow: 0px 1px 1px rgba(0,0,0,0.08);"
-                      @click.stop="viewBill(b)"
-                    >Send again</button>
-                    <!-- See details for everything else -->
-                    <a
-                      v-else
-                      href="#"
-                      class="text-[13px] font-medium text-[#2465de] hover:underline cursor-pointer align-middle"
-                      @click.prevent.stop="viewBill(b)"
-                    >See details</a>
                   </td>
                 </tr>
               </tbody>
@@ -491,7 +480,8 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { bills, fundingStyle, statusStyle } from '../../composables/useBills.js'
+import { bills, statusStyle } from '../../composables/useBills.js'
+import mailForwardIcon from '../../assets/icons/icon-mail-forward.svg'
 import ellipse37 from '../../assets/images/billpay/ellipse37.svg'
 import ellipse38 from '../../assets/images/billpay/ellipse38.png'
 import image from '../../assets/images/billpay/image.svg'
@@ -532,9 +522,7 @@ const columns = [
   { key: 'invoice', label: '# Invoice', sortable: true },
   { key: 'amount', label: 'Amount', sortable: true },
   { key: 'due', label: 'Due date', sortable: true },
-  { key: 'funding', label: 'Funding', sortable: false },
-  { key: 'status', label: 'Bill status', sortable: false },
-  { key: 'action', label: '', sortable: false },
+  { key: 'status', label: 'Status', sortable: false },
 ]
 
 // Tab → matching status (visual filtering)
