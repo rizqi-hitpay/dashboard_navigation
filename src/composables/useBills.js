@@ -1,11 +1,11 @@
 // Shared Bill Pay data + chip styling, used by the bills list and the detail view.
 
 export const bills = [
-  { id: 1, recipient: 'Berry Sharp', invoice: 'INV-83177', amount: 'SGD 1,870.00', due: '2025-08-15', funding: 'Returned', status: 'Overdue' },
-  { id: 2, recipient: 'David Tarigan', invoice: 'INV-98765', amount: 'SGD 870.00', due: '2025-11-05', funding: 'Collected', status: 'Pending' },
+  { id: 1, recipient: 'Berry Sharp', invoice: 'INV-83177', amount: 'SGD 1,870.00', due: '2025-08-15', funding: 'Awaiting funds', status: 'Overdue' },
+  { id: 2, recipient: 'David Tarigan', invoice: 'INV-98765', amount: 'SGD 870.00', due: '2025-11-05', funding: 'Awaiting funds', status: 'Pending' },
   { id: 3, recipient: 'Naomi Atkinson', invoice: 'N/A', amount: 'SGD 1,088.00', due: 'N/A', funding: 'Returned', status: 'Failed' },
   { id: 4, recipient: 'Naomi Atkinson', invoice: 'INV-67890', amount: 'SGD 1,088.00', due: '2025-09-10', funding: 'Awaiting funds', status: 'Need approval' },
-  { id: 5, recipient: 'Liam Carter', invoice: 'INV-12345', amount: 'SGD 987.75', due: '2026-01-30', funding: 'Collected', status: 'Scheduled' },
+  { id: 5, recipient: 'Liam Carter', invoice: 'INV-12345', amount: 'SGD 987.75', due: '2026-01-30', funding: 'Awaiting funds', status: 'Scheduled' },
   { id: 6, recipient: 'Sophia Bennett', invoice: 'INV-67891', amount: 'SGD 1,350.00', due: '2026-02-14', funding: 'Not funded', status: 'Draft' },
   { id: 7, recipient: 'Ethan Johnson', invoice: 'INV-54321', amount: 'SGD 750.25', due: '2026-03-01', funding: 'Collected', status: 'Processing' },
   { id: 8, recipient: 'Olivia Smith', invoice: 'INV-98765', amount: 'SGD 1,560.80', due: '2026-04-18', funding: 'Returned', status: 'Rejected' },
