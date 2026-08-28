@@ -57,9 +57,22 @@
                 <p class="text-[13px] leading-[1.5]" :class="m.working ? 'text-[#61667c]' : 'text-[#03102f] max-w-[320px]'">{{ m.text }}</p>
               </div>
             </div>
-            <!-- User row -->
-            <div v-else class="ws-msg flex flex-col items-end w-full" :style="{ '--wd': `${m.delay}ms` }">
-              <div class="bg-[#4c8afd] px-[12px] py-[8px] rounded-[16px] max-w-[324px]">
+            <!-- User row — attachments sit right-aligned above the bubble with a
+                 2px gap inside the message group (Figma: 2065:10600) -->
+            <div v-else class="ws-msg flex flex-col items-end gap-[2px] w-full" :style="{ '--wd': `${m.delay}ms` }">
+              <div v-if="m.attachments?.length" class="flex flex-wrap gap-[2px] justify-end max-w-[324px]">
+                <div
+                  v-for="(a, i) in m.attachments"
+                  :key="`${a.name}-${i}`"
+                  class="size-[120px] rounded-[12px] overflow-hidden shrink-0"
+                >
+                  <img v-if="a.previewUrl" :src="a.previewUrl" :alt="a.name" class="size-full object-cover" />
+                  <div v-else class="size-full bg-[#f2f2f4] flex items-center justify-center">
+                    <img :src="attachmentIcon" alt="" class="size-[24px]" />
+                  </div>
+                </div>
+              </div>
+              <div v-if="m.text" class="bg-[#4c8afd] px-[12px] py-[8px] rounded-[16px] max-w-[324px]">
                 <p class="text-[13px] leading-[1.5] text-white">{{ m.text }}</p>
               </div>
             </div>
@@ -532,6 +545,14 @@
       :class="ghost.anim ? 'ghost-anim' : ''"
       :style="ghost.style"
     >
+      <div v-if="ghost.attachments?.length" class="flex flex-wrap gap-[8px] w-full shrink-0">
+        <div v-for="(a, i) in ghost.attachments" :key="`${a.name}-${i}`" class="size-[64px] rounded-[12px] overflow-hidden shrink-0">
+          <img v-if="a.previewUrl" :src="a.previewUrl" alt="" class="size-full object-cover" />
+          <div v-else class="size-full bg-[#f2f2f4] flex items-center justify-center">
+            <img :src="attachmentIcon" alt="" class="size-[20px]" />
+          </div>
+        </div>
+      </div>
       <p class="flex-1 w-full text-left text-[#03102f] overflow-hidden" style="font-size: 13.5px; line-height: 1.5;">{{ ghost.text }}</p>
       <div class="flex items-center justify-between w-full shrink-0">
         <span
@@ -680,9 +701,11 @@ let workingTimer = null
 
 function sendWsMessage() {
   const text = wsPrompt.value.trim()
-  if (!text || !currentApp.value) return
+  if ((!text && !wsFiles.value.length) || !currentApp.value) return
   const app = currentApp.value
-  app.messages.push({ id: ++msgId, role: 'me', text, delay: 0 })
+  // Attachments travel with the message (Figma: 2065:10600)
+  const attachments = wsFiles.value.splice(0)
+  app.messages.push({ id: ++msgId, role: 'me', text, delay: 0, attachments })
   wsPrompt.value = ''
   if (!app.built) return
 
@@ -917,10 +940,11 @@ async function startBuild() {
     sidebarDocked.value = true
     scheduleSidebarAutoHide(1600)
   }
+  const attachments = landingFiles.value.splice(0)
   const app = reactive({
     id: ++appId,
     title: deriveTitle(text),
-    messages: [{ id: ++msgId, role: 'me', text, delay: 620 }],
+    messages: [{ id: ++msgId, role: 'me', text, delay: 620, attachments }],
     built: false,
   })
   apps.value.push(app)
@@ -940,6 +964,7 @@ async function startBuild() {
   }
 
   ghost.text = text
+  ghost.attachments = attachments
   ghost.style = rectToStyle(from, '3px')
   ghost.anim = false
   ghost.active = true
