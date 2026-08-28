@@ -8,7 +8,7 @@
       <div
         class="shrink-0 h-full overflow-hidden"
         :class="sidebarDocked ? 'border-r border-[#e5e6ea]' : ''"
-        :style="{ width: sidebarDocked ? '220px' : '0px', transition: 'width 250ms cubic-bezier(0.4, 0, 0.2, 1)' }"
+        :style="{ width: sidebarDocked ? '220px' : '0px', transition: 'width 400ms cubic-bezier(0.4, 0, 0.2, 1)' }"
       >
         <StudioSidebar :apps="apps" :active-app-id="currentApp?.id" @new-app="startNewApp" @select-app="selectApp" />
       </div>
@@ -17,12 +17,11 @@
            Collapses away in full-screen mode (Figma: 2001:9463) -->
       <div
         class="shrink-0 h-full overflow-hidden"
-        :class="isFullscreen ? '' : 'border-r border-[#e5e6ea]'"
         :style="{ width: isFullscreen ? '0px' : '425px', transition: 'width 250ms cubic-bezier(0.4, 0, 0.2, 1)' }"
       >
-      <aside class="ws-stagger flex flex-col w-[425px] h-full shrink-0 bg-white" style="--wd: 0ms;">
-        <!-- Head -->
-        <div class="flex items-center gap-[16px] h-[48px] shrink-0 p-[12px] border-b border-[#e5e6ea]">
+      <aside class="ws-stagger flex flex-col w-[425px] h-full shrink-0 bg-[#fcfcfd]" style="--wd: 0ms;">
+        <!-- Head (Figma: 2054:6631 — borderless, history icon beside the title) -->
+        <div class="flex items-center gap-[16px] h-[48px] shrink-0 p-[12px]">
           <button
             class="flex items-center justify-center size-[24px] -m-[4px] rounded-[4px] transition-colors duration-150 hover:bg-[#f0f1f5]"
             aria-label="Toggle Studio sidebar"
@@ -31,48 +30,31 @@
           >
             <img :src="panelSidebarIcon" alt="" class="size-[16px]" />
           </button>
-          <span class="flex-1 text-[13px] font-medium text-[#03102f] leading-[1.5] truncate">{{ currentApp?.title }}</span>
+          <div class="flex-1 min-w-0 flex items-center gap-[8px]">
+            <span class="text-[13px] font-medium text-[#03102f] leading-[1.5] truncate">{{ currentApp?.title }}</span>
+            <img :src="historyIcon" alt="" class="size-[16px] shrink-0" />
+          </div>
         </div>
 
-        <!-- Chat room (Figma: 42:3516 / 47:9097 — bottom-anchored, newest message on top) -->
+        <!-- Chat room (Figma: 42:3516 / 47:9097) — bottom-anchored, chronological:
+             newest at the bottom, with the thinking status pinned below the log -->
         <div class="flex-1 flex flex-col justify-end gap-[8px] px-[16px] overflow-hidden min-h-0">
           <Transition name="thinking-fade" :duration="220">
-          <div v-if="currentApp && !currentApp.built" class="ws-msg flex items-center gap-[4px] pr-[12px] w-full" style="--wd: 1050ms;">
-            <!-- Thinking icon (Figma: 52:11838) — star and outer ring both rotate clockwise -->
-            <svg class="size-[20px] shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <!-- Ring painted first so it slips BEHIND the star as it scales down -->
-              <g class="think-ring-scale">
-              <g class="think-ring">
-                <path d="M5 19.1667C4.53976 19.1667 4.16667 18.7936 4.16667 18.3333C4.16667 17.8731 4.53976 17.5 5 17.5C5.46024 17.5 5.83333 17.8731 5.83333 18.3333C5.83333 18.7936 5.46024 19.1667 5 19.1667Z" fill="url(#thinkGrad1)"/>
-                <path d="M15 2.5C14.5398 2.5 14.1667 2.1269 14.1667 1.66667C14.1667 1.20643 14.5398 0.833333 15 0.833333C15.4602 0.833333 15.8333 1.20643 15.8333 1.66667C15.8333 2.1269 15.4602 2.5 15 2.5Z" fill="url(#thinkGrad1)"/>
-                <path d="M18.3333 5.83333C17.8731 5.83333 17.5 5.46024 17.5 5C17.5 4.53976 17.8731 4.16667 18.3333 4.16667C18.7936 4.16667 19.1667 4.53976 19.1667 5C19.1667 5.46024 18.7936 5.83333 18.3333 5.83333Z" fill="url(#thinkGrad1)"/>
-                <path fill-rule="evenodd" clip-rule="evenodd" d="M18.5956 12.4961C18.9837 12.641 19.1808 13.073 19.036 13.461C18.0978 15.9747 16.1501 17.9939 13.6857 19.0252C13.3036 19.1851 12.8642 19.005 12.7043 18.6229C12.5444 18.2408 12.7245 17.8014 13.1066 17.6415C15.1895 16.7698 16.8377 15.0612 17.6307 12.9365C17.7755 12.5485 18.2075 12.3513 18.5956 12.4961Z" fill="url(#thinkGrad1)"/>
-                <path fill-rule="evenodd" clip-rule="evenodd" d="M7.51731 1.40386C7.66245 1.79182 7.46562 2.22397 7.07766 2.36912C4.94129 3.16838 3.2256 4.83575 2.36043 6.9422C2.20306 7.32536 1.76487 7.50839 1.38172 7.35102C0.998566 7.19365 0.815533 6.75546 0.972905 6.37231C1.99612 3.88108 4.02332 1.91027 6.55206 0.964217C6.94001 0.819076 7.37217 1.01591 7.51731 1.40386Z" fill="url(#thinkGrad1)"/>
-                <path d="M1.66667 15.8333C1.20643 15.8333 0.833333 15.4602 0.833333 15C0.833333 14.5398 1.20643 14.1667 1.66667 14.1667C2.1269 14.1667 2.5 14.5398 2.5 15C2.5 15.4602 2.1269 15.8333 1.66667 15.8333Z" fill="url(#thinkGrad1)"/>
-              </g>
-              </g>
-              <path class="think-star" d="M8.9123 4.18879C9.18888 3.04817 10.8111 3.04817 11.0877 4.18879L11.8487 7.3273C11.9475 7.73454 12.2655 8.0525 12.6727 8.15125L15.8112 8.91229C16.9518 9.18888 16.9518 10.8111 15.8112 11.0877L12.6727 11.8487C12.2655 11.9475 11.9475 12.2654 11.8487 12.6727L11.0877 15.8112C10.8111 16.9518 9.18888 16.9518 8.9123 15.8112L8.15126 12.6727C8.05251 12.2654 7.73455 11.9475 7.32731 11.8487L4.1888 11.0877C3.04818 10.8111 3.04818 9.18888 4.1888 8.91229L7.32731 8.15125C7.73455 8.0525 8.05251 7.73454 8.15126 7.3273L8.9123 4.18879Z" fill="url(#thinkGrad0)"/>
-              <defs>
-                <radialGradient id="thinkGrad0" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(6.06061 5.75757) rotate(71.9958) scale(12.7453 12.7453)">
-                  <stop stop-color="#9295A5"/>
-                  <stop offset="1" stop-color="#CBCDD4"/>
-                </radialGradient>
-                <radialGradient id="thinkGrad1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(4.58333 4.16667) rotate(71.9958) scale(17.5248)">
-                  <stop stop-color="#9295A5"/>
-                  <stop offset="1" stop-color="#CBCDD4"/>
-                </radialGradient>
-              </defs>
-            </svg>
+          <div v-if="currentApp && !currentApp.built" class="ws-msg order-last flex items-center gap-[4px] pr-[12px] w-full" style="--wd: 1050ms;">
+            <!-- Thinking icon (Figma: 52:11838) -->
+            <StudioThinkIcon />
             <div class="p-[8px] rounded-[16px] max-w-[336px]">
               <p class="text-[13px] leading-[1.5] text-[#61667c]">I’m thinking while initiating your workspace...</p>
             </div>
           </div>
           </Transition>
           <template v-for="m in currentApp?.messages || []" :key="m.id">
-            <!-- AI reply row (Figma: 47:9099) -->
-            <div v-if="m.role === 'ai'" class="ws-msg flex flex-col items-start w-full" :style="{ '--wd': `${m.delay}ms` }">
-              <div class="p-[8px] rounded-[16px] w-full">
-                <p class="text-[13px] leading-[1.5] text-[#03102f] max-w-[320px]">{{ m.text }}</p>
+            <!-- AI reply row (Figma: 47:9099); while working it carries the
+                 spinning think icon (Figma: 2060:8983) -->
+            <div v-if="m.role === 'ai'" class="ws-msg flex items-center gap-[4px] pr-[12px] w-full" :style="{ '--wd': `${m.delay}ms` }">
+              <StudioThinkIcon v-if="m.working" />
+              <div class="p-[8px] rounded-[16px]" :class="m.working ? 'max-w-[336px]' : 'w-full'">
+                <p class="text-[13px] leading-[1.5]" :class="m.working ? 'text-[#61667c]' : 'text-[#03102f] max-w-[320px]'">{{ m.text }}</p>
               </div>
             </div>
             <!-- User row -->
@@ -137,33 +119,41 @@
       </aside>
       </div>
 
-      <!-- Preview area (Figma: 24:21353) -->
-      <section class="ws-stagger relative flex flex-col flex-1 h-full min-w-0 bg-white" style="--wd: 120ms;">
+      <!-- Preview area (Figma: 2054:6649) -->
+      <section class="ws-stagger relative flex flex-col flex-1 h-full min-w-0 bg-[#fcfcfd]" style="--wd: 120ms;">
         <!-- Head — collapses away in full-screen mode -->
         <div
           class="shrink-0 overflow-hidden"
           :style="{ height: isFullscreen ? '0px' : '48px', transition: 'height 250ms cubic-bezier(0.4, 0, 0.2, 1)' }"
         >
-        <div class="flex items-center justify-between h-[48px] px-[12px] py-[8px] border-b border-[#e5e6ea]">
-          <!-- User chip with usage meter (Figma: 52:11926) -->
-          <div class="flex items-center gap-[8px] bg-[#fcfcfd] border border-[#e5e6ea] rounded-[40px] px-[8px] py-[4px]">
-            <img :src="user2Icon" alt="" class="size-[14px]" />
-            <span class="text-[12px] leading-[1.5] text-[#03102f] whitespace-nowrap">Cherry QA</span>
-            <div
-              class="relative w-[120px] h-[8px] bg-white rounded-[16px] overflow-hidden"
-              style="box-shadow: 0px 1px 3px 0px rgba(0,0,0,0.1), 0px 3px 22px 0px rgba(38,42,50,0.09);"
-            >
-              <div class="usage-fill absolute left-0 top-1/2 -translate-y-1/2 h-[9px] w-[26px] bg-[#4c8afd]" />
+        <div class="flex items-center justify-between h-[48px] px-[12px] py-[8px]">
+          <!-- User chip + settings pill (Figma: 2054:6651) -->
+          <div class="flex items-center gap-[8px]">
+            <div class="flex items-center gap-[8px] bg-[#fcfcfd] border border-[#e5e6ea] rounded-[40px] px-[8px] py-[4px]">
+              <img :src="user2Icon" alt="" class="size-[14px]" />
+              <span class="text-[12px] leading-[1.5] text-[#03102f] whitespace-nowrap">Cherry QA</span>
             </div>
+            <button
+              class="flex items-center justify-center size-[28px] rounded-full bg-[#fcfcfd] border border-[#e5e6ea] transition-colors duration-150 hover:bg-[#f0f1f5]"
+              aria-label="App settings"
+            >
+              <img :src="settingGearIcon" alt="" class="size-[18px]" />
+            </button>
           </div>
           <div class="flex items-center gap-[8px]">
-            <!-- Last published time (Figma: 2008:13804) -->
+            <!-- Last published time (Figma: 2054:6658 — with history icon) -->
             <Transition name="published-fade">
-              <span
-                v-if="lastPublishedLabel"
-                class="pr-[8px] text-[12px] leading-[1.5] text-[#61667c] whitespace-nowrap"
-              >Last published: {{ lastPublishedLabel }}</span>
+              <div v-if="lastPublishedLabel" class="flex items-center gap-[4px] pr-[8px]">
+                <img :src="historyIcon" alt="" class="size-[14px] shrink-0" />
+                <span class="text-[12px] leading-[1.5] text-[#61667c] whitespace-nowrap">Last published: {{ lastPublishedLabel }}</span>
+              </div>
             </Transition>
+            <!-- Environment pill (Figma: 2054:6662) -->
+            <button class="flex items-center gap-[4px] bg-[#fcfcfd] border border-[#e5e6ea] rounded-[40px] px-[8px] py-[4px] transition-colors duration-150 hover:bg-[#f0f1f5]">
+              <img :src="envDotIcon" alt="" class="size-[14px]" />
+              <span class="pr-[8px] text-[12px] leading-[1.5] text-[#03102f] whitespace-nowrap">Main</span>
+              <img :src="chevronDown14Icon" alt="" class="size-[14px]" />
+            </button>
             <button
               class="flex items-center justify-center size-[28px] rounded-[8px] transition-colors duration-150 hover:bg-[#f0f1f5]"
               aria-label="Full screen"
@@ -171,34 +161,133 @@
             >
               <img :src="arrowFullscreenIcon" alt="" class="size-[16px]" />
             </button>
+            <!-- Publish button: disabled "Publishing.." variant while in flight (Figma: 2060:9299) -->
             <button
-              class="flex items-center justify-center w-[80px] h-[28px] rounded-[8px] text-[12px] font-medium text-white transition-[filter] duration-150 hover:brightness-105 disabled:cursor-default disabled:hover:brightness-100"
-              style="background: linear-gradient(to bottom, #4179e2, #1f5bcc); border: 1px solid #2465de; box-shadow: 0px 1.5px 0px 0px #1d5fd9; text-shadow: 0px 1px 1px rgba(0,0,0,0.12);"
-              :disabled="publishing"
+              class="flex items-center justify-center min-w-[80px] h-[28px] rounded-[8px] text-[12px] font-medium text-white transition-[filter] duration-150 hover:brightness-105 disabled:cursor-default disabled:hover:brightness-100"
+              :style="publishState === 'publishing'
+                ? 'background: linear-gradient(to bottom, #567fcd, #3662b5); border: 1px solid #2465de; text-shadow: 0px 1px 1px rgba(0,0,0,0.12);'
+                : 'background: linear-gradient(to bottom, #4179e2, #1f5bcc); border: 1px solid #2465de; box-shadow: 0px 1.5px 0px 0px #1d5fd9; text-shadow: 0px 1px 1px rgba(0,0,0,0.12);'"
+              :disabled="publishState === 'publishing'"
               @click="publishApp"
             >
-              <span v-if="publishing" class="publish-spinner" aria-label="Publishing" />
-              <template v-else>Publish</template>
+              <span :class="publishState === 'publishing' ? 'opacity-50' : ''">{{ publishState === 'publishing' ? 'Publishing..' : 'Publish' }}</span>
             </button>
           </div>
         </div>
         </div>
 
+        <!-- Publish dropdown: progress while publishing (2060:9022), morphs into
+             the success card when done (2063:12074) -->
+        <Transition name="pub-drop">
+          <div
+            v-if="publishState !== 'idle'"
+            ref="publishDropRef"
+            class="absolute right-[12px] top-[48px] w-[326px] bg-white rounded-[8px] p-[16px] z-40"
+            style="box-shadow: 0px 1px 3px 0px rgba(0,0,0,0.1), 0px 3px 22px 0px rgba(38,42,50,0.09); transform-origin: top right;"
+          >
+            <div
+              class="overflow-hidden"
+              :style="{ height: publishState === 'publishing' ? '36px' : publishSuccessHeight, transition: 'height 300ms cubic-bezier(0.16, 1, 0.3, 1)' }"
+            >
+              <Transition name="pub-swap" mode="out-in">
+                <!-- Progress (Figma: 2063:11594) -->
+                <div v-if="publishState === 'publishing'" key="progress" class="flex flex-col h-[36px] w-full">
+                  <p class="flex-1 text-[12px] font-medium leading-[1.5] text-[#03102f] w-full">Publishing</p>
+                  <div class="flex items-center gap-[4px] w-full">
+                    <div class="relative flex-1 h-[8px] bg-[#f2f2f4] rounded-[16px] overflow-hidden">
+                      <div
+                        class="absolute inset-y-0 left-0 bg-[#2465de] rounded-[16px]"
+                        :style="{ width: `${publishProgress}%`, transition: 'width 200ms linear' }"
+                      />
+                    </div>
+                    <span class="text-[12px] font-medium leading-[1.5] text-[#03102f] whitespace-nowrap">{{ Math.round(publishProgress) }}%</span>
+                  </div>
+                </div>
+                <!-- Success (Figma: 2063:11276) -->
+                <div v-else key="success" class="flex flex-col gap-[8px] items-center w-full" @vue:mounted="measureSuccess">
+                  <div class="flex items-center justify-center p-[8px] bg-[#e6f9f0] rounded-full">
+                    <img :src="checkGreenIcon" alt="" class="size-[24px]" />
+                  </div>
+                  <p class="text-[12px] font-medium leading-[1.5] text-[#03102f] whitespace-nowrap">🎉 Publish success</p>
+                  <p class="text-[12px] leading-[1.5] text-[#61667c] text-center w-full">Your app has been published successfully.<br />Now it’s live!</p>
+                  <div class="flex gap-[16px] items-start pt-[12px] w-full px-[10px]">
+                    <button
+                      class="flex-1 flex items-center justify-center h-[28px] rounded-[8px] text-[12px] font-medium text-[#61667c] transition-[filter] duration-150 hover:brightness-[0.98]"
+                      style="background: linear-gradient(to bottom, #ffffff, #f2f2f2); border: 1px solid #f2f2f4; box-shadow: 0px 1.5px 0px 0px rgba(0,0,0,0.1); text-shadow: 0px 1px 1px rgba(0,0,0,0.08);"
+                      @click="publishState = 'idle'"
+                    >Close</button>
+                    <button
+                      class="flex-1 flex items-center justify-center h-[28px] rounded-[8px] text-[12px] font-medium text-white transition-[filter] duration-150 hover:brightness-105"
+                      style="background: linear-gradient(to bottom, #4179e2, #1f5bcc); border: 1px solid #2465de; box-shadow: 0px 1.5px 0px 0px #1d5fd9; text-shadow: 0px 1px 1px rgba(0,0,0,0.12);"
+                      @click="seeItLive"
+                    >See it live</button>
+                  </div>
+                </div>
+              </Transition>
+            </div>
+          </div>
+        </Transition>
+
         <!-- IFRAME area: stacking-cube loader while building, the built app after
              (Figma: 24:21361 / 42:3616 → 47:9109) -->
         <Transition name="loader-fade" mode="out-in" :duration="260">
-        <div v-if="!currentApp?.built" class="flex-1 min-h-0 bg-[#fcfcfd] flex flex-col items-center justify-center gap-[12px]">
-          <svg class="cube-loader" width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path class="cube-lid" d="M22.5517 6.62667L15.2367 2.68333C14.4667 2.26333 13.5333 2.26333 12.7633 2.68333L5.44833 6.62667C4.91167 6.91833 4.585 7.47833 4.585 8.12C4.585 8.75 4.91167 9.32167 5.44833 9.61333L12.7633 13.5567C13.1483 13.7667 13.58 13.8717 14 13.8717C14.42 13.8717 14.8517 13.7667 15.2367 13.5567L22.5517 9.61333C23.0883 9.32167 23.415 8.76167 23.415 8.12C23.415 7.47833 23.0883 6.91833 22.5517 6.62667Z" fill="#9295A5"/>
-            <path class="cube-left" opacity="0.4" d="M11.5617 14.9217L4.74833 11.515C4.22333 11.2583 3.61583 11.2817 3.12583 11.585C2.62417 11.9 2.33333 12.425 2.33333 13.0083V19.4367C2.33333 20.545 2.95167 21.5483 3.94333 22.05L10.745 25.4567C10.9783 25.5733 11.235 25.6317 11.4917 25.6317C11.795 25.6317 12.0983 25.55 12.3667 25.3867C12.8683 25.0833 13.16 24.5467 13.16 23.9633V17.535C13.1717 16.415 12.5533 15.4117 11.5617 14.9217Z" fill="#9295A5"/>
-            <path class="cube-right" opacity="0.4" d="M24.8742 11.585C24.3725 11.2817 23.7658 11.2467 23.2525 11.515L16.4508 14.9217C15.4592 15.4233 14.8408 16.415 14.8408 17.535V23.9633C14.8408 24.5467 15.1325 25.0833 15.6342 25.3867C15.9025 25.55 16.2058 25.6317 16.5092 25.6317C16.7658 25.6317 17.0225 25.5733 17.2558 25.4567L24.0575 22.05C25.0492 21.5483 25.6675 20.5567 25.6675 19.4367V13.0083C25.6675 12.425 25.3758 11.9 24.8742 11.585Z" fill="#9295A5"/>
-          </svg>
+        <div
+          v-if="!currentApp?.built"
+          class="flex-1 min-h-0 bg-[#fcfcfd] flex flex-col"
+          :class="isFullscreen ? '' : 'pt-[4px] px-[8px] pb-[8px]'"
+          style="transition: padding 250ms cubic-bezier(0.4, 0, 0.2, 1);"
+        >
+        <div
+          class="flex-1 bg-white flex flex-col items-center justify-center gap-[12px]"
+          :class="isFullscreen ? '' : 'rounded-[8px]'"
+          :style="isFullscreen ? {} : { boxShadow: '0px 1px 3px 0px rgba(0,0,0,0.1), 0px 3px 22px 0px rgba(38,42,50,0.09)' }"
+        >
+          <StudioCubeLoader />
           <p class="text-[13px] leading-[1.5] text-[#61667c]">Setting up your workspace</p>
         </div>
+        </div>
 
-        <!-- Built app preview (Figma: 47:9109 "IFRAME") -->
-        <div v-else class="flex-1 min-h-0 bg-[#fcfcfd] overflow-y-auto">
-          <div class="flex flex-col gap-[32px] min-h-full" :class="compactApp ? 'p-[16px]' : 'p-[24px]'">
+        <!-- Built app preview: a floating white card on the grey ground (2054:6669);
+             full-bleed with no gutter or card chrome in full screen (2054:6122) -->
+        <div
+          v-else
+          class="relative flex-1 min-h-0 bg-[#fcfcfd] flex flex-col"
+          :class="isFullscreen ? '' : 'pt-[4px] px-[8px] pb-[8px]'"
+          style="transition: padding 250ms cubic-bezier(0.4, 0, 0.2, 1);"
+        >
+          <!-- Working state: a dark blurred chip centered over the app (Figma: 2060:9007) -->
+          <Transition name="loader-fade" :duration="260">
+            <div
+              v-if="currentApp?.working"
+              class="absolute z-20 flex items-center justify-center"
+              :class="isFullscreen ? 'inset-0' : 'top-[4px] inset-x-[8px] bottom-[8px] rounded-[8px]'"
+              style="background: rgba(255,255,255,0.72);"
+            >
+              <div
+                class="flex flex-col items-center justify-center gap-[8px] min-w-[164px] p-[16px] rounded-[8px]"
+                style="background: rgba(0,0,0,0.45); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);"
+              >
+                <StudioCubeLoader color="#ffffff" />
+                <p class="text-[13px] leading-[1.5] text-white whitespace-nowrap">Working on it...</p>
+              </div>
+            </div>
+          </Transition>
+
+          <!-- Publishing scrim over the app (Figma: 2060:9372) -->
+          <Transition name="loader-fade" :duration="260">
+            <div
+              v-if="publishState === 'publishing'"
+              class="absolute z-10"
+              :class="isFullscreen ? 'inset-0' : 'top-[4px] inset-x-[8px] bottom-[8px] rounded-[8px]'"
+              style="background: rgba(255,255,255,0.72);"
+            />
+          </Transition>
+          <div
+            class="flex-1 min-h-0 bg-white overflow-y-auto"
+            :class="isFullscreen ? '' : 'rounded-[8px]'"
+            :style="isFullscreen ? {} : { boxShadow: '0px 1px 3px 0px rgba(0,0,0,0.1), 0px 3px 22px 0px rgba(38,42,50,0.09)' }"
+          >
+          <div class="flex flex-col gap-[32px] min-h-full p-[16px]">
             <!-- Header row -->
             <div class="app-in flex flex-wrap gap-y-[12px] items-center justify-between w-full shrink-0" style="--ad: 0ms;">
               <div class="flex flex-col gap-[4px]">
@@ -271,20 +360,22 @@
               </div>
             </div>
           </div>
+          </div>
         </div>
         </Transition>
 
-        <!-- Exit full screen: floating pencil, expands to "Edit" on hover
-             (Figma: 2001:9670 rest / 2008:14017 hover) -->
+        <!-- Exit full screen: pencil handle on the sidebar/content seam,
+             expands to an "Edit" pill on hover (Figma: 2054:6381 / 2059:8014) -->
         <Transition name="fab-pop">
           <button
             v-if="isFullscreen"
-            class="fab-edit absolute bottom-[24px] right-[24px] flex items-center gap-[8px] h-[44px] rounded-full bg-[#03102f] z-30 overflow-hidden whitespace-nowrap"
+            class="fab-edit absolute left-[-14px] flex items-center gap-[6px] h-[28px] rounded-full bg-[#03102f] z-30 overflow-hidden whitespace-nowrap"
+            style="top: calc(50% - 14px);"
             aria-label="Exit full screen"
             @click="exitFullscreen"
           >
-            <img :src="pencilIcon" alt="" class="size-[20px] shrink-0" />
-            <span class="fab-label text-[16px] font-medium text-white" style="line-height: 1.4;">Edit</span>
+            <img :src="pencilIcon" alt="" class="size-[16px] shrink-0" />
+            <span class="fab-label text-[12px] font-medium leading-[1.5] text-white">Edit</span>
           </button>
         </Transition>
       </section>
@@ -434,22 +525,6 @@
       </div>
     </div>
 
-    <!-- Success snackbar (same recipe as CardsPage / BalancePage) -->
-    <Teleport to="body">
-      <div class="fixed top-[24px] inset-x-0 z-[80] flex justify-center pointer-events-none">
-        <Transition name="snackbar">
-          <div
-            v-if="toast"
-            class="flex items-center gap-[8px] p-[12px] rounded-[8px] bg-[#e6f9f0] border border-[#b3eed2] pointer-events-auto"
-            style="filter: drop-shadow(0px 8px 6px rgba(42,50,82,0.04));"
-          >
-            <img :src="snackbarCheckIcon" width="24" height="24" alt="" class="shrink-0" />
-            <span class="text-[14px] font-normal text-[#03102f] leading-[1.5] whitespace-nowrap">{{ toast }}</span>
-          </div>
-        </Transition>
-      </div>
-    </Teleport>
-
     <!-- ============ Morph ghost: the input card flying to its docked position ============ -->
     <div
       v-if="ghost.active"
@@ -486,6 +561,8 @@ import { computed, nextTick, onMounted, onUnmounted, reactive, ref, useTemplateR
 import { activeProduct } from '../../composables/useNav.js'
 import StudioAttachButton from '../content/StudioAttachButton.vue'
 import StudioSidebar from '../navigation/StudioSidebar.vue'
+import StudioThinkIcon from '../content/StudioThinkIcon.vue'
+import StudioCubeLoader from '../content/StudioCubeLoader.vue'
 import attachmentIcon from '../../assets/icons/icon-attachment.svg'
 
 import bg1 from '../../assets/images/studio-bg-1.svg'
@@ -497,7 +574,11 @@ import user2Icon from '../../assets/icons/icon-user-2.svg'
 import arrowFullscreenIcon from '../../assets/icons/icon-arrow-fullscreen.svg'
 import fingerprintIcon from '../../assets/icons/studio-app-fingerprint.svg'
 import pencilIcon from '../../assets/icons/icon-pencil-white-20.svg'
-import snackbarCheckIcon from '../../assets/icons/icon-snackbar-check.svg'
+import checkGreenIcon from '../../assets/icons/icon-check-24-green.svg'
+import settingGearIcon from '../../assets/icons/icon-setting-gear.svg'
+import historyIcon from '../../assets/icons/icon-history-16.svg'
+import envDotIcon from '../../assets/icons/studio-env-dot.svg'
+import chevronDown14Icon from '../../assets/icons/icon-chevron-down-14.svg'
 
 // Deep links to /studio activate the Studio product in the nav rail
 onMounted(() => { activeProduct.value = 3 })
@@ -558,10 +639,8 @@ function autoGrow(e) {
   el.style.height = `${Math.max(49, Math.min(el.scrollHeight, 140))}px`
 }
 
-// Apps built this session (listed in the Studio sidebar: 47:8307). Each app
-// keeps its own chat (messages are newest first, per the design: 47:9097).
-const apps = ref([])
-const currentApp = ref(null)
+// Apps in the Studio sidebar (47:8307). Each app keeps its own chat, in
+// chronological order (newest message at the bottom).
 let msgId = 0
 let appId = 0
 
@@ -574,16 +653,54 @@ const AI_RESPONSE =
   'It includes a home screen with a prominent clock-in button, a weekly timesheet, ' +
   'a monthly history view, and a profile/settings screen.'
 
+// One example app is pre-seeded so the initial landing shows the docked
+// sidebar version (Figma: 42:4809) with an app already in YOUR APP.
+const apps = ref([
+  reactive({
+    id: ++appId,
+    title: 'Clock-in Clock-out',
+    built: true,
+    messages: [
+      { id: ++msgId, role: 'me', text: 'Create a clock-in and clock-out app for my staff', delay: 0 },
+      { id: ++msgId, role: 'ai', text: AI_RESPONSE, delay: 0 },
+    ],
+  }),
+])
+const currentApp = ref(null)
+
 function finishBuild(app) {
   app.built = true
-  app.messages.unshift({ id: ++msgId, role: 'ai', text: AI_RESPONSE, delay: 0 })
+  app.messages.push({ id: ++msgId, role: 'ai', text: AI_RESPONSE, delay: 0 })
 }
+
+// Asking the AI in the workspace acknowledges with a spinning "Roger that!"
+// row while the canvas shows a "Working on it..." overlay (Figma: 2060:8535)
+const WORKING_DURATION_MS = 5500
+let workingTimer = null
 
 function sendWsMessage() {
   const text = wsPrompt.value.trim()
   if (!text || !currentApp.value) return
-  currentApp.value.messages.unshift({ id: ++msgId, role: 'me', text, delay: 0 })
+  const app = currentApp.value
+  app.messages.push({ id: ++msgId, role: 'me', text, delay: 0 })
   wsPrompt.value = ''
+  if (!app.built) return
+
+  if (!app.working) {
+    const ack = { id: ++msgId, role: 'ai', text: 'Roger that! I’m working on it', delay: 0, working: true }
+    app.messages.push(ack)
+    app.workingMsg = ack
+  }
+  app.working = true
+  clearTimeout(workingTimer)
+  workingTimer = setTimeout(() => {
+    app.working = false
+    if (app.workingMsg) {
+      app.workingMsg.working = false
+      app.workingMsg.text = 'Done! I’ve updated your app — take a look at the preview.'
+      app.workingMsg = null
+    }
+  }, WORKING_DURATION_MS)
 }
 
 // ---------------------------------------------------------------------------
@@ -591,7 +708,17 @@ function sendWsMessage() {
 // ---------------------------------------------------------------------------
 const sidebarDocked = ref(false)
 
+// Entering chat mode keeps the sidebar for a beat, then slides it away so
+// the user sees what happened. A manual toggle cancels the auto-hide.
+let sidebarAutoHideTimer = null
+
+function scheduleSidebarAutoHide(delay) {
+  clearTimeout(sidebarAutoHideTimer)
+  sidebarAutoHideTimer = setTimeout(() => { sidebarDocked.value = false }, delay)
+}
+
 function toggleSidebar() {
+  clearTimeout(sidebarAutoHideTimer)
   sidebarDocked.value = !sidebarDocked.value
 }
 
@@ -602,6 +729,7 @@ const isFullscreen = ref(false)
 let dockedBeforeFullscreen = false
 
 function enterFullscreen() {
+  clearTimeout(sidebarAutoHideTimer)
   dockedBeforeFullscreen = sidebarDocked.value
   sidebarDocked.value = true
   isFullscreen.value = true
@@ -619,31 +747,55 @@ function selectApp(app) {
   currentApp.value = app
 }
 
-// Publishing shows a brief loading spinner, stamps the app, and confirms via
-// snackbar; the head then shows "Last published: Today, 05:11PM" (2008:13804).
-const publishing = ref(false)
+// Publishing (Figma: 2060:9022 → 2063:11605): the button flips to a disabled
+// "Publishing..", a dropdown under it tracks progress while the canvas dims,
+// then the dropdown morphs into the success card with Close / See it live.
+const publishState = ref('idle') // 'idle' | 'publishing' | 'success'
+const publishProgress = ref(0)
+const publishSuccessHeight = ref('162px')
+const publishDropRef = useTemplateRef('publishDropRef')
 let publishTimer = null
+let progressTimer = null
 
 function publishApp() {
-  if (!currentApp.value || publishing.value) return
-  publishing.value = true
+  if (!currentApp.value || publishState.value === 'publishing') return
   const app = currentApp.value
+  publishState.value = 'publishing'
+  publishProgress.value = 0
+
+  // Ease toward ~99%, then snap to 100 when the "deploy" completes
+  clearInterval(progressTimer)
+  progressTimer = setInterval(() => {
+    const remaining = 99 - publishProgress.value
+    publishProgress.value = Math.min(99, publishProgress.value + Math.max(1, Math.round(remaining * 0.16)))
+  }, 180)
+
+  clearTimeout(publishTimer)
   publishTimer = setTimeout(() => {
-    publishing.value = false
+    clearInterval(progressTimer)
+    publishProgress.value = 100
     app.publishedAt = new Date()
-    showToast('App published successfully')
-  }, 1400)
+    publishTimer = setTimeout(() => { publishState.value = 'success' }, 350)
+  }, 2600)
 }
 
-// Snackbar — same one-shot toast recipe as CardsPage
-const toast = ref('')
-let toastTimer = null
-
-function showToast(message) {
-  toast.value = message
-  clearTimeout(toastTimer)
-  toastTimer = setTimeout(() => { toast.value = '' }, 3200)
+function measureSuccess(vnode) {
+  if (vnode.el?.scrollHeight) publishSuccessHeight.value = `${vnode.el.scrollHeight}px`
 }
+
+function seeItLive() {
+  publishState.value = 'idle'
+  enterFullscreen()
+}
+
+// Clicking outside dismisses the success card (not the in-flight progress)
+function onDocMousedown(e) {
+  if (publishState.value === 'success' && publishDropRef.value && !publishDropRef.value.contains(e.target)) {
+    publishState.value = 'idle'
+  }
+}
+onMounted(() => document.addEventListener('mousedown', onDocMousedown))
+onUnmounted(() => document.removeEventListener('mousedown', onDocMousedown))
 
 const lastPublishedLabel = computed(() => {
   const d = currentApp.value?.publishedAt
@@ -656,7 +808,8 @@ const lastPublishedLabel = computed(() => {
   return `${day}, ${time}`
 })
 
-// Opening an app from the landing's sidebar fades into its workspace
+// Opening an app from the landing's sidebar fades into its workspace;
+// the sidebar rides along, then slides away after a beat
 function openAppFromLanding(app) {
   placeholderStopped = true
   currentApp.value = app
@@ -664,6 +817,7 @@ function openAppFromLanding(app) {
   inputMorphDone.value = true
   phase.value = 'leaving'
   setTimeout(() => { phase.value = 'workspace' }, 430)
+  scheduleSidebarAutoHide(1400)
 }
 
 function focusPrompt() {
@@ -712,7 +866,9 @@ onUnmounted(() => {
   clearInterval(clockTimer)
   clearTimeout(buildTimer)
   clearTimeout(publishTimer)
-  clearTimeout(toastTimer)
+  clearInterval(progressTimer)
+  clearTimeout(sidebarAutoHideTimer)
+  clearTimeout(workingTimer)
   for (const f of [...landingFiles.value, ...wsFiles.value]) {
     if (f.previewUrl) URL.revokeObjectURL(f.previewUrl)
   }
@@ -755,9 +911,12 @@ async function startBuild() {
   if (!text || phase.value !== 'landing') return
 
   placeholderStopped = true
-  // If the landing showed the docked sidebar (user already has apps),
-  // keep it docked in the workspace for continuity (Figma: 42:4809)
-  if (apps.value.length > 0) sidebarDocked.value = true
+  // The landing's docked sidebar carries into the workspace for continuity,
+  // then slides away once the chat has settled (workspace design: 24:20960)
+  if (apps.value.length > 0) {
+    sidebarDocked.value = true
+    scheduleSidebarAutoHide(1600)
+  }
   const app = reactive({
     id: ++appId,
     title: deriveTitle(text),
@@ -967,24 +1126,24 @@ onUnmounted(() => { placeholderStopped = true })
   opacity: 1;
 }
 
-/* Publish button loading spinner */
-.publish-spinner {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.35);
-  border-top-color: #ffffff;
-  animation: publish-spin 700ms linear infinite;
+/* Publish dropdown: scales in from the Publish button's corner */
+.pub-drop-enter-active {
+  transition: opacity 180ms ease-out, transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-@keyframes publish-spin {
-  to { transform: rotate(360deg); }
+.pub-drop-leave-active {
+  transition: opacity 130ms ease, transform 130ms ease;
+}
+.pub-drop-enter-from,
+.pub-drop-leave-to {
+  opacity: 0;
+  transform: scale(0.92) translateY(-6px);
 }
 
-/* Snackbar motion — same as CardsPage */
-.snackbar-enter-active { transition: opacity 200ms ease-out, transform 200ms ease-out; }
-.snackbar-leave-active { transition: opacity 150ms ease-in, transform 150ms ease-in; }
-.snackbar-enter-from,
-.snackbar-leave-to { opacity: 0; transform: translateY(-16px); }
+/* Progress ↔ success content crossfade inside the dropdown */
+.pub-swap-enter-active { transition: opacity 160ms ease-out 60ms, transform 200ms cubic-bezier(0.16, 1, 0.3, 1) 60ms; }
+.pub-swap-leave-active { transition: opacity 110ms ease; }
+.pub-swap-enter-from { opacity: 0; transform: translateY(6px); }
+.pub-swap-leave-to { opacity: 0; }
 
 /* "Last published" label eases in next to the Publish button */
 .published-fade-enter-active {
@@ -995,30 +1154,30 @@ onUnmounted(() => { placeholderStopped = true })
   transform: translateX(6px);
 }
 
-/* Exit-fullscreen FAB: a 44px circle that expands into an "Edit" pill on
-   hover (Figma: 2008:14017 — px-14, 16px label, tighter shadow) */
+/* Exit-fullscreen pencil handle: 28px circle that expands into an "Edit"
+   pill on hover (Figma: 2059:8014 — 59px wide, tighter shadow) */
 .fab-edit {
-  width: 44px;
-  padding-left: 12px;
-  box-shadow: 0px 3px 22px 0px rgba(38,42,50,0.09);
-  transition: width 220ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 220ms ease;
+  width: 28px;
+  padding-left: 6px;
+  box-shadow: 0px 3px 22px 0px rgba(38, 42, 50, 0.09);
+  transition: width 200ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 200ms ease;
 }
 .fab-edit:hover {
-  width: 84px;
-  box-shadow: 0px 3px 11px 0px rgba(38,42,50,0.09);
+  width: 59px;
+  box-shadow: 0px 3px 11px 0px rgba(38, 42, 50, 0.09);
 }
 .fab-label {
   opacity: 0;
-  transform: translateX(-4px);
-  transition: opacity 160ms ease, transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateX(-3px);
+  transition: opacity 150ms ease, transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .fab-edit:hover .fab-label {
   opacity: 1;
   transform: translateX(0);
-  transition-delay: 40ms;
+  transition-delay: 30ms;
 }
 
-/* Exit-fullscreen pencil FAB pops in and out */
+/* Exit-fullscreen pencil handle pops in and out */
 .fab-pop-enter-active {
   transition: opacity 200ms ease-out, transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -1029,15 +1188,6 @@ onUnmounted(() => { placeholderStopped = true })
 .fab-pop-leave-to {
   opacity: 0;
   transform: scale(0.6);
-}
-
-/* The usage meter fill grows in once when the workspace head appears */
-.usage-fill {
-  animation: usage-grow 700ms cubic-bezier(0.16, 1, 0.3, 1) 500ms both;
-}
-@keyframes usage-grow {
-  from { width: 0; }
-  to   { width: 26px; }
 }
 
 /* Built-app sections rise in with a stagger, per-section delay via --ad */
@@ -1056,78 +1206,12 @@ onUnmounted(() => { placeholderStopped = true })
     border-width 520ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* The thinking icon: the center star spins clockwise; the outer "Vector"
-   ring spins the other way while breathing down in scale. Rotation and
-   scale live on nested groups so each keeps its own easing. */
-.think-star,
-.think-ring,
-.think-ring-scale {
-  transform-box: fill-box;
-  transform-origin: 50% 50%;
-}
-.think-star {
-  animation: think-spin 4s linear infinite;
-}
-.think-ring {
-  animation: think-spin-ccw 2.4s linear infinite;
-}
-.think-ring-scale {
-  animation: think-ring-breathe 2.4s ease-in-out infinite;
-}
-@keyframes think-spin {
-  to { transform: rotate(360deg); }
-}
-@keyframes think-spin-ccw {
-  to { transform: rotate(-360deg); }
-}
-@keyframes think-ring-breathe {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(0.15); }
-}
-
-/* ---- Stacking cube loader (Figma: 42:3616) ----
-   The bulk 3dcube's three parts stack into place one after another
-   (left face, right face, then the lid drops in), hold, scatter, repeat. */
-.cube-loader .cube-lid,
-.cube-loader .cube-left,
-.cube-loader .cube-right {
-  transform-box: fill-box;
-  transform-origin: 50% 50%;
-}
-.cube-loader .cube-left {
-  animation: cube-stack-left 2.8s ease-in-out infinite;
-}
-.cube-loader .cube-right {
-  animation: cube-stack-right 2.8s ease-in-out infinite;
-}
-.cube-loader .cube-lid {
-  animation: cube-stack-lid 2.8s ease-in-out infinite;
-}
-@keyframes cube-stack-left {
-  0%        { opacity: 0; transform: translate(-8px, 7px) scale(0.7); }
-  10%       { opacity: 0.42; transform: translate(1px, -1px) scale(1.06); }
-  15%, 80%  { opacity: 0.4; transform: translate(0, 0) scale(1); }
-  92%, 100% { opacity: 0; transform: translate(-4px, 4px) scale(0.8); }
-}
-@keyframes cube-stack-right {
-  0%, 16%   { opacity: 0; transform: translate(8px, 7px) scale(0.7); }
-  26%       { opacity: 0.42; transform: translate(-1px, -1px) scale(1.06); }
-  31%, 80%  { opacity: 0.4; transform: translate(0, 0) scale(1); }
-  92%, 100% { opacity: 0; transform: translate(4px, 4px) scale(0.8); }
-}
-@keyframes cube-stack-lid {
-  0%, 34%   { opacity: 0; transform: translateY(-9px) scale(0.8); }
-  46%       { opacity: 1; transform: translateY(1.5px) scale(1.04); }
-  52%, 80%  { opacity: 1; transform: translateY(0) scale(1); }
-  92%, 100% { opacity: 0; transform: translateY(-4px) scale(0.85); }
-}
-
 /* Respect reduced-motion preferences: show the final state, skip the loops */
 @media (prefers-reduced-motion: reduce) {
-  .stagger, .studio-bg, .landing-leave, .ws-stagger, .ws-msg, .app-in, .usage-fill { animation-duration: 1ms; }
-  .bg-blob-1, .bg-blob-2, .input-glow, .think-star, .think-ring, .think-ring-scale,
-  .cube-loader .cube-lid, .cube-loader .cube-left, .cube-loader .cube-right { animation: none; }
-  .snackbar-enter-active, .snackbar-leave-active { transition: none; }
-  .snackbar-enter-from, .snackbar-leave-to { transform: none; }
+  .stagger, .studio-bg, .landing-leave, .ws-stagger, .ws-msg, .app-in { animation-duration: 1ms; }
+  .bg-blob-1, .bg-blob-2, .input-glow { animation: none; }
+  .pub-drop-enter-active, .pub-drop-leave-active,
+  .pub-swap-enter-active, .pub-swap-leave-active { transition: none; }
+  .pub-drop-enter-from, .pub-drop-leave-to, .pub-swap-enter-from { transform: none; }
 }
 </style>
