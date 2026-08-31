@@ -18,7 +18,7 @@ import { onMounted, onUnmounted, useTemplateRef } from 'vue'
 
 const canvasRef = useTemplateRef('canvasRef')
 
-const SPACING = 10
+const SPACING = 4
 const COLOR = 'rgb(129, 161, 214)'
 const RIPPLE_LIFE = 2600
 // The dot field lives in a 700x700 circle at the center (Figma: 2092:13444),
@@ -51,6 +51,8 @@ function onPointerLeave() {
   pointer.target = 0
 }
 
+let grid = []
+
 function resize() {
   const canvas = canvasRef.value
   if (!canvas) return
@@ -63,6 +65,29 @@ function resize() {
   canvas.width = Math.round(cw * dpr)
   canvas.height = Math.round(ch * dpr)
   canvas.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0)
+
+  // Precompute the in-circle dot grid once — at a 4px pitch there are tens
+  // of thousands of cells, so per-frame hypot/bounds work would add up
+  const cols = Math.ceil(cw / SPACING)
+  const rows = Math.ceil(ch / SPACING)
+  const gx = (cw - (cols - 1) * SPACING) / 2
+  const gy = (ch - (rows - 1) * SPACING) / 2
+  grid = []
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const x = gx + col * SPACING
+      const y = gy + row * SPACING
+      const u = Math.hypot(x - cx, y - cy)
+      if (u > AREA_R) continue
+      grid.push({
+        x,
+        y,
+        u,
+        rimFade: Math.min(1, (AREA_R - u) / RIM_FADE),
+        falloff: 1 - 0.3 * Math.min(u / AREA_R, 1),
+      })
+    }
+  }
   if (reducedMotion) drawFrame(performance.now(), true)
 }
 
@@ -79,53 +104,39 @@ function drawFrame(now, staticOnly = false) {
   // Hover glow eases toward its target strength
   pointer.current += (pointer.target - pointer.current) * 0.08
 
-  // Centered grid, exactly like the reference
-  const cols = Math.ceil(cw / SPACING)
-  const rows = Math.ceil(ch / SPACING)
-  const gx = (cw - (cols - 1) * SPACING) / 2
-  const gy = (ch - (rows - 1) * SPACING) / 2
+  const hasHover = pointer.current > 0.001
+  ctx.fillStyle = COLOR
+  for (const d of grid) {
+    // Ambient radial wave + soft falloff toward the rim
+    let h = staticOnly
+      ? 0.5 * d.falloff
+      : Math.pow(0.5 + 0.5 * Math.sin(d.u / 130 - 0.0024 * now), 1.6) * d.falloff
 
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      const x = gx + col * SPACING
-      const y = gy + row * SPACING
-      const u = Math.hypot(x - cx, y - cy)
-      if (u > AREA_R) continue
-      const rimFade = Math.min(1, (AREA_R - u) / RIM_FADE)
-
-      // Ambient radial wave + soft falloff toward the rim
-      let h = staticOnly
-        ? 0.5 * (1 - 0.3 * Math.min(u / AREA_R, 1))
-        : Math.pow(0.5 + 0.5 * Math.sin(u / 130 - 0.0024 * now), 1.6)
-          * (1 - 0.3 * Math.min(u / AREA_R, 1))
-
-      // Click ripples: an expanding ring with a shimmering tail
-      for (const rp of ripples) {
-        const dt = now - rp.start
-        const n = Math.hypot(x - rp.x, y - rp.y)
-        h += Math.exp(-(((n - 0.28 * dt) ** 2)) / 1352)
-          * (1 - dt / RIPPLE_LIFE)
-          * (0.6 + 0.4 * Math.sin(n / 90 - 0.02 * dt))
-          * 1.1
-      }
-
-      // Hover glow around the cursor
-      if (pointer.current > 0.001) {
-        const pd = Math.hypot(x - pointer.x, y - pointer.y)
-        h += Math.exp(-((pd / 78) ** 2))
-          * (0.7 + 0.3 * Math.sin(pd / 26 - 0.006 * now))
-          * 0.45
-          * pointer.current
-      }
-
-      h = Math.max(0, Math.min(h, 1.4))
-      const r = 0.7 + 1.2 * h
-      ctx.globalAlpha = (0.08 + 0.72 * h) * rimFade
-      ctx.fillStyle = COLOR
-      ctx.beginPath()
-      ctx.arc(x, y, r, 0, Math.PI * 2)
-      ctx.fill()
+    // Click ripples: an expanding ring with a shimmering tail
+    for (const rp of ripples) {
+      const dt = now - rp.start
+      const n = Math.hypot(d.x - rp.x, d.y - rp.y)
+      h += Math.exp(-(((n - 0.28 * dt) ** 2)) / 1352)
+        * (1 - dt / RIPPLE_LIFE)
+        * (0.6 + 0.4 * Math.sin(n / 90 - 0.02 * dt))
+        * 1.1
     }
+
+    // Hover glow around the cursor
+    if (hasHover) {
+      const pd = Math.hypot(d.x - pointer.x, d.y - pointer.y)
+      h += Math.exp(-((pd / 78) ** 2))
+        * (0.7 + 0.3 * Math.sin(pd / 26 - 0.006 * now))
+        * 0.45
+        * pointer.current
+    }
+
+    h = Math.max(0, Math.min(h, 1.4))
+    const r = 0.5 + 0.7 * h
+    ctx.globalAlpha = (0.08 + 0.72 * h) * d.rimFade
+    ctx.beginPath()
+    ctx.arc(d.x, d.y, r, 0, Math.PI * 2)
+    ctx.fill()
   }
   ctx.globalAlpha = 1
 }
