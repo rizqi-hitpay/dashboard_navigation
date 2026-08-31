@@ -83,7 +83,7 @@
           </div>
           <p class="text-[14px] text-[#61667c]" style="line-height: 1.5;">{{ card.description }}</p>
           <button class="self-start text-[14px] font-medium text-[#2465de] hover:opacity-80 transition-opacity" style="line-height: 1.5;">
-            Learn more →
+            {{ card.action }} →
           </button>
         </div>
       </div>
@@ -122,30 +122,35 @@ const cards = [
   {
     title: 'Professional Invoicing',
     description: 'Send branded invoices with online payment options. Auto-reminders help you get paid faster.',
+    action: 'Create first invoice',
     tile: TileInvoice,
     ...PAYMENT,
   },
   {
     title: 'Create Payment Links',
     description: 'Share a link and get paid instantly — no website or app needed. Works via WhatsApp, email, or SMS.',
+    action: 'Create payment link',
     tile: TilePaymentLink,
     ...PAYMENT,
   },
   {
     title: 'Static QR Payments',
     description: 'Print a QR code and place it anywhere. Customers scan and pay via PayNow or other methods.',
+    action: 'Generate QR code',
     tile: TileStaticQr,
     ...PAYMENT,
   },
   {
     title: 'POS & Online Store Builder',
     description: 'Turn any device into a point-of-sale terminal, or launch a full online storefront in minutes.',
+    action: 'Set up your store',
     tile: TilePos,
     ...COMMERCE,
   },
   {
     title: 'Send Money',
     description: 'Pay vendors, suppliers and staff directly from your HitPay balance with instant bank transfers.',
+    action: 'Make a transfer',
     tile: TileSendMoney,
     ...FINANCE,
   },

@@ -1,14 +1,32 @@
 <template>
   <div class="h-full overflow-y-auto bg-white" style="padding: 24px 28px;">
 
-    <!-- Page header -->
-    <div class="flex items-center justify-between shrink-0 mb-5">
-      <h1 class="text-[18px] font-medium text-[#03102f]">Overview</h1>
+    <!-- Page header + incentive banner: hovering the block reveals Minimize -->
+    <div class="group/banner">
+      <div class="flex items-center justify-between shrink-0 mb-5">
+        <h1 class="text-[18px] font-medium text-[#03102f]">Overview</h1>
+      </div>
+
+      <!-- New-user incentive banner (0/10 · 4/10 · completed · missed=hidden) -->
+      <div v-if="isNewUser && incentiveVisible" class="relative">
+        <!-- Hover-revealed control above the banner's top-right:
+             Minimize/Expand while in progress, Close once completed -->
+        <button
+          class="absolute flex items-center text-[13px] font-medium text-[#03102f] leading-none opacity-0 group-hover/banner:opacity-100 transition-opacity duration-200 hover:opacity-70"
+          style="right: 8px; bottom: 100%; margin-bottom: 8px; gap: 6px;"
+          @click="onBannerAction"
+        >
+          <img :src="incentiveState === 'completed' ? closeIcon : minimizeIcon" width="14" height="14" />
+          {{ incentiveState === 'completed' ? 'Close' : (incentiveMinimized ? 'Expand' : 'Minimize') }}
+        </button>
+        <IncentiveBanner />
+      </div>
     </div>
 
-    <!-- Product intro carousel (new users only, dismissible) — reveals on first load -->
+    <!-- Product intro carousel (new users only, dismissible) — reveals on first
+         load; shown only in the Missed incentive state -->
     <div
-      v-if="isNewUser && !productIntroDismissed"
+      v-if="isNewUser && !productIntroDismissed && incentiveState === 'missed'"
       class="intro-reveal"
       :class="{ 'intro-reveal--open': introOpen, 'intro-reveal--done': introDone }"
     >
@@ -156,10 +174,14 @@ import RecentTransactionsTable from './RecentTransactionsTable.vue'
 import SalesBarChart from './SalesBarChart.vue'
 import DonutChartCard from './DonutChartCard.vue'
 import RecentPayoutsTable from './RecentPayoutsTable.vue'
+import IncentiveBanner from '../onboarding/IncentiveBanner.vue'
 import paletteIcon from '../../assets/icons/icon-palette.svg'
+import minimizeIcon from '../../assets/icons/icon-minimize.svg'
+import closeIcon from '../../assets/icons/icon-close.svg'
 import promoPaymentLinksImg from '../../assets/images/promo-payment-links.webp'
 import promoInvoiceImg from '../../assets/images/promo-invoice.webp'
 import { useNewUser } from '../../composables/useNewUser'
+import { useIncentive } from '../../composables/useIncentive'
 
 const smallBannerDismissed = ref(false)
 const largeBannerDismissed = ref(false)
@@ -167,6 +189,15 @@ const productIntroDismissed = ref(false)
 
 // New-user activation flow: all dashboard data starts empty
 const { isNewUser } = useNewUser()
+
+// Incentive banner state (driven by the floating preview switcher)
+const { incentiveState, incentiveVisible, incentiveMinimized, incentiveDismissed } = useIncentive()
+
+// Completed banner is closed for good; in-progress banners toggle minimized
+function onBannerAction() {
+  if (incentiveState.value === 'completed') incentiveDismissed.value = true
+  else incentiveMinimized.value = !incentiveMinimized.value
+}
 
 // One-time intro reveal: collapsed → expands (pushing the stat cards down) and
 // the carousel cards stagger in. `done` drops the grid clip so hover shadows

@@ -1,17 +1,5 @@
 <template>
   <div class="flex flex-col h-screen bg-[#f8f9fc] overflow-hidden">
-    <!-- Sticky top setup banner — revealed when the setup card is minimized via its minus icon -->
-    <div class="banner-reveal shrink-0" :style="{ gridTemplateRows: setupBannerVisible ? '1fr' : '0fr' }">
-      <div class="min-h-0 overflow-hidden">
-        <SetupBanner
-          class="banner-inner"
-          :class="{ 'banner-inner--shown': setupBannerVisible }"
-          @restore="setupBannerVisible = false"
-          @action="bankAccountPageOpen = true"
-        />
-      </div>
-    </div>
-
     <div class="flex flex-1 min-h-0 overflow-hidden">
     <!-- Left nav rail: 81px -->
     <NavRail />
@@ -82,8 +70,8 @@
   <!-- Intro modal -->
   <VideoIntroModal v-model="introModalOpen" />
 
-  <!-- New-user setup overlay + docked setup guide -->
-  <NewUserOverlay v-if="isNewUser" />
+  <!-- Incentive banner state switcher (prototype preview control) -->
+  <IncentivePreviewSwitcher />
 
   <!-- Account Verification full page -->
   <Teleport to="body">
@@ -116,13 +104,12 @@ import { sidebarCollapsed, sidebarHovered, sidebarPinned } from '../../composabl
 import { settingsOpen } from '../../composables/useSettingsPanel.js'
 import OverviewContent from '../content/OverviewContent.vue'
 import AskAgentPanel from '../content/AskAgentPanel.vue'
-import NewUserOverlay from '../onboarding/NewUserOverlay.vue'
-import SetupBanner from '../onboarding/SetupBanner.vue'
+import IncentivePreviewSwitcher from '../onboarding/IncentivePreviewSwitcher.vue'
 import AccountVerificationPage from '../onboarding/AccountVerificationPage.vue'
 import AddBankAccountPage from '../onboarding/AddBankAccountPage.vue'
 import { useNewUser } from '../../composables/useNewUser'
 
-const { isNewUser, verificationPageOpen, bankAccountPageOpen, setupBannerVisible } = useNewUser()
+const { verificationPageOpen, bankAccountPageOpen } = useNewUser()
 
 // Debounced hover to prevent flicker when mouse moves between collapsed strip and overlay
 let hoverTimer = null
@@ -167,22 +154,6 @@ const sidebarKey = computed(() => {
 </script>
 
 <style scoped>
-/* Sticky top banner reveal — height via grid rows (transform-free push),
-   inner content eases down. Onboarding ease-out; respects reduced motion. */
-.banner-reveal {
-  display: grid;
-  transition: grid-template-rows 340ms cubic-bezier(0.32, 0.72, 0, 1);
-}
-.banner-inner {
-  opacity: 0;
-  transform: translateY(-8px);
-  transition: opacity 240ms ease-out, transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
-}
-.banner-inner--shown {
-  opacity: 1;
-  transform: translateY(0);
-}
-
 /* Enter: slide in from left + fade — ease-out for instant responsiveness feel */
 .sidebar-enter-active {
   transition: opacity 180ms ease-out, transform 180ms ease-out;
@@ -229,7 +200,5 @@ const sidebarKey = computed(() => {
 @media (prefers-reduced-motion: reduce) {
   .full-page-enter-active,
   .full-page-leave-active { transition: none; }
-  .banner-reveal,
-  .banner-inner { transition: none; }
 }
 </style>
