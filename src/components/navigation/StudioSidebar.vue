@@ -48,7 +48,13 @@
               @click="emit('select-app', app)"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="8" cy="8" r="2.66667" :fill="app.id === activeAppId ? '#2465DE' : '#4C689C'"/>
+                <!-- Live (full-screen) apps get the pulsing green dot -->
+                <circle v-if="app.id === liveAppId" class="live-ping" cx="8" cy="8" r="2.66667" fill="#2BC37D"/>
+                <circle
+                  cx="8" cy="8" r="2.66667"
+                  :class="app.id === liveAppId ? 'live-dot' : ''"
+                  :fill="app.id === liveAppId ? '#2BC37D' : app.id === activeAppId ? '#2465DE' : '#A6B3CD'"
+                />
               </svg>
               <span class="flex-1 text-left text-[13px] leading-[1.5] text-[#03102f] truncate">{{ app.title }}</span>
             </button>
@@ -84,7 +90,36 @@ defineProps({
   apps: { type: Array, default: () => [] },
   activeAppId: { type: [Number, String], default: null },
   newAppActive: { type: Boolean, default: false },
+  liveAppId: { type: [Number, String], default: null },
 })
 
 const emit = defineEmits(['new-app', 'select-app'])
 </script>
+
+<style scoped>
+/* Live-mode dot: gentle breathe + an expanding ping echo */
+.live-dot,
+.live-ping {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+.live-dot {
+  animation: live-dot-breathe 1.6s ease-in-out infinite;
+}
+.live-ping {
+  animation: live-ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes live-dot-breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.2); }
+}
+@keyframes live-ping {
+  0%   { transform: scale(1); opacity: 0.5; }
+  80%, 100% { transform: scale(2.6); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot, .live-ping { animation: none; }
+  .live-ping { opacity: 0; }
+}
+</style>

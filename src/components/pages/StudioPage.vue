@@ -10,7 +10,13 @@
         :class="sidebarDocked ? 'border-r border-[#e5e6ea]' : ''"
         :style="{ width: sidebarDocked ? '220px' : '0px', transition: 'width 400ms cubic-bezier(0.4, 0, 0.2, 1)' }"
       >
-        <StudioSidebar :apps="apps" :active-app-id="currentApp?.id" @new-app="startNewApp" @select-app="selectApp" />
+        <StudioSidebar
+          :apps="apps"
+          :active-app-id="currentApp?.id"
+          :live-app-id="isFullscreen ? currentApp?.id : null"
+          @new-app="startNewApp"
+          @select-app="selectApp"
+        />
       </div>
 
       <!-- Chat panel (Figma: 24:21294 — 425px, border-right).
@@ -244,20 +250,20 @@
         <!-- IFRAME area: stacking-cube loader while building, the built app after
              (Figma: 24:21361 / 42:3616 → 47:9109) -->
         <Transition name="loader-fade" mode="out-in" :duration="260">
-        <div
-          v-if="!currentApp?.built"
-          class="flex-1 min-h-0 bg-[#fcfcfd] flex flex-col"
-          :class="isFullscreen ? '' : 'pt-[4px] px-[8px] pb-[8px]'"
-          style="transition: padding 250ms cubic-bezier(0.4, 0, 0.2, 1);"
-        >
-        <div
-          class="flex-1 bg-white flex flex-col items-center justify-center gap-[12px]"
-          :class="isFullscreen ? '' : 'rounded-[8px]'"
-          :style="isFullscreen ? {} : { boxShadow: '0px 1px 3px 0px rgba(0,0,0,0.1), 0px 3px 22px 0px rgba(38,42,50,0.09)' }"
-        >
-          <StudioCubeLoader />
-          <p class="text-[13px] leading-[1.5] text-[#61667c]">Setting up your workspace</p>
-        </div>
+        <!-- Setting-up state: full-bleed pulsing dot grid behind the loader
+             (Figma: 2001:9671 / 2092:13439) -->
+        <div v-if="!currentApp?.built" class="relative flex-1 min-h-0 bg-white overflow-hidden">
+          <StudioPulseCanvas />
+          <div class="relative z-10 h-full flex items-center justify-center">
+            <!-- Frosted loading chip clears the dots behind it (Figma: 2092:13445) -->
+            <div
+              class="flex flex-col items-center justify-center gap-[8px] p-[16px] rounded-[8px] border border-white"
+              style="background: rgba(255,255,255,0.15); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);"
+            >
+              <StudioCubeLoader />
+              <p class="workspace-pulse-text text-[13px] leading-[1.5] text-[#61667c] text-center whitespace-nowrap">Setting up your workspace</p>
+            </div>
+          </div>
         </div>
 
         <!-- Built app preview: a floating white card on the grey ground (2054:6669);
@@ -265,7 +271,7 @@
         <div
           v-else
           class="relative flex-1 min-h-0 bg-[#fcfcfd] flex flex-col"
-          :class="isFullscreen ? '' : 'pt-[4px] px-[8px] pb-[8px]'"
+          :class="isFullscreen ? '' : 'p-[8px] border border-[#e5e6ea] rounded-tl-[16px]'"
           style="transition: padding 250ms cubic-bezier(0.4, 0, 0.2, 1);"
         >
           <!-- Working state: a dark blurred chip centered over the app (Figma: 2060:9007) -->
@@ -273,7 +279,7 @@
             <div
               v-if="currentApp?.working"
               class="absolute z-20 flex items-center justify-center"
-              :class="isFullscreen ? 'inset-0' : 'top-[4px] inset-x-[8px] bottom-[8px] rounded-[8px]'"
+              :class="isFullscreen ? 'inset-0' : 'inset-[8px] rounded-[8px]'"
               style="background: rgba(255,255,255,0.72);"
             >
               <div
@@ -291,13 +297,13 @@
             <div
               v-if="publishState === 'publishing'"
               class="absolute z-10"
-              :class="isFullscreen ? 'inset-0' : 'top-[4px] inset-x-[8px] bottom-[8px] rounded-[8px]'"
+              :class="isFullscreen ? 'inset-0' : 'inset-[8px] rounded-[8px]'"
               style="background: rgba(255,255,255,0.72);"
             />
           </Transition>
           <div
             class="flex-1 min-h-0 bg-white overflow-y-auto"
-            :class="isFullscreen ? '' : 'rounded-[8px]'"
+            :class="isFullscreen ? '' : 'rounded-[8px] border border-[#f2f2f4]'"
             :style="isFullscreen ? {} : { boxShadow: '0px 1px 3px 0px rgba(0,0,0,0.1), 0px 3px 22px 0px rgba(38,42,50,0.09)' }"
           >
           <div class="flex flex-col gap-[32px] min-h-full p-[16px]">
@@ -584,6 +590,7 @@ import StudioAttachButton from '../content/StudioAttachButton.vue'
 import StudioSidebar from '../navigation/StudioSidebar.vue'
 import StudioThinkIcon from '../content/StudioThinkIcon.vue'
 import StudioCubeLoader from '../content/StudioCubeLoader.vue'
+import StudioPulseCanvas from '../content/StudioPulseCanvas.vue'
 import attachmentIcon from '../../assets/icons/icon-attachment.svg'
 
 import bg1 from '../../assets/images/studio-bg-1.svg'
@@ -1151,6 +1158,15 @@ onUnmounted(() => { placeholderStopped = true })
   opacity: 1;
 }
 
+/* The setting-up label breathes, workpulse style */
+.workspace-pulse-text {
+  animation: workspace-pulse-text 2.6s ease-in-out infinite;
+}
+@keyframes workspace-pulse-text {
+  0%, 100% { opacity: 0.75; }
+  50%      { opacity: 1; }
+}
+
 /* Publish dropdown: scales in from the Publish button's corner */
 .pub-drop-enter-active {
   transition: opacity 180ms ease-out, transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -1234,7 +1250,7 @@ onUnmounted(() => { placeholderStopped = true })
 /* Respect reduced-motion preferences: show the final state, skip the loops */
 @media (prefers-reduced-motion: reduce) {
   .stagger, .studio-bg, .landing-leave, .ws-stagger, .ws-msg, .app-in { animation-duration: 1ms; }
-  .bg-blob-1, .bg-blob-2, .input-glow { animation: none; }
+  .bg-blob-1, .bg-blob-2, .input-glow, .workspace-pulse-text { animation: none; }
   .pub-drop-enter-active, .pub-drop-leave-active,
   .pub-swap-enter-active, .pub-swap-leave-active { transition: none; }
   .pub-drop-enter-from, .pub-drop-leave-to, .pub-swap-enter-from { transform: none; }
