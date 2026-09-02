@@ -21,10 +21,6 @@ const canvasRef = useTemplateRef('canvasRef')
 const SPACING = 4
 const COLOR = 'rgb(129, 161, 214)'
 const RIPPLE_LIFE = 2600
-// The dot field lives in a 700x700 circle at the center (Figma: 2092:13444),
-// with a short soft fade at the rim
-const AREA_R = 350
-const RIM_FADE = 40
 
 let raf = 0
 let resizeObserver = null
@@ -66,25 +62,24 @@ function resize() {
   canvas.height = Math.round(ch * dpr)
   canvas.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0)
 
-  // Precompute the in-circle dot grid once — at a 4px pitch there are tens
-  // of thousands of cells, so per-frame hypot/bounds work would add up
+  // Precompute the dot grid once — the field fills the whole container while
+  // the wave stays radial; at a 4px pitch per-frame hypot work would add up
   const cols = Math.ceil(cw / SPACING)
   const rows = Math.ceil(ch / SPACING)
   const gx = (cw - (cols - 1) * SPACING) / 2
   const gy = (ch - (rows - 1) * SPACING) / 2
+  const maxDist = Math.hypot(cx, cy)
   grid = []
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
       const x = gx + col * SPACING
       const y = gy + row * SPACING
       const u = Math.hypot(x - cx, y - cy)
-      if (u > AREA_R) continue
       grid.push({
         x,
         y,
         u,
-        rimFade: Math.min(1, (AREA_R - u) / RIM_FADE),
-        falloff: 1 - 0.3 * Math.min(u / AREA_R, 1),
+        falloff: 1 - 0.3 * Math.min(u / maxDist, 1),
       })
     }
   }
@@ -133,7 +128,7 @@ function drawFrame(now, staticOnly = false) {
 
     h = Math.max(0, Math.min(h, 1.4))
     const r = 0.5 + 0.7 * h
-    ctx.globalAlpha = (0.08 + 0.72 * h) * d.rimFade
+    ctx.globalAlpha = 0.08 + 0.72 * h
     ctx.beginPath()
     ctx.arc(d.x, d.y, r, 0, Math.PI * 2)
     ctx.fill()
