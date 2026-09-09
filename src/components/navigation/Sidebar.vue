@@ -50,6 +50,7 @@
           :active="activeItem === item.label"
           :expandable="item.expandable && !(item.label === 'Labs' && labsFewApps)"
           :default-open="item.defaultOpen"
+          :show-new="item.showNew"
           :submenu-items="item.submenuItems || []"
           @click="activeItem = item.label"
         />
@@ -74,6 +75,7 @@ import gridIcon from '../../assets/icons/icon-grid.svg'
 import transactionIcon from '../../assets/icons/icon-transaction.svg'
 import pieChartIcon from '../../assets/icons/icon-pie-chart.svg'
 import bankIcon from '../../assets/icons/icon-bank.svg'
+import virtualAccountIcon from '../../assets/icons/icon-virtual-account.svg'
 import usersIcon from '../../assets/icons/icon-users.svg'
 import productIcon from '../../assets/icons/icon-product.svg'
 import discountIcon from '../../assets/icons/icon-discount.svg'
@@ -139,6 +141,7 @@ const sections = [
       { icon: transactionIcon, label: 'Transactions' },
       { icon: pieChartIcon, label: 'Reports' },
       { icon: bankIcon, label: 'Payouts & Balances', submenuItems: payoutsSubmenu },
+      { icon: virtualAccountIcon, label: 'Virtual Accounts', showNew: true },
       { icon: usersIcon, label: 'Customer' },
       { icon: productIcon, label: 'Products' },
       { icon: discountIcon, label: 'Discounts' },

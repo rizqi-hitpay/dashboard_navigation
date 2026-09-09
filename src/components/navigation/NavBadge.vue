@@ -1,5 +1,5 @@
 <template>
-  <span v-if="variant === 'new'" class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium text-white bg-[#b14aed] leading-[18px] shrink-0">
+  <span v-if="variant === 'new'" class="inline-flex items-center justify-center px-[6px] rounded-[20px] text-[10px] font-medium uppercase tracking-[0.3px] text-[#7d1ab7] bg-[#efdbfb] leading-[18px] shrink-0">
     New
   </span>
   <span v-else-if="variant === 'count'" class="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-medium text-white bg-[#dc3545] leading-none shrink-0">

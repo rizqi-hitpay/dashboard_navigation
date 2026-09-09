@@ -22,6 +22,7 @@ import LabsCategoryPage from '../components/pages/LabsCategoryPage.vue'
 import LabsAppPage from '../components/pages/LabsAppPage.vue'
 import MotionGuidelinePage from '../components/pages/MotionGuidelinePage.vue'
 import StudioPage from '../components/pages/StudioPage.vue'
+import VirtualAccountsPage from '../components/pages/VirtualAccountsPage.vue'
 import PlaceholderPage from '../components/pages/PlaceholderPage.vue'
 
 const routes = [
@@ -47,6 +48,7 @@ const routes = [
   { path: '/labs/:category', name: 'labs-category', component: LabsCategoryPage },
   // Settings menus without real content yet → per-menu empty state
   { path: '/settings/:slug', name: 'settings-empty', component: SettingsEmptyStatePage },
+  { path: '/virtual-accounts', name: 'virtual-accounts', component: VirtualAccountsPage },
   { path: '/studio', name: 'studio', component: StudioPage },
   { path: '/motion', name: 'motion', component: MotionGuidelinePage, meta: { fullPage: true } },
   // Any other link falls back to a "coming soon" placeholder
