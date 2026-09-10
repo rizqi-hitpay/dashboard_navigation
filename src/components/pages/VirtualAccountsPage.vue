@@ -27,7 +27,7 @@
 
       <!-- Transfer details card -->
       <div class="w-full px-[24px] pb-[12px]">
-        <div class="w-full rounded-[8px] overflow-hidden">
+        <div class="w-full rounded-[8px]">
           <div class="bg-[#fcfcfd] border border-[#e5e6ea] rounded-t-[8px] p-[12px]">
             <div class="flex flex-wrap gap-x-[12px] gap-y-[16px] p-[12px]">
               <div v-for="d in details" :key="d.label" class="flex flex-col gap-[2px] w-[244px]">
@@ -65,16 +65,45 @@
               </div>
             </div>
           </div>
-          <div class="flex justify-end bg-white border-b border-l border-r border-[#e5e6ea] rounded-b-[8px] p-[8px]">
+          <!-- Share via + Copy as message (Figma: 2214:13510) -->
+          <div class="flex items-center justify-between gap-[16px] bg-white border-b border-l border-r border-[#e5e6ea] rounded-b-[8px] px-[24px] py-[8px]">
+            <div class="flex items-center gap-[16px]">
+              <span class="text-[14px] font-normal text-[#03102f] leading-[1.5] whitespace-nowrap">Share via</span>
+              <div class="flex items-center gap-[4px]">
+                <div v-for="channel in channels" :key="channel.label" class="relative">
+                  <button
+                    type="button"
+                    class="flex items-center justify-center p-[8px] rounded-[8px] hover:bg-[#f2f2f4] transition-colors duration-150"
+                    :aria-label="'Share via ' + channel.label"
+                    @mouseenter="hoveredChannel = channel.label"
+                    @mouseleave="hoveredChannel = null"
+                    @focus="hoveredChannel = channel.label"
+                    @blur="hoveredChannel = null"
+                  >
+                    <img :src="channel.icon" width="18" height="18" alt="" />
+                  </button>
+                  <!-- Bottom tooltip (Figma: 2214:12474) -->
+                  <Transition name="share-tooltip">
+                    <span
+                      v-if="hoveredChannel === channel.label"
+                      class="absolute left-1/2 -translate-x-1/2 top-[calc(100%+8px)] px-[8px] py-[4px] rounded-[4px] bg-[#fcfcfd] text-[12px] font-medium text-[#61667c] leading-[1.5] whitespace-nowrap pointer-events-none z-10"
+                      style="box-shadow: 0px 1px 3px 0px rgba(0,0,0,0.1), 0px 3px 22px 0px rgba(38,42,50,0.09);"
+                      role="tooltip"
+                    >
+                      <img :src="tooltipArrowIcon" width="12" height="8" alt="" class="absolute left-1/2 -translate-x-1/2 top-[-7px] max-w-none" />
+                      {{ channel.label }}
+                    </span>
+                  </Transition>
+                </div>
+              </div>
+            </div>
             <button
               type="button"
-              class="flex items-center justify-center gap-[8px] h-[36px] px-[12px] rounded-[8px] cursor-pointer hover:bg-[#f0f4fd] transition-colors duration-150"
-              @click="shareOpen = true"
+              class="flex items-center justify-center gap-[8px] h-[36px] rounded-[8px] cursor-pointer hover:opacity-75 transition-opacity duration-150"
+              @click="copyAsMessage"
             >
-              <svg class="shrink-0" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M12 5.3a1.9 1.9 0 100-3.8 1.9 1.9 0 000 3.8zM4 9.9a1.9 1.9 0 100-3.8 1.9 1.9 0 000 3.8zM12 14.5a1.9 1.9 0 100-3.8 1.9 1.9 0 000 3.8zM5.7 7.1l4.6-2.3M5.7 8.9l4.6 2.3" stroke="#2465de" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-              <span class="text-[14px] font-medium text-[#2465de] leading-[1.5] whitespace-nowrap">Share transfer details</span>
+              <img :src="copyBlueIcon" width="16" height="16" alt="" class="shrink-0" />
+              <span class="text-[14px] font-medium text-[#2465de] leading-[1.5] whitespace-nowrap">{{ messageCopied ? 'Copied!' : 'Copy as message' }}</span>
             </button>
           </div>
         </div>
@@ -223,20 +252,21 @@
 
       </div>
     </div>
-
-    <!-- Share transfer details modal (Figma: 2:19212) -->
-    <ShareTransferDetailsModal :open="shareOpen" :details="shareDetails" @close="shareOpen = false" />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, nextTick } from 'vue'
-import ShareTransferDetailsModal from '../modals/ShareTransferDetailsModal.vue'
 import receiptIcon from '../../assets/icons/icon-receipt.svg'
 import downloadIcon from '../../assets/icons/icon-download.svg'
 import filterIcon from '../../assets/icons/icon-filter.svg'
 import copyIcon from '../../assets/icons/icon-copy.svg'
 import questionIcon from '../../assets/icons/icon-question-circle.svg'
+import copyBlueIcon from '../../assets/icons/icon-copy-blue.svg'
+import tooltipArrowIcon from '../../assets/icons/icon-tooltip-arrow.svg'
+import whatsappIcon from '../../assets/icons/icon-share-whatsapp.svg'
+import chatIcon from '../../assets/icons/icon-share-chat.svg'
+import emailIcon from '../../assets/icons/icon-share-email.svg'
 
 // ── Transfer details (Figma: 2203:12844) ──
 const details = [
@@ -249,9 +279,25 @@ const details = [
   { label: 'Supported transfer types', chips: ['FAST', 'SWIFT'] },
 ]
 
-// The modal shares only the text details, not the currency/transfer-type chips
-const shareOpen = ref(false)
-const shareDetails = details.filter((d) => d.value)
+// ── Share via + Copy as message (Figma: 2214:13510) ──
+const channels = [
+  { label: 'WhatsApp', icon: whatsappIcon },
+  { label: 'SMS', icon: chatIcon },
+  { label: 'Email', icon: emailIcon },
+]
+
+const hoveredChannel = ref(null)
+const messageCopied = ref(false)
+let messageTimer = null
+
+// Only the text details go into the message, not the currency/transfer-type chips
+function copyAsMessage() {
+  const message = details.filter((d) => d.value).map((d) => `${d.label}: ${d.value}`).join('\n')
+  navigator.clipboard?.writeText(message).catch(() => {})
+  messageCopied.value = true
+  clearTimeout(messageTimer)
+  messageTimer = setTimeout(() => { messageCopied.value = false }, 1600)
+}
 
 const copiedKey = ref(null)
 let copyTimer = null
@@ -324,8 +370,16 @@ const filteredTransfers = computed(() => {
 .copy-tip-enter-from { opacity: 0; transform: translateX(-50%) translateY(2px); }
 .copy-tip-leave-to { opacity: 0; }
 
+/* Share-channel tooltip — slides down into place */
+.share-tooltip-enter-active { transition: opacity 140ms ease-out, transform 140ms ease-out; }
+.share-tooltip-leave-active { transition: opacity 100ms ease-in; }
+.share-tooltip-enter-from { opacity: 0; transform: translateX(-50%) translateY(-2px); }
+.share-tooltip-leave-to { opacity: 0; }
+
 @media (prefers-reduced-motion: reduce) {
   .copy-tip-enter-active, .copy-tip-leave-active { transition: none; }
   .copy-tip-enter-from { transform: translateX(-50%); }
+  .share-tooltip-enter-active, .share-tooltip-leave-active { transition: none; }
+  .share-tooltip-enter-from { transform: translateX(-50%); }
 }
 </style>
