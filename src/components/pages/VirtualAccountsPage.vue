@@ -39,6 +39,17 @@
       <!-- Bank locations table (Figma: 2229:52021) -->
       <div class="flex flex-col w-full px-[24px] pt-[24px] pb-[24px]">
         <div class="w-full rounded-[8px] border border-[#e5e6ea] overflow-hidden bg-white">
+          <!-- Segmented control — appears once an account has been closed (Figma: 2269:49589) -->
+          <div v-if="closedAccounts.length" class="flex items-center gap-[4px] px-[12px] py-[8px] bg-white border-b-[0.5px] border-[#cbcdd4]">
+            <button
+              v-for="t in ['All', 'Closed']"
+              :key="t"
+              type="button"
+              class="flex items-center justify-center min-w-[48px] px-[8px] py-[4px] rounded-[8px] text-[12px] leading-[1.5] whitespace-nowrap transition-colors duration-150"
+              :class="tableTab === t ? 'bg-[#e5e6ea] font-medium text-[#03102f]' : 'font-normal text-[#61667c] hover:bg-[#f6f7f9]'"
+              @click="tableTab = t"
+            >{{ t }}</button>
+          </div>
           <div class="w-full overflow-x-auto">
             <table class="w-full border-collapse min-w-[900px]" style="table-layout: fixed;">
               <colgroup>
@@ -59,7 +70,36 @@
                   </th>
                 </tr>
               </thead>
-              <tbody>
+              <!-- Closed accounts (Figma: 2269:58847) -->
+              <tbody v-if="tableTab === 'Closed'">
+                <tr v-for="acc in closedAccounts" :key="acc.name + acc.number" class="[&:last-child>td]:border-b-0">
+                  <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-r border-[#e5e6ea]">
+                    <div class="flex items-center gap-[8px]">
+                      <img :src="acc.flag" width="24" height="16" alt="" class="shrink-0 rounded-[2px]" style="box-shadow: 0px 0px 0px 0.5px rgba(3,16,47,0.08);" />
+                      <span class="text-[13px] font-normal text-[#03102f] leading-[1.5] whitespace-nowrap">{{ acc.name }}</span>
+                    </div>
+                  </td>
+                  <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-r border-[#e5e6ea]">
+                    <div class="flex items-center gap-[2px] flex-wrap">
+                      <span
+                        v-for="c in acc.currencies"
+                        :key="c"
+                        class="inline-flex items-center justify-center min-h-[24px] min-w-[32px] px-[8px] py-[2px] rounded-[24px] bg-[#e5eeff] text-[12px] font-medium text-[#2465de] leading-[1.5] whitespace-nowrap"
+                      >{{ c }}</span>
+                    </div>
+                  </td>
+                  <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-r border-[#e5e6ea]">
+                    <span class="text-[13px] font-normal text-[#03102f] leading-[1.5] whitespace-nowrap">{{ acc.settlement }}</span>
+                  </td>
+                  <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-[#e5e6ea]">
+                    <span class="flex items-center gap-[8px]">
+                      <span class="size-[5px] rounded-full bg-[#61667c]" />
+                      <span class="text-[12px] font-medium text-[#61667c] leading-[1.5] whitespace-nowrap">Closed</span>
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+              <tbody v-else>
                 <tr
                   v-for="loc in locations"
                   :key="loc.name"
@@ -268,6 +308,16 @@
             </div>
           </div>
 
+          <!-- Close account (Figma: 2261:63420) -->
+          <button
+            v-if="detailLocation.status === 'active'"
+            type="button"
+            class="flex items-center justify-center w-full h-[36px] px-[12px] rounded-[8px] bg-white border border-[#f0b5b9] transition-colors duration-150 hover:bg-[#fdf2f2] active:translate-y-[1px]"
+            @click="closeLocation = detailLocation"
+          >
+            <span class="text-[13px] font-medium text-[#e02c3c] leading-[1.5] whitespace-nowrap">Close account</span>
+          </button>
+
         </div>
       </div>
     </Transition>
@@ -279,6 +329,14 @@
       @close="requestLocation = null"
       @submit="onRequestSubmitted"
     />
+
+    <!-- Close account modal (Figma: 2269:39091 / 2269:67980) -->
+    <CloseAccountModal
+      :open="!!closeLocation"
+      :location="closeLocation"
+      @close="onCloseModalDismissed"
+      @closed="onAccountClosed"
+    />
   </div>
 </template>
 
@@ -287,6 +345,7 @@ import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import VaGlobeAnimation from '../content/VaGlobeAnimation.vue'
 import RequestAccountModal from '../modals/RequestAccountModal.vue'
+import CloseAccountModal from '../modals/CloseAccountModal.vue'
 import flagSg from '../../assets/images/flag-sg.png'
 import flagIn from '../../assets/images/flag-in.png'
 import flagAu from '../../assets/images/flag-au.png'
@@ -431,6 +490,35 @@ const requestLocation = ref(null)
 function onRequestSubmitted({ location }) {
   const loc = locations.find((l) => l.name === location)
   if (loc) loc.status = 'processing'
+}
+
+// ── Close account flow (Figma: 2261:63420 → 2269:39091 → 2269:67980) ──
+const closeLocation = ref(null)
+const closedAccounts = reactive([])
+const tableTab = ref('All')
+let pendingClose = null
+
+// Confirmed in the modal: the account moves to the Closed tab and the
+// location becomes requestable again (Figma: 2269:49589)
+function onAccountClosed(loc) {
+  pendingClose = loc
+  closedAccounts.push({
+    name: loc.name,
+    flag: loc.flag,
+    number: loc.account?.number,
+    currencies: [...loc.currencies],
+    settlement: loc.settlement,
+  })
+}
+
+// Dismissing the modal after a confirmed close also closes the drawer
+function onCloseModalDismissed() {
+  closeLocation.value = null
+  if (pendingClose) {
+    pendingClose.status = null
+    if (detailLocation.value === pendingClose) detailLocation.value = null
+    pendingClose = null
+  }
 }
 </script>
 
