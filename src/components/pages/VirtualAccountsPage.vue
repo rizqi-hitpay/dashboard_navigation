@@ -76,7 +76,13 @@
               </thead>
               <!-- Closed accounts (Figma: 2269:58847) -->
               <tbody v-if="tableTab === 'Closed'">
-                <tr v-for="acc in closedAccounts" :key="acc.name + acc.number" class="[&:last-child>td]:border-b-0">
+                <tr
+                  v-for="acc in closedAccounts"
+                  :key="acc.name + acc.number"
+                  class="cursor-pointer transition-colors duration-150 [&:last-child>td]:border-b-0"
+                  :class="detailLocation === acc ? 'bg-[#fcfcfd]' : 'hover:bg-[#fcfcfd]'"
+                  @click="openDetail(acc)"
+                >
                   <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-r border-[#e5e6ea]">
                     <div class="flex items-center gap-[8px]">
                       <img :src="acc.flag" width="24" height="16" alt="" class="shrink-0 rounded-[2px]" style="box-shadow: 0px 0px 0px 0.5px rgba(3,16,47,0.08);" />
@@ -84,12 +90,16 @@
                     </div>
                   </td>
                   <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-r border-[#e5e6ea]">
-                    <div class="flex items-center gap-[2px] flex-wrap">
+                    <div class="flex items-center gap-[2px]" :class="detailLocation ? 'flex-nowrap' : 'flex-wrap'">
                       <span
-                        v-for="c in acc.currencies"
+                        v-for="c in (detailLocation ? acc.currencies.slice(0, 1) : acc.currencies)"
                         :key="c"
                         class="inline-flex items-center justify-center min-h-[24px] min-w-[32px] px-[8px] py-[2px] rounded-[24px] bg-[#e5eeff] text-[12px] font-medium text-[#2465de] leading-[1.5] whitespace-nowrap"
                       >{{ c }}</span>
+                      <span
+                        v-if="detailLocation && acc.currencies.length > 1"
+                        class="inline-flex items-center justify-center min-h-[24px] min-w-[32px] px-[8px] py-[2px] rounded-[24px] bg-[#e5eeff] text-[12px] font-medium text-[#2465de] leading-[1.5] whitespace-nowrap"
+                      >+{{ acc.currencies.length - 1 }}</span>
                     </div>
                   </td>
                   <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-r border-[#e5e6ea]">
@@ -176,10 +186,10 @@
             <div class="flex items-center gap-[8px]">
               <img :src="renderLocation.flag" width="24" height="16" alt="" class="shrink-0 rounded-[1px]" style="box-shadow: 0px 0px 0px 0.5px rgba(3,16,47,0.08);" />
               <p class="font-medium text-[18px] text-[#03102f] leading-[1.35] truncate">{{ renderLocation.name }}</p>
-              <!-- Active accounts carry the status in the header (Figma: 2236:85958) -->
-              <span v-if="renderLocation.status === 'active'" class="flex items-center gap-[6px] shrink-0 pl-[2px]">
-                <span class="size-[5px] rounded-full bg-[#238b5b]" />
-                <span class="text-[12px] font-medium text-[#238b5b] leading-[1.5] whitespace-nowrap">Active</span>
+              <!-- Status lives in the header (Figma: 2236:85958) -->
+              <span v-if="renderLocation.status" class="flex items-center gap-[6px] shrink-0 pl-[2px]">
+                <span class="size-[5px] rounded-full" :style="{ background: detailStatus.color }" />
+                <span class="text-[12px] font-medium leading-[1.5] whitespace-nowrap" :style="{ color: detailStatus.color }">{{ detailStatus.label }}</span>
               </span>
             </div>
           </div>
@@ -191,11 +201,17 @@
         <!-- Body -->
         <div class="flex-1 overflow-y-auto flex flex-col gap-[16px] px-[16px] py-[16px]">
 
-          <!-- Active account: details list replaces the preview card (Figma: 2236:85958) -->
-          <div v-if="renderLocation.status === 'active'" class="flex flex-col gap-[12px]">
+          <!-- Active/closed account: details list replaces the preview card
+               (Figma: 2236:85958 / 2309:24921) -->
+          <div v-if="renderLocation.status === 'active' || renderLocation.status === 'closed'" class="flex flex-col gap-[12px]">
+            <!-- Closed notice (Figma: 2309:24921) -->
+            <div v-if="renderLocation.status === 'closed'" class="w-full rounded-[8px] bg-[#f2f2f4] px-[12px] py-[8px]">
+              <p class="text-[12px] font-normal text-[#03102f] leading-[1.5] text-center">This virtual account can no longer receive funds.</p>
+            </div>
             <div class="flex items-center justify-between gap-[16px]">
               <p class="text-[16px] font-medium text-[#03102f] leading-[1.4]">Account details</p>
               <button
+                v-if="renderLocation.status === 'active'"
                 type="button"
                 class="flex items-center justify-center gap-[6px] h-[28px] px-[8px] rounded-[8px] border border-[#f2f2f4] transition-[filter] duration-150 hover:brightness-95 active:translate-y-[1px]"
                 style="background: linear-gradient(to bottom, #ffffff, #f2f2f2); box-shadow: 0px 1.5px 0px 0px rgba(0,0,0,0.1);"
@@ -214,6 +230,7 @@
                 <span class="text-[12px] font-normal text-[#61667c] leading-[1.5]">{{ f.label }}</span>
                 <span class="text-[14px] font-normal text-[#03102f] leading-[1.5]">{{ f.value }}</span>
                 <button
+                  v-if="renderLocation.status === 'active'"
                   type="button"
                   class="absolute right-[12px] top-[9px] flex items-center justify-center cursor-pointer hover:opacity-70 transition-opacity"
                   :aria-label="'Copy ' + f.label"
@@ -244,36 +261,35 @@
           <div v-else class="flex flex-col items-center gap-[12px]">
             <div class="va-card-ring" :class="{ 'va-card-ring--on': renderLocation.status === 'processing' }">
             <div
-              class="relative w-[300px] h-[176px] rounded-[12px] overflow-hidden border"
+              class="relative w-[340px] h-[156px] rounded-[12px] overflow-hidden border"
               :class="renderLocation.status === 'rejected' ? 'bg-[#fdf2f2] border-[#e08790]' : 'border-white'"
               :style="renderLocation.status === 'rejected'
                 ? { boxShadow: '0px 19px 30px 0px rgba(38,42,50,0.04)' }
-                : { background: 'linear-gradient(128.5deg, #f7f7f8 32.4%, #f6faf4 66.2%, #e5eff4 100%)', boxShadow: '0px 19px 30px 0px rgba(38,42,50,0.04)' }"
+                : { background: 'linear-gradient(135.5deg, #f7f7f8 32.4%, #f6faf4 66.2%, #e5eff4 100%)', boxShadow: '0px 19px 30px 0px rgba(38,42,50,0.04)' }"
             >
               <!-- Skewed bank outline, overflowing bottom-right (Figma: 2286:15040) -->
-              <div class="absolute flex items-center justify-center" style="right: -71.4px; bottom: -19.1px; width: 235.1px; height: 158.6px;">
+              <div class="absolute flex items-center justify-center" style="right: -70.3px; bottom: -10.4px; width: 198.8px; height: 135.1px;">
                 <img
                   :src="bankOutline"
                   alt=""
                   class="flex-none max-w-none"
-                  style="width: 169.3px; height: 169.3px; transform: rotate(0.86deg) skewX(-22deg) scaleY(0.93); filter: drop-shadow(0px 21.8px 24.6px rgba(0,0,0,0.12));"
+                  style="width: 145px; height: 145px; transform: rotate(-0.2deg) skewX(-22deg) scaleY(0.93); filter: drop-shadow(0px 18.7px 21px rgba(0,0,0,0.12));"
                 />
               </div>
-              <div class="absolute left-[16px] top-[16px] flex items-center gap-[4px]">
-                <img :src="virtualAccountIcon" width="18" height="18" alt="" class="shrink-0 opacity-85" />
-                <span class="text-[12px] font-normal text-[#61667c] leading-[1.5] whitespace-nowrap">Virtual account</span>
-              </div>
-              <span v-if="renderLocation.status" class="absolute right-[16px] top-[12px] flex items-center gap-[8px] h-[24px]">
-                <span class="size-[5px] rounded-full" :style="{ background: detailStatus.color }" />
-                <span class="text-[12px] font-medium leading-[1.5] whitespace-nowrap" :style="{ color: detailStatus.color }">{{ detailStatus.label }}</span>
-              </span>
-              <div class="absolute left-[18px] top-[64px] flex flex-col gap-[2px]">
-                <span class="text-[12px] font-normal text-[#61667c] leading-[1.5]">Account name</span>
-                <span class="text-[14px] font-normal text-[#03102f] leading-[20px]" style="font-family: 'Reddit Mono', ui-monospace, monospace;">Acme inc</span>
-              </div>
-              <div class="absolute left-[18px] top-[116px] flex flex-col gap-[2px]">
-                <span class="text-[12px] font-normal text-[#61667c] leading-[1.5]">Account number</span>
-                <span class="text-[14px] font-normal text-[#03102f] leading-[20px]" style="font-family: 'Reddit Mono', ui-monospace, monospace;">1111 2222 3333 4444</span>
+              <!-- Vertically centered 2-column details (Figma: 2309:14070) -->
+              <div class="absolute left-[19px] top-1/2 -translate-y-1/2 w-[301px] grid grid-cols-2 gap-[12px] text-[#61667c]">
+                <div class="flex flex-col gap-[2px]">
+                  <span class="text-[12px] font-normal leading-[1.5]">Account name</span>
+                  <span class="text-[14px] font-normal leading-[1.4] whitespace-nowrap" style="font-family: 'Reddit Mono', ui-monospace, monospace;">Acme inc</span>
+                </div>
+                <div class="flex flex-col gap-[2px]">
+                  <span class="text-[12px] font-normal leading-[1.5]">Bank name</span>
+                  <span class="text-[14px] font-normal leading-[1.4] whitespace-nowrap" style="font-family: 'Reddit Mono', ui-monospace, monospace;">Regulated Bank</span>
+                </div>
+                <div class="flex flex-col gap-[2px]">
+                  <span class="text-[12px] font-normal leading-[1.5]">Account number</span>
+                  <span class="text-[14px] font-normal leading-[1.4] whitespace-nowrap" style="font-family: 'Reddit Mono', ui-monospace, monospace;">1111 2222 3333 4444</span>
+                </div>
               </div>
             </div>
             </div>
@@ -347,6 +363,13 @@
       @submit="onRequestSubmitted"
     />
 
+    <!-- Account approved modal (Figma: 2309:14092) -->
+    <ActiveAccountModal
+      :open="!!activatedLocation"
+      :location="activatedLocation"
+      @close="activatedLocation = null"
+    />
+
     <!-- Close account modal (Figma: 2269:39091 / 2269:67980) -->
     <CloseAccountModal
       :open="!!closeLocation"
@@ -358,11 +381,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import VaGlobeAnimation from '../content/VaGlobeAnimation.vue'
 import RequestAccountModal from '../modals/RequestAccountModal.vue'
 import CloseAccountModal from '../modals/CloseAccountModal.vue'
+import ActiveAccountModal from '../modals/ActiveAccountModal.vue'
 import flagSg from '../../assets/images/flag-sg.png'
 import flagIn from '../../assets/images/flag-in.png'
 import flagAu from '../../assets/images/flag-au.png'
@@ -383,6 +407,7 @@ const STATUS_META = {
   active: { label: 'Active', color: '#238b5b' },
   processing: { label: 'Processing', color: '#bd8400' },
   rejected: { label: 'Rejected', color: '#c20a1c' },
+  closed: { label: 'Closed', color: '#61667c' },
 }
 
 const locations = reactive([
@@ -511,11 +536,32 @@ function copyDetailsAsMessage() {
 // ── Request account modal (Figma: 2240:130402) ──
 const requestLocation = ref(null)
 
-// Submitted requests flip the location into the processing state (Figma: 2236:90943)
-function onRequestSubmitted({ location }) {
+// Submitted requests flip the location into the processing state (Figma: 2236:90943),
+// then the mock review approves after 10s and celebrates (Figma: 2309:14092)
+const activatedLocation = ref(null)
+const approvalTimers = {}
+
+function onRequestSubmitted({ location, provider }) {
   const loc = locations.find((l) => l.name === location)
-  if (loc) loc.status = 'processing'
+  if (!loc) return
+  loc.status = 'processing'
+  clearTimeout(approvalTimers[loc.name])
+  approvalTimers[loc.name] = setTimeout(() => {
+    if (loc.status !== 'processing') return
+    loc.account = loc.account || {
+      name: 'HitPay Store',
+      number: '88' + String(Math.floor(1e10 + Math.random() * 9e10)),
+      swift: 'DBSSSGSG',
+      bank: provider || loc.providers[0]?.name,
+      location: loc.name,
+      address: '123 Orchard Road, Singapore 238888',
+    }
+    loc.status = 'active'
+    activatedLocation.value = loc
+  }, 10000)
 }
+
+onUnmounted(() => Object.values(approvalTimers).forEach(clearTimeout))
 
 // ── Close account flow (Figma: 2261:63420 → 2269:39091 → 2269:67980) ──
 const closeLocation = ref(null)
@@ -530,7 +576,10 @@ function onAccountClosed(loc) {
   closedAccounts.push({
     name: loc.name,
     flag: loc.flag,
+    status: 'closed',
     number: loc.account?.number,
+    account: { ...loc.account },
+    rails: loc.rails,
     currencies: [...loc.currencies],
     settlement: loc.settlement,
   })
