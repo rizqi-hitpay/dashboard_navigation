@@ -36,8 +36,12 @@
         </div>
       </div>
 
-      <!-- Bank locations table (Figma: 2229:52021) -->
-      <div class="flex flex-col w-full px-[24px] pt-[24px] pb-[24px]">
+      <!-- Bank locations table (Figma: 2229:52021) — only the table makes room
+           for the panel: 480px panel + 16px gap (Figma: 2261:87957) -->
+      <div
+        class="flex flex-col w-full px-[24px] pt-[24px] pb-[24px]"
+        :style="{ paddingRight: detailLocation ? '496px' : '24px', transition: 'padding-right 280ms cubic-bezier(0.4, 0, 0.2, 1)' }"
+      >
         <div class="w-full rounded-[8px] border border-[#e5e6ea] overflow-hidden bg-white">
           <!-- Segmented control — appears once an account has been closed (Figma: 2269:49589) -->
           <div v-if="closedAccounts.length" class="flex items-center gap-[4px] px-[12px] py-[8px] bg-white border-b-[0.5px] border-[#cbcdd4]">
@@ -51,12 +55,12 @@
             >{{ t }}</button>
           </div>
           <div class="w-full overflow-x-auto">
-            <table class="w-full border-collapse min-w-[900px]" style="table-layout: fixed;">
+            <table class="w-full border-collapse" :class="detailLocation ? 'min-w-0' : 'min-w-[900px]'" style="table-layout: fixed;">
               <colgroup>
-                <col style="width: 183px;" />
-                <col />
-                <col style="width: 263px;" />
-                <col style="width: 200px;" />
+                <col :style="{ width: detailLocation ? '128px' : '183px' }" />
+                <col :style="detailLocation ? { width: '112px' } : {}" />
+                <col :style="{ width: detailLocation ? 'auto' : '263px' }" />
+                <col :style="{ width: detailLocation ? '126px' : '200px' }" />
               </colgroup>
               <thead>
                 <tr>
@@ -66,7 +70,7 @@
                     class="bg-[#fcfcfd] h-[34px] border-b border-[#e5e6ea] px-[12px] py-[8px] text-left align-middle"
                     :class="ci < columns.length - 1 ? 'border-r border-[#e5e6ea]' : ''"
                   >
-                    <span class="text-[10px] font-medium uppercase tracking-[0.3px] leading-[18px] text-[#03102f] whitespace-nowrap">{{ col }}</span>
+                    <span class="block text-[10px] font-medium uppercase tracking-[0.3px] leading-[18px] text-[#03102f] whitespace-nowrap overflow-hidden text-ellipsis">{{ col }}</span>
                   </th>
                 </tr>
               </thead>
@@ -89,7 +93,7 @@
                     </div>
                   </td>
                   <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-r border-[#e5e6ea]">
-                    <span class="text-[13px] font-normal text-[#03102f] leading-[1.5] whitespace-nowrap">{{ acc.settlement }}</span>
+                    <span class="block text-[13px] font-normal text-[#03102f] leading-[1.5] whitespace-nowrap overflow-hidden text-ellipsis">{{ acc.settlement }}</span>
                   </td>
                   <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-[#e5e6ea]">
                     <span class="flex items-center gap-[8px]">
@@ -105,7 +109,7 @@
                   :key="loc.name"
                   class="cursor-pointer transition-colors duration-150 [&:last-child>td]:border-b-0"
                   :class="detailLocation && detailLocation.name === loc.name ? 'bg-[#fcfcfd]' : 'hover:bg-[#fcfcfd]'"
-                  @click="detailLocation = loc"
+                  @click="openDetail(loc)"
                 >
                   <!-- Bank location -->
                   <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-r border-[#e5e6ea]">
@@ -114,19 +118,23 @@
                       <span class="text-[13px] font-normal text-[#03102f] leading-[1.5] whitespace-nowrap">{{ loc.name }}</span>
                     </div>
                   </td>
-                  <!-- Currency chips -->
+                  <!-- Currency chips — collapse to first +N while the panel is open (Figma: 2261:88364) -->
                   <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-r border-[#e5e6ea]">
-                    <div class="flex items-center gap-[2px] flex-wrap">
+                    <div class="flex items-center gap-[2px]" :class="detailLocation ? 'flex-nowrap' : 'flex-wrap'">
                       <span
-                        v-for="c in loc.currencies"
+                        v-for="c in (detailLocation ? loc.currencies.slice(0, 1) : loc.currencies)"
                         :key="c"
                         class="inline-flex items-center justify-center min-h-[24px] min-w-[32px] px-[8px] py-[2px] rounded-[24px] bg-[#e5eeff] text-[12px] font-medium text-[#2465de] leading-[1.5] whitespace-nowrap"
                       >{{ c }}</span>
+                      <span
+                        v-if="detailLocation && loc.currencies.length > 1"
+                        class="inline-flex items-center justify-center min-h-[24px] min-w-[32px] px-[8px] py-[2px] rounded-[24px] bg-[#e5eeff] text-[12px] font-medium text-[#2465de] leading-[1.5] whitespace-nowrap"
+                      >+{{ loc.currencies.length - 1 }}</span>
                     </div>
                   </td>
                   <!-- Settlement -->
                   <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-r border-[#e5e6ea]">
-                    <span class="text-[13px] font-normal text-[#03102f] leading-[1.5] whitespace-nowrap">{{ loc.settlement }}</span>
+                    <span class="block text-[13px] font-normal text-[#03102f] leading-[1.5] whitespace-nowrap overflow-hidden text-ellipsis">{{ loc.settlement }}</span>
                   </td>
                   <!-- Status: dot + colored label for requested rows (Figma: 2236:75489) -->
                   <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-[#e5e6ea]">
@@ -153,26 +161,27 @@
 
     </div>
 
-    <!-- Click-outside backdrop: anywhere off the drawer closes it -->
-    <div v-if="detailLocation" class="absolute inset-0 z-40" @click="detailLocation = null" />
-
-    <!-- Off-canvas detail view (Figma: 2239:103156) — same recipe as the settings drawer -->
+    <!-- Off-canvas detail view (Figma: 2261:88364) — overlays header and banner,
+         only the table shrinks beside it -->
     <Transition name="drawer">
       <div
         v-if="detailLocation"
-        class="absolute inset-y-0 right-0 z-50 w-[480px] max-w-full bg-white flex flex-col"
-        style="box-shadow: -8px 0px 28px rgba(38,42,50,0.12);"
+        class="absolute inset-y-0 right-0 z-40 w-[480px] max-w-full bg-white flex flex-col"
+        style="box-shadow: -16px 3px 80px 0px rgba(38,42,50,0.1);"
       >
-        <!-- Header: flag + country -->
-        <div class="shrink-0 flex items-center gap-[32px] border-b border-[#e5e6ea] p-[16px]">
-          <div class="flex-1 flex items-center gap-[8px] min-w-0">
-            <img :src="detailLocation.flag" width="24" height="16" alt="" class="shrink-0 rounded-[1px]" style="box-shadow: 0px 0px 0px 0.5px rgba(3,16,47,0.08);" />
-            <p class="font-medium text-[18px] text-[#03102f] leading-[1.35] truncate">{{ detailLocation.name }}</p>
-            <!-- Active accounts carry the status in the header (Figma: 2236:85958) -->
-            <span v-if="detailLocation.status === 'active'" class="flex items-center gap-[6px] shrink-0 pl-[2px]">
-              <span class="size-[5px] rounded-full bg-[#238b5b]" />
-              <span class="text-[12px] font-medium text-[#238b5b] leading-[1.5] whitespace-nowrap">Active</span>
-            </span>
+        <!-- Header: BANK LOCATION label + flag + country (Figma: I2261:88365;1241:33634) -->
+        <div class="shrink-0 flex items-start gap-[16px] border-b border-[#e5e6ea] p-[16px]">
+          <div class="flex-1 flex flex-col gap-[4px] min-w-0 pt-[2px]">
+            <span class="text-[10px] font-medium uppercase tracking-[0.3px] text-[#61667c] leading-[18px]">Bank location</span>
+            <div class="flex items-center gap-[8px]">
+              <img :src="renderLocation.flag" width="24" height="16" alt="" class="shrink-0 rounded-[1px]" style="box-shadow: 0px 0px 0px 0.5px rgba(3,16,47,0.08);" />
+              <p class="font-medium text-[18px] text-[#03102f] leading-[1.35] truncate">{{ renderLocation.name }}</p>
+              <!-- Active accounts carry the status in the header (Figma: 2236:85958) -->
+              <span v-if="renderLocation.status === 'active'" class="flex items-center gap-[6px] shrink-0 pl-[2px]">
+                <span class="size-[5px] rounded-full bg-[#238b5b]" />
+                <span class="text-[12px] font-medium text-[#238b5b] leading-[1.5] whitespace-nowrap">Active</span>
+              </span>
+            </div>
           </div>
           <button class="flex items-center justify-center size-[32px] rounded-[4px] shrink-0 transition-colors duration-150 hover:bg-[#f0f1f5]" aria-label="Close" @click="detailLocation = null">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 5L15 15M15 5L5 15" stroke="#61667c" stroke-width="1.6" stroke-linecap="round" /></svg>
@@ -183,7 +192,7 @@
         <div class="flex-1 overflow-y-auto flex flex-col gap-[16px] px-[16px] py-[16px]">
 
           <!-- Active account: details list replaces the preview card (Figma: 2236:85958) -->
-          <div v-if="detailLocation.status === 'active'" class="flex flex-col gap-[12px]">
+          <div v-if="renderLocation.status === 'active'" class="flex flex-col gap-[12px]">
             <div class="flex items-center justify-between gap-[16px]">
               <p class="text-[16px] font-medium text-[#03102f] leading-[1.4]">Account details</p>
               <button
@@ -231,41 +240,49 @@
             </button>
           </div>
 
-          <!-- Account preview card — exact 300×176 layout from Figma (2239:101723) -->
+          <!-- Account preview card — gradient + bank outline (Figma: 2271:10691) -->
           <div v-else class="flex flex-col items-center gap-[12px]">
-            <div class="va-card-ring" :class="{ 'va-card-ring--on': detailLocation.status === 'processing' }">
+            <div class="va-card-ring" :class="{ 'va-card-ring--on': renderLocation.status === 'processing' }">
             <div
               class="relative w-[300px] h-[176px] rounded-[12px] overflow-hidden border"
-              :class="detailLocation.status === 'rejected' ? 'bg-[#fdf2f2] border-[#e08790]' : 'bg-[#f6f6f5] border-white'"
+              :class="renderLocation.status === 'rejected' ? 'bg-[#fdf2f2] border-[#e08790]' : 'border-white'"
+              :style="renderLocation.status === 'rejected'
+                ? { boxShadow: '0px 19px 30px 0px rgba(38,42,50,0.04)' }
+                : { background: 'linear-gradient(128.5deg, #f7f7f8 32.4%, #f6faf4 66.2%, #e5eff4 100%)', boxShadow: '0px 19px 30px 0px rgba(38,42,50,0.04)' }"
             >
-              <!-- Ellipses 42/43: #D4DADA at 25% — the overlap doubles the tint (Figma: 2239:101906/101914) -->
-              <span class="absolute rounded-full" :class="detailLocation.status === 'rejected' ? 'bg-[#e08790]/20' : 'bg-[#d4dada]/25'" style="width: 270px; height: 271px; left: -105px; top: 64px;" />
-              <span class="absolute rounded-full" :class="detailLocation.status === 'rejected' ? 'bg-[#e08790]/20' : 'bg-[#d4dada]/25'" style="width: 270px; height: 271px; left: 126px; top: 64px;" />
+              <!-- Skewed bank outline, overflowing bottom-right (Figma: 2286:15040) -->
+              <div class="absolute flex items-center justify-center" style="right: -71.4px; bottom: -19.1px; width: 235.1px; height: 158.6px;">
+                <img
+                  :src="bankOutline"
+                  alt=""
+                  class="flex-none max-w-none"
+                  style="width: 169.3px; height: 169.3px; transform: rotate(0.86deg) skewX(-22deg) scaleY(0.93); filter: drop-shadow(0px 21.8px 24.6px rgba(0,0,0,0.12));"
+                />
+              </div>
               <div class="absolute left-[16px] top-[16px] flex items-center gap-[4px]">
                 <img :src="virtualAccountIcon" width="18" height="18" alt="" class="shrink-0 opacity-85" />
                 <span class="text-[12px] font-normal text-[#61667c] leading-[1.5] whitespace-nowrap">Virtual account</span>
               </div>
-              <span class="absolute right-[16px] top-[12px] flex items-center gap-[8px] h-[24px]">
+              <span v-if="renderLocation.status" class="absolute right-[16px] top-[12px] flex items-center gap-[8px] h-[24px]">
                 <span class="size-[5px] rounded-full" :style="{ background: detailStatus.color }" />
                 <span class="text-[12px] font-medium leading-[1.5] whitespace-nowrap" :style="{ color: detailStatus.color }">{{ detailStatus.label }}</span>
               </span>
-              <div class="absolute left-[18px] top-[108px] flex flex-col gap-[4px]">
+              <div class="absolute left-[18px] top-[64px] flex flex-col gap-[2px]">
                 <span class="text-[12px] font-normal text-[#61667c] leading-[1.5]">Account name</span>
-                <span
-                  class="text-[14px] font-medium text-[#4a4f63] leading-[1.5]"
-                  :class="detailLocation.status === 'active' ? '' : 'select-none'"
-                  :style="detailLocation.status === 'active' ? {} : { filter: 'blur(5px)' }"
-                  :aria-hidden="detailLocation.status !== 'active'"
-                >1111 2222 3333 4444</span>
+                <span class="text-[14px] font-normal text-[#03102f] leading-[20px]" style="font-family: 'Reddit Mono', ui-monospace, monospace;">Acme inc</span>
+              </div>
+              <div class="absolute left-[18px] top-[116px] flex flex-col gap-[2px]">
+                <span class="text-[12px] font-normal text-[#61667c] leading-[1.5]">Account number</span>
+                <span class="text-[14px] font-normal text-[#03102f] leading-[20px]" style="font-family: 'Reddit Mono', ui-monospace, monospace;">1111 2222 3333 4444</span>
               </div>
             </div>
             </div>
-            <p v-if="detailLocation.status === 'processing'" class="w-full text-[12px] font-normal text-[#bd8400] leading-[1.5] text-center">
-              We're reviewing your {{ detailLocation.name }} account request with the selected provider. This usually takes 1–2 business days, and we'll email you once it's approved.
+            <p v-if="renderLocation.status === 'processing'" class="w-full text-[12px] font-normal text-[#bd8400] leading-[1.5] text-center">
+              We're reviewing your {{ renderLocation.name }} account request with the selected provider. This usually takes 1–2 business days, and we'll email you once it's approved.
             </p>
             <!-- Rejected: error snackbar (Figma: 2239:112747) -->
             <div
-              v-else-if="detailLocation.status === 'rejected'"
+              v-else-if="renderLocation.status === 'rejected'"
               class="w-full rounded-[8px] border border-[#f1b8bd] bg-[#fbeaea] px-[12px] py-[8px]"
             >
               <p class="text-[12px] font-normal text-[#03102f] leading-[1.5] text-center">
@@ -281,7 +298,7 @@
               style="background: linear-gradient(to bottom, #4179e2, #1f5bcc); box-shadow: 0px 1.5px 0px 0px #1d5fd9;"
               @click="requestLocation = detailLocation"
             >
-              <span class="text-[12px] font-medium text-white leading-[1.5] whitespace-nowrap" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.12);">Request {{ detailLocation.name }} Account</span>
+              <span class="text-[12px] font-medium text-white leading-[1.5] whitespace-nowrap" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.12);">Request {{ renderLocation.name }} Account</span>
             </button>
           </div>
 
@@ -289,7 +306,7 @@
           <div class="flex flex-col gap-[12px] rounded-[12px] border border-[#e5e6ea] p-[12px]">
             <span class="text-[10px] font-medium uppercase tracking-[0.3px] text-[#61667c] leading-[18px]">How customer pay you</span>
             <div class="flex flex-col gap-[12px]">
-              <div v-for="rail in detailLocation.rails" :key="rail.name" class="flex flex-col gap-[4px]">
+              <div v-for="rail in renderLocation.rails" :key="rail.name" class="flex flex-col gap-[4px]">
                 <p class="text-[12px] font-medium text-[#03102f] leading-[1.5]">{{ rail.tier }} — {{ rail.name }}</p>
                 <p class="text-[12px] font-normal text-[#61667c] leading-[1.5]">{{ rail.desc }}</p>
               </div>
@@ -298,10 +315,10 @@
 
           <!-- Supported currencies -->
           <div class="flex flex-col gap-[12px] rounded-[12px] border border-[#e5e6ea] p-[12px]">
-            <span class="text-[10px] font-medium uppercase tracking-[0.3px] text-[#61667c] leading-[18px]">Supported currencies ({{ detailLocation.currencies.length }})</span>
+            <span class="text-[10px] font-medium uppercase tracking-[0.3px] text-[#61667c] leading-[18px]">Supported currencies ({{ renderLocation.currencies.length }})</span>
             <div class="flex items-center gap-[2px] flex-wrap">
               <span
-                v-for="c in detailLocation.currencies"
+                v-for="c in renderLocation.currencies"
                 :key="c"
                 class="inline-flex items-center justify-center min-h-[24px] min-w-[32px] px-[8px] py-[2px] rounded-[24px] bg-[#e5eeff] text-[12px] font-medium text-[#2465de] leading-[1.5] whitespace-nowrap"
               >{{ c }}</span>
@@ -310,7 +327,7 @@
 
           <!-- Close account (Figma: 2261:63420) -->
           <button
-            v-if="detailLocation.status === 'active'"
+            v-if="renderLocation.status === 'active'"
             type="button"
             class="flex items-center justify-center w-full h-[36px] px-[12px] rounded-[8px] bg-white border border-[#f0b5b9] transition-colors duration-150 hover:bg-[#fdf2f2] active:translate-y-[1px]"
             @click="closeLocation = detailLocation"
@@ -354,6 +371,7 @@ import flagEu from '../../assets/images/flag-eu.png'
 import flagUs from '../../assets/images/flag-us.png'
 import virtualAccountIcon from '../../assets/icons/icon-virtual-account.svg'
 import copyIcon from '../../assets/icons/icon-copy.svg'
+import bankOutline from '../../assets/images/va-bank-outline.svg'
 
 // Intro banner dismisses via the hover Close button (resets on reload — prototype only)
 const bannerVisible = ref(true)
@@ -441,17 +459,24 @@ const locations = reactive([
 
 // ── Off-canvas detail view (Figma: 2239:103156) ──
 const detailLocation = ref(null)
+// Keeps the last-opened location rendered while the panel slides shut
+const renderLocation = ref(null)
+
+function openDetail(loc) {
+  detailLocation.value = loc
+  renderLocation.value = loc
+}
 
 // Card chip: the location's status, or Available when not yet requested
 const detailStatus = computed(() =>
-  STATUS_META[detailLocation.value?.status] || { label: 'Available', color: '#002771' },
+  STATUS_META[renderLocation.value?.status] || { label: 'Available', color: '#002771' },
 )
 
 // ── Active account details (Figma: 2236:85958) ──
 const router = useRouter()
 
 const activeFields = computed(() => {
-  const a = detailLocation.value?.account
+  const a = renderLocation.value?.account
   if (!a) return []
   return [
     { label: 'Account name', value: a.name },
@@ -516,13 +541,23 @@ function onCloseModalDismissed() {
   closeLocation.value = null
   if (pendingClose) {
     pendingClose.status = null
-    if (detailLocation.value === pendingClose) detailLocation.value = null
+    if (renderLocation.value === pendingClose) detailLocation.value = null
     pendingClose = null
   }
 }
 </script>
 
 <style scoped>
+/* Slide-over panel — same motion as the settings drawer */
+.drawer-enter-active { transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1); }
+.drawer-leave-active { transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1); }
+.drawer-enter-from,
+.drawer-leave-to { transform: translateX(100%); }
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer-enter-active, .drawer-leave-active { transition: none; }
+}
+
 /* Copied! tooltip on the account detail fields */
 .copy-tip-enter-active { transition: opacity 140ms ease-out, transform 140ms ease-out; }
 .copy-tip-leave-active { transition: opacity 100ms ease-in; }
@@ -574,13 +609,4 @@ function onCloseModalDismissed() {
   .copy-tip-enter-from { transform: none; }
 }
 
-/* Slide-over drawer — same motion as the settings drawer */
-.drawer-enter-active { transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1); }
-.drawer-leave-active { transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1); }
-.drawer-enter-from,
-.drawer-leave-to { transform: translateX(100%); }
-
-@media (prefers-reduced-motion: reduce) {
-  .drawer-enter-active, .drawer-leave-active { transition: none; }
-}
 </style>
