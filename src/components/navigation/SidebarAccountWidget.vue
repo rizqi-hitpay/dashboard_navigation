@@ -8,7 +8,7 @@
       style="height: 56px; padding: 0 8px;"
       @click="open = !open"
     >
-      <div class="w-8 h-8 rounded-[5px] bg-[#343848] flex items-center justify-center shrink-0 overflow-hidden">
+      <div class="w-8 h-8 rounded-[40px] bg-[#343848] flex items-center justify-center shrink-0 overflow-hidden">
         <span class="text-[14px] font-medium text-white">C</span>
       </div>
       <template v-if="sidebarExpanded">

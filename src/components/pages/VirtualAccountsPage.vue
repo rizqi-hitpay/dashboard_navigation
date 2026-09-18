@@ -40,7 +40,7 @@
            for the panel: 480px panel + 16px gap (Figma: 2261:87957) -->
       <div
         class="flex flex-col w-full px-[24px] pt-[24px] pb-[24px]"
-        :style="{ paddingRight: detailLocation ? '496px' : '24px', transition: 'padding-right 280ms cubic-bezier(0.4, 0, 0.2, 1)' }"
+        :style="{ paddingRight: detailLocation ? '504px' : '24px', transition: 'padding-right 280ms cubic-bezier(0.4, 0, 0.2, 1)' }"
       >
         <div class="w-full rounded-[8px] border border-[#e5e6ea] overflow-hidden bg-white">
           <!-- Segmented control — appears once an account has been closed (Figma: 2269:49589) -->
@@ -176,8 +176,8 @@
     <Transition name="drawer">
       <div
         v-if="detailLocation"
-        class="absolute inset-y-0 right-0 z-40 w-[480px] max-w-full bg-white flex flex-col"
-        style="box-shadow: -16px 3px 80px 0px rgba(38,42,50,0.1);"
+        class="absolute top-[8px] right-[8px] bottom-[8px] z-40 w-[480px] max-w-full bg-white flex flex-col rounded-[8px] overflow-hidden"
+        style="box-shadow: -16px 24px 120px 0px rgba(38,42,50,0.2);"
       >
         <!-- Header: BANK LOCATION label + flag + country (Figma: I2261:88365;1241:33634) -->
         <div class="shrink-0 flex items-start gap-[16px] border-b border-[#e5e6ea] p-[16px]">
@@ -228,7 +228,7 @@
                 class="relative flex flex-col gap-[2px] rounded-[8px] border border-[#e5e6ea] bg-white px-[12px] py-[9px]"
               >
                 <span class="text-[12px] font-normal text-[#61667c] leading-[1.5]">{{ f.label }}</span>
-                <span class="text-[14px] font-normal text-[#03102f] leading-[1.5]">{{ f.value }}</span>
+                <span class="text-[13px] font-medium text-[#03102f] leading-[1.5]">{{ f.value }}</span>
                 <button
                   v-if="renderLocation.status === 'active'"
                   type="button"
@@ -252,7 +252,7 @@
               class="self-center flex items-center gap-[6px] h-[28px] cursor-pointer hover:opacity-75 transition-opacity"
               @click="router.push('/transactions')"
             >
-              <span class="text-[13px] font-medium text-[#2465de] leading-[1.5] whitespace-nowrap">View transactions</span>
+              <span class="text-[12px] font-medium text-[#2465de] leading-[1.5] whitespace-nowrap">View transactions</span>
               <svg class="shrink-0" width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2.5 8h11M9.5 4l4 4-4 4" stroke="#2465de" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
             </button>
           </div>
@@ -319,18 +319,18 @@
           </div>
 
           <!-- How customer pay you -->
-          <div class="flex flex-col gap-[12px] rounded-[12px] border border-[#e5e6ea] p-[12px]">
+          <div class="flex flex-col gap-[12px] rounded-[8px] border border-[#e5e6ea] bg-[#fcfcfd] p-[12px]">
             <span class="text-[10px] font-medium uppercase tracking-[0.3px] text-[#61667c] leading-[18px]">How customer pay you</span>
             <div class="flex flex-col gap-[12px]">
               <div v-for="rail in renderLocation.rails" :key="rail.name" class="flex flex-col gap-[4px]">
-                <p class="text-[12px] font-medium text-[#03102f] leading-[1.5]">{{ rail.tier }} — {{ rail.name }}</p>
+                <p class="text-[13px] font-medium text-[#03102f] leading-[1.5]">{{ rail.tier }} — {{ rail.name }}</p>
                 <p class="text-[12px] font-normal text-[#61667c] leading-[1.5]">{{ rail.desc }}</p>
               </div>
             </div>
           </div>
 
           <!-- Supported currencies -->
-          <div class="flex flex-col gap-[12px] rounded-[12px] border border-[#e5e6ea] p-[12px]">
+          <div class="flex flex-col gap-[12px] rounded-[8px] border border-[#e5e6ea] bg-[#fcfcfd] p-[12px]">
             <span class="text-[10px] font-medium uppercase tracking-[0.3px] text-[#61667c] leading-[18px]">Supported currencies ({{ renderLocation.currencies.length }})</span>
             <div class="flex items-center gap-[2px] flex-wrap">
               <span
@@ -345,10 +345,10 @@
           <button
             v-if="renderLocation.status === 'active'"
             type="button"
-            class="flex items-center justify-center w-full h-[36px] px-[12px] rounded-[8px] bg-white border border-[#f0b5b9] transition-colors duration-150 hover:bg-[#fdf2f2] active:translate-y-[1px]"
+            class="flex items-center justify-center w-full h-[28px] px-[8px] rounded-[8px] bg-white border border-[#dc3545] transition-colors duration-150 hover:bg-[#fdf2f2] active:translate-y-[1px]"
             @click="closeLocation = detailLocation"
           >
-            <span class="text-[13px] font-medium text-[#e02c3c] leading-[1.5] whitespace-nowrap">Close account</span>
+            <span class="text-[12px] font-medium text-[#dc3545] leading-[1.5] whitespace-nowrap">Close account</span>
           </button>
 
         </div>
@@ -601,7 +601,7 @@ function onCloseModalDismissed() {
 .drawer-enter-active { transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1); }
 .drawer-leave-active { transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1); }
 .drawer-enter-from,
-.drawer-leave-to { transform: translateX(100%); }
+.drawer-leave-to { transform: translateX(calc(100% + 8px)); }
 
 @media (prefers-reduced-motion: reduce) {
   .drawer-enter-active, .drawer-leave-active { transition: none; }
