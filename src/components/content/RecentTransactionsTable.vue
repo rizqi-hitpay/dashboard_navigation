@@ -1,9 +1,12 @@
 <template>
-  <div>
-    <!-- Section header -->
-    <div class="flex items-center justify-between mb-1" style="height: 40px;">
-      <span class="text-[16px] font-medium text-[#03102f]">Recent Transactions</span>
-      <button class="flex items-center gap-1 text-[12px] font-medium text-[#2364dd] hover:opacity-75 transition-opacity">
+  <div class="ai-chart-scope">
+    <!-- Section header — AI nudge chip slides out beside the title on hover -->
+    <div class="flex items-center justify-between gap-2 mb-1" style="height: 40px;">
+      <div class="flex items-center gap-2 min-w-0 overflow-hidden">
+        <span class="text-[16px] font-medium text-[#03102f] truncate shrink-0 max-w-full">Recent Transactions</span>
+        <AiChartNudge label="Ask about this table" prompt="Summarise my recent transactions" />
+      </div>
+      <button class="shrink-0 flex items-center gap-1 text-[12px] font-medium text-[#2364dd] hover:opacity-75 transition-opacity">
         View all
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
           <path d="M3 7h8M8 4l3 3-3 3" stroke="#2364dd" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
@@ -12,7 +15,10 @@
     </div>
 
     <!-- Table -->
-    <div class="overflow-hidden" style="border: 1px solid #e5e6ea; border-radius: 8px;">
+    <div class="relative overflow-hidden" style="border: 1px solid #e5e6ea; border-radius: 8px;">
+      <Transition name="tbl-overlay">
+        <TableLoadingOverlay v-if="!loaded" />
+      </Transition>
       <table class="w-full border-collapse">
         <!-- Header -->
         <thead>
@@ -58,14 +64,20 @@
             <!-- Date -->
             <td style="padding: 8px 12px; border-right: 1px solid #e5e6ea;">
               <span
-                class="text-[13px] text-[#03102f] whitespace-nowrap"
+                class="text-[13px] text-[#03102f] whitespace-nowrap cell-fade"
+                :class="{ 'cell-fade--in': loaded }"
+                :style="{ transitionDelay: i * 50 + 'ms' }"
                 style="font-family: 'Reddit Mono', monospace; font-weight: 400;"
               >{{ row.date }}</span>
             </td>
 
             <!-- Customer -->
             <td style="padding: 8px 12px; border-right: 1px solid #e5e6ea;">
-              <span class="text-[13px] text-[#03102f] truncate block">{{ row.customer }}</span>
+              <span
+                class="text-[13px] text-[#03102f] truncate block cell-fade"
+                :class="{ 'cell-fade--in': loaded }"
+                :style="{ transitionDelay: i * 50 + 'ms' }"
+              >{{ row.customer }}</span>
             </td>
 
             <!-- Amount -->
@@ -73,7 +85,7 @@
               <span
                 class="text-[13px] text-[#03102f] whitespace-nowrap"
                 style="font-family: 'Reddit Mono', monospace; font-weight: 600;"
-              >{{ row.amount }}</span>
+              ><TickerNumber :value="row.amount" :loaded="loaded" /></span>
             </td>
           </tr>
         </tbody>
@@ -83,10 +95,32 @@
 </template>
 
 <script setup>
+import TickerNumber from './TickerNumber.vue'
+import AiChartNudge from './AiChartNudge.vue'
+import TableLoadingOverlay from './TableLoadingOverlay.vue'
+
 defineProps({
   rows: {
     type: Array,
     default: () => [],
   },
+  loaded: { type: Boolean, default: false },
 })
 </script>
+
+<style scoped>
+/* Loading state (Figma 3973:3773): text cells hidden until the data is ready,
+   then fade in with a light per-row stagger. Amounts stay visible at SGD 0.00
+   and count up via TickerNumber. */
+.cell-fade { opacity: 0; }
+.cell-fade--in { opacity: 1; transition: opacity 400ms cubic-bezier(0.32, 0.72, 0, 1); }
+
+/* Spinner overlay lifts with a quick fade once the data lands */
+.tbl-overlay-leave-active { transition: opacity 250ms ease; }
+.tbl-overlay-leave-to { opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cell-fade--in { transition: none; }
+  .tbl-overlay-leave-active { transition: none; }
+}
+</style>

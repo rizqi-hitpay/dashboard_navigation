@@ -60,13 +60,15 @@
         </Transition>
       </Teleport>
 
-      <!-- Sidekick: own card, 4px gap handled by parent, slides in by width -->
+      <!-- Sidekick: own card, slides in by width. The 4px gap to the main card
+           is a margin that animates with it, so no sliver remains when closed -->
       <div
-        class="shrink-0 overflow-hidden rounded-[8px]"
+        class="shrink-0 overflow-hidden rounded-[20px]"
         :class="agentPanelOpen ? 'border border-[#e5e6ea]' : ''"
         :style="{
           width: agentPanelOpen ? '360px' : '0px',
-          transition: 'width 280ms cubic-bezier(0.4, 0, 0.2, 1)',
+          marginLeft: agentPanelOpen ? '4px' : '0px',
+          transition: 'width 280ms cubic-bezier(0.4, 0, 0.2, 1), margin-left 280ms cubic-bezier(0.4, 0, 0.2, 1)',
           boxShadow: agentPanelOpen ? '0px 3px 22px 0px rgba(37,41,49,0.08)' : 'none',
         }"
       >
@@ -81,7 +83,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import NavRail from '../navigation/NavRail.vue'
 import MobileTopBar from '../navigation/MobileTopBar.vue'
@@ -101,6 +103,12 @@ import FinanceGate from './FinanceGate.vue'
 import { financeUnlocked } from '../../composables/useFinanceAuth.js'
 import LabsSidebar from '../navigation/LabsSidebar.vue'
 import { labsFewApps } from '../../composables/useLabsPreview.js'
+import { startDashboardLoading, stopDashboardLoading } from '../../composables/useDashboardData.js'
+
+// Fake API window: each dashboard element's data source arrives after its own
+// random delay, so the loading treatments resolve independently
+onMounted(() => startDashboardLoading({ min: 1500, max: 5000 }))
+onUnmounted(() => stopDashboardLoading())
 
 // Finance (product 2) is gated behind the shared passcode
 const financeLocked = computed(() => activeProduct.value === 2 && !financeUnlocked.value)

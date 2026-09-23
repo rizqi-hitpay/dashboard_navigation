@@ -1,30 +1,36 @@
 <template>
-  <div class="h-full overflow-y-auto bg-white" style="padding: 24px 28px;">
+  <div class="h-full overflow-y-auto bg-white" style="padding: 24px 28px 0;">
 
     <!-- Page header -->
     <div class="flex items-center justify-between shrink-0 mb-5">
       <h1 class="text-[18px] font-medium text-[#03102f]">Overview</h1>
     </div>
 
-    <!-- Stat cards row -->
-    <div class="grid grid-cols-4 gap-3 shrink-0 mb-5">
+    <!-- Stat cards row — each card is its own fake API source -->
+    <!-- Bottom margin = 20px row gap + 26px reserved for the AI nudge strip
+         that slides out under a card, so its arrival never shifts the page -->
+    <div class="grid grid-cols-4 gap-3 items-start shrink-0" style="margin-bottom: 46px;">
       <OverviewCard
-        v-for="card in statCards"
+        v-for="(card, i) in statCards"
         :key="card.label"
         :label="card.label"
         :value="card.value"
         :trend="card.trend"
         :direction="card.direction || 'up'"
+        :loaded="isLoaded('stat-' + i)"
+        :nudge="card.nudge"
+        :nudge-prompt="card.nudgePrompt"
+        :nudge-shown="agentChatReady"
       />
     </div>
 
     <!-- Transactions + Sales chart row -->
     <div class="grid grid-cols-2 gap-4 mb-4">
       <!-- Recent Transactions -->
-      <RecentTransactionsTable :rows="recentTransactions" />
+      <RecentTransactionsTable :rows="recentTransactions" :loaded="isLoaded('transactions')" />
 
       <!-- Your Sales bar chart -->
-      <SalesBarChart />
+      <SalesBarChart :loaded="isLoaded('sales')" />
     </div>
 
     <!-- Donut charts row -->
@@ -36,18 +42,20 @@
         center-label="Total"
         discover-text="Discover more methods"
         :tabs="[{ label: '7d' }, { label: '30d' }]"
+        :loaded="isLoaded('payment-methods')"
       />
       <DonutChartCard
         title="Sales by Channels"
         :segments="channelSegments"
         total="SGD 18,470"
         center-label="Total"
+        :loaded="isLoaded('channels')"
       />
     </div>
 
     <!-- Recent Payouts table -->
     <div class="mb-5">
-      <RecentPayoutsTable :rows="recentPayouts" />
+      <RecentPayoutsTable :rows="recentPayouts" :loaded="isLoaded('payouts')" />
     </div>
 
     <!-- Product intro carousel (Explore HitPay), dismissible — reveals on first load -->
@@ -59,15 +67,13 @@
       <div class="intro-reveal__inner">
         <div style="padding-top: 8px;">
           <ProductIntroCarousel :play="introOpen" @close="productIntroDismissed = true" />
-
-          <!-- Chat box → opens the AI Assistant with the typed message.
-               Hidden while the AI Assistant panel is open. -->
-          <div v-if="!agentPanelOpen" class="flex justify-center" style="margin-top: 64px;">
-            <AgentChatInput style="width: 500px;" />
-          </div>
         </div>
       </div>
     </div>
+
+    <!-- Floating AI chat — arrives once the dashboard data has loaded.
+         Hidden while the AI Assistant panel is open. -->
+    <AgentChatDock v-if="!agentPanelOpen" />
 
   </div>
 </template>
@@ -81,12 +87,15 @@ let introHasPlayed = false
 import { ref, onMounted } from 'vue'
 import OverviewCard from './OverviewCard.vue'
 import ProductIntroCarousel from './ProductIntroCarousel.vue'
-import AgentChatInput from './AgentChatInput.vue'
-import { agentPanelOpen } from '../../composables/useAgentPanel.js'
+import AgentChatDock from './AgentChatDock.vue'
+import { agentPanelOpen, agentChatReady } from '../../composables/useAgentPanel.js'
 import RecentTransactionsTable from './RecentTransactionsTable.vue'
 import SalesBarChart from './SalesBarChart.vue'
 import DonutChartCard from './DonutChartCard.vue'
 import RecentPayoutsTable from './RecentPayoutsTable.vue'
+import { useDashboardData } from '../../composables/useDashboardData.js'
+
+const { isLoaded } = useDashboardData()
 
 const productIntroDismissed = ref(false)
 
@@ -106,7 +115,8 @@ onMounted(() => {
 
 const statCards = [
   { label: 'Sales this month', value: 'SGD 398,152', trend: '+5%' },
-  { label: 'Sales this week',  value: 'SGD 18,470',  trend: '+11%' },
+  { label: 'Sales this week',  value: 'SGD 18,470',  trend: '11%', direction: 'down',
+    nudge: 'Why 11% drop?', nudgePrompt: 'Why did my sales drop 11% this week?' },
   { label: 'Sales today',      value: 'SGD 2,760',   trend: '+39%' },
   { label: 'Wallet balance',   value: 'SGD 70,251',  trend: '+39%' },
 ]

@@ -1,8 +1,11 @@
 <template>
-  <div>
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-1" style="height: 40px;">
-      <span class="text-[16px] font-medium text-[#03102f]">Your Sales</span>
+  <div class="ai-chart-scope">
+    <!-- Header — AI nudge chip slides out beside the title on hover -->
+    <div class="flex items-center justify-between gap-2 mb-1" style="height: 40px;">
+      <div class="flex items-center gap-2 min-w-0 overflow-hidden">
+        <span class="text-[16px] font-medium text-[#03102f] truncate shrink-0 max-w-full">Your Sales</span>
+        <AiChartNudge :prompt="`Summarise my sales for the last ${activeTab}`" />
+      </div>
       <div class="flex items-center rounded-[24px]" style="background: #f8f9fc; padding: 4px; gap: 4px;">
         <button
           v-for="t in ['7d', '30d']"
@@ -56,16 +59,19 @@
               :height="BAR_AREA_H"
               fill="url(#weekendGrad)"
             />
-            <!-- Bars -->
+            <!-- Bars: flat at zero until the data lands, then grow bottom-up
+                 with a left-to-right stagger -->
             <rect
               v-for="(bar, bi) in group.bars"
               :key="'b' + bi"
+              class="bar-grow"
               :x="groupX(gi) + bi * (barW30d + INNER_GAP)"
-              :y="BAR_AREA_H - valToPx(bar.value)"
+              :y="loaded ? BAR_AREA_H - valToPx(bar.value) : BAR_AREA_H"
               :width="barW30d"
-              :height="valToPx(bar.value)"
+              :height="loaded ? valToPx(bar.value) : 0"
               rx="2"
               :fill="bar.highlight ? '#2364dd' : 'rgba(35,100,221,0.25)'"
+              :style="{ transitionDelay: (gi * N_BARS_GROUP + bi) * 15 + 'ms' }"
             />
             <!-- X-axis label -->
             <text
@@ -79,24 +85,27 @@
             >{{ group.label }}</text>
           </g>
 
-          <!-- Dashed marker line + dot -->
-          <line
-            :x1="markerX"
-            :x2="markerX"
-            y1="0"
-            :y2="BAR_AREA_H"
-            stroke="#2364dd"
-            stroke-width="1"
-            stroke-dasharray="3,2"
-          />
-          <circle
-            :cx="markerX"
-            :cy="BAR_AREA_H - valToPx(markerValue)"
-            r="3"
-            fill="#2364dd"
-            stroke="white"
-            stroke-width="1.5"
-          />
+          <!-- Dashed marker line + dot — hidden until loaded, fades in after
+               the bars finish growing -->
+          <g class="marker-fade" :class="{ 'marker-fade--in': loaded }">
+            <line
+              :x1="markerX"
+              :x2="markerX"
+              y1="0"
+              :y2="BAR_AREA_H"
+              stroke="#2364dd"
+              stroke-width="1"
+              stroke-dasharray="3,2"
+            />
+            <circle
+              :cx="markerX"
+              :cy="BAR_AREA_H - valToPx(markerValue)"
+              r="3"
+              fill="#2364dd"
+              stroke="white"
+              stroke-width="1.5"
+            />
+          </g>
         </template>
 
         <!-- ── 7d view ── -->
@@ -111,12 +120,14 @@
               fill="url(#weekendGrad)"
             />
             <rect
+              class="bar-grow"
               :x="dayX7d(i)"
-              :y="BAR_AREA_H - valToPx(bar.value)"
+              :y="loaded ? BAR_AREA_H - valToPx(bar.value) : BAR_AREA_H"
               :width="barW7d"
-              :height="valToPx(bar.value)"
+              :height="loaded ? valToPx(bar.value) : 0"
               rx="2"
               :fill="bar.highlight ? '#2364dd' : 'rgba(35,100,221,0.25)'"
+              :style="{ transitionDelay: i * 40 + 'ms' }"
             />
             <text
               :x="dayX7d(i) + barW7d / 2"
@@ -136,6 +147,11 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import AiChartNudge from './AiChartNudge.vue'
+
+defineProps({
+  loaded: { type: Boolean, default: false },
+})
 
 const activeTab = ref('30d')
 
@@ -262,3 +278,21 @@ const bars7d = [
   { label: 'SUN', value:  700, weekend: true },
 ]
 </script>
+
+<style scoped>
+/* Loading state (Figma 3973:3800): axes/grid/weekend bands stay, bars grow
+   bottom-up on the decelerate curve once the data lands (y and height are
+   SVG geometry properties, so they transition like any CSS property) */
+.bar-grow {
+  transition: y 700ms cubic-bezier(0.32, 0.72, 0, 1), height 700ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Marker appears after the bars have mostly grown */
+.marker-fade { opacity: 0; }
+.marker-fade--in { opacity: 1; transition: opacity 300ms ease 950ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bar-grow { transition: none; }
+  .marker-fade--in { transition: none; }
+}
+</style>

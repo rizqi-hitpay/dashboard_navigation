@@ -1,8 +1,11 @@
 <template>
-  <div>
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-1" style="height: 40px;">
-      <span class="text-[16px] font-medium text-[#03102f]">{{ title }}</span>
+  <div class="ai-chart-scope">
+    <!-- Header — AI nudge chip slides out beside the title on hover -->
+    <div class="flex items-center justify-between gap-2 mb-1" style="height: 40px;">
+      <div class="flex items-center gap-2 min-w-0 overflow-hidden">
+        <span class="text-[16px] font-medium text-[#03102f] truncate shrink-0 max-w-full">{{ title }}</span>
+        <AiChartNudge :prompt="`Tell me about my ${title.toLowerCase()} for the last ${activeTab}`" />
+      </div>
 
       <!-- Tab group -->
       <div class="flex items-center rounded-[24px]" style="background: #f8f9fc; padding: 4px; gap: 4px;">
@@ -43,17 +46,30 @@
             <!-- Transparent background catches hover on center hole / gaps -->
             <circle cx="105" cy="105" r="105" fill="rgba(0,0,0,0)" style="pointer-events: all;" />
 
-            <path
-              v-for="(seg, i) in computedSegments"
-              :key="i"
-              :d="seg.path"
-              :style="{
-                fill: segFill(i),
-                cursor: 'pointer',
-                transition: 'fill 180ms ease',
-              }"
-              transform="rotate(-90, 105, 105)"
+            <!-- Loading state (Figma 3973:3917): neutral ring shown until the
+                 data lands, colored segments sweep clockwise over it -->
+            <circle
+              cx="105"
+              cy="105"
+              :r="(OUTER_R + INNER_R) / 2"
+              fill="none"
+              stroke="#f2f2f4"
+              :stroke-width="OUTER_R - INNER_R"
             />
+
+            <template v-if="sweep > 0">
+              <path
+                v-for="(seg, i) in computedSegments"
+                :key="i"
+                :d="seg.path"
+                :style="{
+                  fill: segFill(i),
+                  cursor: 'pointer',
+                  transition: 'fill 180ms ease',
+                }"
+                transform="rotate(-90, 105, 105)"
+              />
+            </template>
           </svg>
 
           <!-- Center label overlay -->
@@ -68,7 +84,7 @@
             <span
               class="text-[16px] font-medium text-[#03102f]"
               style="line-height: 1.4;"
-            >{{ centerValue }}</span>
+            ><TickerNumber v-if="hoveredIndex === null" :value="total" :loaded="loaded" /><template v-else>{{ centerValue }}</template></span>
           </div>
         </div>
       </div>
@@ -110,7 +126,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onBeforeUnmount } from 'vue'
+import TickerNumber from './TickerNumber.vue'
+import AiChartNudge from './AiChartNudge.vue'
 
 const props = defineProps({
   title:        { type: String, required: true },
@@ -119,10 +137,33 @@ const props = defineProps({
   centerLabel:  { type: String, default: 'Total' },
   discoverText: { type: String, default: '' },
   tabs:         { type: Array,  default: () => [{ label: '7d' }, { label: '30d' }] },
+  loaded:       { type: Boolean, default: false },
 })
 
 const activeTab    = ref('30d')
 const hoveredIndex = ref(null)
+
+// Sweep progress: 0 = neutral loading ring, 1 = fully drawn segments.
+// Mounted with loaded already true → drawn immediately.
+const sweep = ref(props.loaded ? 1 : 0)
+let sweepRaf = null
+
+watch(() => props.loaded, (loaded) => {
+  cancelAnimationFrame(sweepRaf)
+  if (!loaded) { sweep.value = 0; return }
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (reduce) { sweep.value = 1; return }
+  const t0 = performance.now()
+  const DURATION = 900
+  const tick = (now) => {
+    const t = Math.min((now - t0) / DURATION, 1)
+    sweep.value = 1 - Math.pow(1 - t, 3) // decelerate
+    if (t < 1) sweepRaf = requestAnimationFrame(tick)
+  }
+  sweepRaf = requestAnimationFrame(tick)
+})
+
+onBeforeUnmount(() => cancelAnimationFrame(sweepRaf))
 
 // ── Donut geometry (Figma: 210×210px, innerRadius ratio 0.8) ──
 const CX = 105, CY = 105
@@ -152,8 +193,8 @@ const computedSegments = computed(() => {
 
   for (const seg of props.segments) {
     const arcLen     = (seg.pct / totalPct) * usableC
-    const startAngle = (cumulative / C) * 2 * Math.PI
-    const endAngle   = ((cumulative + arcLen) / C) * 2 * Math.PI
+    const startAngle = (cumulative / C) * 2 * Math.PI * sweep.value
+    const endAngle   = ((cumulative + arcLen) / C) * 2 * Math.PI * sweep.value
     result.push({ ...seg, arcLen, startAngle, endAngle, path: ringArcPath(startAngle, endAngle) })
     cumulative += arcLen + GAP
   }
