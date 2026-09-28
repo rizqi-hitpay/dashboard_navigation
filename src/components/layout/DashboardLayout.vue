@@ -20,7 +20,7 @@
     <div class="flex flex-1 overflow-hidden min-w-0" style="padding: 8px 8px 8px 0;">
 
       <!-- Main card: sidebar + content -->
-      <div class="flex flex-1 rounded-[8px] overflow-hidden min-w-0 border border-[#E5E6EA] relative" style="box-shadow: 0px 3px 22px 0px rgba(37,41,49,0.08);">
+      <div class="flex flex-1 rounded-[20px] overflow-hidden min-w-0 border border-[#E5E6EA] relative" style="box-shadow: 0px 3px 22px 0px rgba(37,41,49,0.08);">
 
         <!-- Persistent sidebar shell -->
         <div

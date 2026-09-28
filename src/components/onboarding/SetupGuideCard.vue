@@ -22,8 +22,8 @@
               v-if="minimized"
               class="shrink-0 flex items-center justify-center hover:opacity-70 transition-opacity duration-150"
               style="width: 20px; height: 20px;"
-              aria-label="Minimize to banner"
-              @click="setupBannerVisible = true"
+              :aria-label="standalone ? 'Hide setup guide' : 'Minimize to banner'"
+              @click="onMinus"
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path d="M2.91667 7H11.0833" stroke="#9295A5" stroke-width="1.16667" stroke-linecap="round"/>
@@ -161,13 +161,30 @@
 </template>
 
 <script setup>
-import { reactive, computed } from 'vue'
+import { reactive, computed, ref } from 'vue'
 import { useNewUser } from '../../composables/useNewUser'
 
-const { verificationPageOpen, bankAccountPageOpen, setupBannerVisible, setupCardMinimized: minimized } = useNewUser()
+const props = defineProps({
+  // Standalone copy (e.g. inside a full-page flow): starts minimized with its
+  // own local state so it doesn't move the dashboard card or banner
+  standalone: { type: Boolean, default: false },
+  // Checklist item the current page is already handling — skipped for "Next:"
+  currentStep: { type: String, default: '' },
+})
+const emit = defineEmits(['dismiss'])
+
+const { verificationPageOpen, bankAccountPageOpen, setupBannerVisible, setupCardMinimized } = useNewUser()
+
+const localMinimized = ref(true)
+const minimized = props.standalone ? localMinimized : setupCardMinimized
 
 function toggleMinimize() {
   minimized.value = !minimized.value
+}
+
+function onMinus() {
+  if (props.standalone) emit('dismiss')
+  else setupBannerVisible.value = true
 }
 
 const sections = reactive([
@@ -201,7 +218,7 @@ const sections = reactive([
 // First incomplete step — surfaced as the "Next:" action while minimized
 const nextStep = computed(() => {
   for (const section of sections) {
-    const item = section.items.find((it) => !it.done)
+    const item = section.items.find((it) => !it.done && it.label !== props.currentStep)
     if (item) return item
   }
   return null
