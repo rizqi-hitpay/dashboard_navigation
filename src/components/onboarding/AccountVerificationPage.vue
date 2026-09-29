@@ -408,7 +408,8 @@ import chevronDownIcon from '../../assets/icons/icon-chevron-down-sm.svg'
 const emit = defineEmits(['close'])
 
 const attested = ref(true)
-const setupGuideVisible = ref(true)
+// Docked setup widget — hidden for now; flip to true to bring it back
+const setupGuideVisible = ref(false)
 
 // AI Sidekick opens beside the flow so the merchant keeps their progress
 const aiOpen = ref(false)
