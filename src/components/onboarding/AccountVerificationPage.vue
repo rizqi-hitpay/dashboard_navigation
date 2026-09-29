@@ -1,7 +1,13 @@
 <template>
-  <div class="fixed inset-0 z-50 flex flex-col bg-white">
+  <!-- Full-bleed page; with the AI Sidekick open it becomes a floating 20px card
+       beside the Sidekick on the page background (Figma 4846:57811: 8px pad + gap) -->
+  <div
+    class="av-shell fixed inset-0 z-50 flex overflow-hidden"
+    :class="{ 'av-shell--ai': aiOpen }"
+  >
+  <div class="av-page flex flex-col flex-1 min-w-0 bg-white overflow-hidden">
     <!-- Top bar -->
-    <div class="flex items-stretch shrink-0" style="border-bottom: 1px solid #e5e6ea;">
+    <div class="flex items-stretch shrink-0" style="height: 64px; border-bottom: 1px solid #e5e6ea;">
       <div class="flex items-center flex-1 min-w-0" style="padding: 16px 24px; gap: 12px;">
         <img :src="logoIcon" alt="HitPay" width="32" height="31.9585" class="shrink-0" />
         <span class="shrink-0" style="width: 1px; height: 20px; background: #e5e6ea;"></span>
@@ -65,8 +71,9 @@
             </div>
           </div>
 
-          <!-- Need help? → AI Assistant -->
-          <div class="relative shrink-0 w-full">
+          <!-- Need help? → AI Assistant (hidden while the Sidekick is open) -->
+          <Transition name="help-fade">
+          <div v-if="!aiOpen" class="relative shrink-0 w-full">
             <div class="ai-help-glow absolute rounded-[16px]"></div>
             <button
               class="ai-help relative flex items-start w-full bg-white rounded-[8px] text-left"
@@ -82,19 +89,25 @@
               </span>
             </button>
           </div>
+          </Transition>
         </div>
 
-        <!-- Step content — reserves room under the card for the docked setup guide (77px + 16px gap) -->
+        <!-- Step content — reserves room under the card for the docked setup guide (77px + 16px gap).
+             With the Sidekick open the column narrows (Figma: 24px left pad, card fills to 664px) -->
         <div
           class="flex flex-1 justify-center items-start min-w-0 min-h-0"
-          :style="{ paddingBottom: setupGuideVisible ? '93px' : '0', transition: 'padding-bottom 200ms ease' }"
+          :style="{
+            paddingBottom: setupGuideVisible ? '93px' : '0',
+            paddingLeft: aiOpen ? '24px' : '0',
+            transition: 'padding 280ms cubic-bezier(0.4, 0, 0.2, 1)',
+          }"
         >
           <!-- One card shell per step; direction-aware slide + fade between steps -->
           <Transition :name="stepTransition" mode="out-in">
           <div
             :key="currentStep"
             class="flex flex-col rounded-[12px] min-h-0"
-            style="width: 764px; max-height: 100%; background: #f8f9fc; padding: 4px;"
+            style="width: 100%; max-width: 764px; max-height: 100%; background: #f8f9fc; padding: 4px;"
           >
             <!-- Title -->
             <div class="flex flex-col justify-center shrink-0" style="padding: 16px; gap: 2px;">
@@ -372,12 +385,20 @@
       </Transition>
     </div>
   </div>
+
+  <!-- AI Sidekick (Figma 4846:161206): 360px card, slides in from the right -->
+  <div class="av-sidekick-slot shrink-0 h-full">
+    <div class="av-sidekick h-full bg-white overflow-hidden">
+      <AskAgentPanel @close="aiOpen = false" />
+    </div>
+  </div>
+  </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import SetupGuideCard from './SetupGuideCard.vue'
-import { agentPanelOpen } from '../../composables/useAgentPanel.js'
+import AskAgentPanel from '../content/AskAgentPanel.vue'
 import logoIcon from '../../assets/icons/logo-hitpay-logogram.svg'
 import aiChatIcon from '../../assets/icons/icon-ai-chat.svg'
 import sparkleIcon from '../../assets/icons/icon-sparkle-ai.svg'
@@ -389,10 +410,10 @@ const emit = defineEmits(['close'])
 const attested = ref(true)
 const setupGuideVisible = ref(true)
 
-// The AI Assistant lives in the dashboard — leave the flow and open it there
+// AI Sidekick opens beside the flow so the merchant keeps their progress
+const aiOpen = ref(false)
 function openAssistant() {
-  agentPanelOpen.value = true
-  emit('close')
+  aiOpen.value = true
 }
 
 const stepDefs = [
@@ -531,7 +552,10 @@ const sections = computed(() => [
 ])
 
 function onKeydown(e) {
-  if (e.key === 'Escape') emit('close')
+  if (e.key !== 'Escape') return
+  // Close the Sidekick first, then the flow
+  if (aiOpen.value) aiOpen.value = false
+  else emit('close')
 }
 onMounted(() => window.addEventListener('keydown', onKeydown))
 onUnmounted(() => window.removeEventListener('keydown', onKeydown))
@@ -710,6 +734,68 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
   box-shadow: 0px 0px 0px 3px rgba(200, 128, 242, 0.16);
 }
 
+/* ── Shell: full-bleed ⇄ floating card + Sidekick (Figma 4846:57811) ── */
+.av-shell {
+  background: #f8f9fc;
+  padding: 0;
+  transition: padding 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.av-shell--ai { padding: 8px; }
+
+.av-page {
+  position: relative;
+  border-radius: 0;
+  transition: border-radius 280ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 280ms ease;
+}
+.av-shell--ai .av-page {
+  border-radius: 20px;
+  box-shadow: 0px 3px 22px 0px rgba(38, 42, 50, 0.08), 0px 1px 1px 0px rgba(0, 0, 0, 0.08);
+}
+/* Figma strokes sit inside the frame without taking layout space — draw them as an overlay */
+.av-page::after,
+.av-sidekick::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid #f2f2f4;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 20;
+}
+.av-page::after {
+  opacity: 0;
+  transition: opacity 280ms ease;
+}
+.av-shell--ai .av-page::after { opacity: 1; }
+
+/* Slot animates 0 → 368px (8px gap + 360px card); the card itself slides in */
+.av-sidekick-slot {
+  width: 0;
+  transition: width 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.av-shell--ai .av-sidekick-slot { width: 368px; }
+
+.av-sidekick {
+  position: relative;
+  width: 360px;
+  margin-left: 8px;
+  border-radius: 20px;
+  box-shadow: 0px 3px 22px 0px rgba(38, 42, 50, 0.08), 0px 1px 1px 0px rgba(0, 0, 0, 0.08);
+  opacity: 0;
+  transform: translateX(24px);
+  transition: opacity 200ms ease, transform 320ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.av-shell--ai .av-sidekick {
+  opacity: 1;
+  transform: translateX(0);
+  transition-delay: 60ms;
+}
+
+.help-fade-enter-active,
+.help-fade-leave-active { transition: opacity 180ms ease, transform 180ms ease; }
+.help-fade-enter-from,
+.help-fade-leave-to { opacity: 0; transform: translateY(6px); }
+
 /* Figma: "Need help?" soft AI gradient glow behind the card */
 .ai-help-glow {
   inset: 8px 0.5px 8px -0.5px;
@@ -743,7 +829,13 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
   .radio,
   .add-person,
   .dot-swap-enter-active,
-  .dot-swap-leave-active { transition: none; }
+  .dot-swap-leave-active,
+  .av-shell,
+  .av-page,
+  .av-sidekick-slot,
+  .av-sidekick,
+  .help-fade-enter-active,
+  .help-fade-leave-active { transition: none; }
   /* Keep a gentle crossfade between steps, drop the movement */
   .step-fwd-enter-active, .step-back-enter-active,
   .step-fwd-leave-active, .step-back-leave-active { transition: opacity 150ms ease; }
