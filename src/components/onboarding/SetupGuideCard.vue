@@ -170,12 +170,14 @@ const props = defineProps({
   standalone: { type: Boolean, default: false },
   // Checklist item the current page is already handling — skipped for "Next:"
   currentStep: { type: String, default: '' },
+  // Standalone only: open collapsed (header-only) or with the full checklist
+  startMinimized: { type: Boolean, default: true },
 })
 const emit = defineEmits(['dismiss'])
 
 const { verificationPageOpen, bankAccountPageOpen, setupBannerVisible, setupCardMinimized } = useNewUser()
 
-const localMinimized = ref(true)
+const localMinimized = ref(props.startMinimized)
 const minimized = props.standalone ? localMinimized : setupCardMinimized
 
 function toggleMinimize() {

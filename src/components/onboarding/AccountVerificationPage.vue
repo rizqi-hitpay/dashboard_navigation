@@ -92,12 +92,12 @@
           </Transition>
         </div>
 
-        <!-- Step content — reserves room under the card for the docked setup guide (77px + 16px gap).
+        <!-- Step content — reserves a right-hand lane for the docked setup guide (314px + 24px gap).
              With the Sidekick open the column narrows (Figma: 24px left pad, card fills to 664px) -->
         <div
           class="flex flex-1 justify-center items-start min-w-0 min-h-0"
           :style="{
-            paddingBottom: setupGuideVisible ? '93px' : '0',
+            paddingRight: showSetupGuide ? '338px' : '0',
             paddingLeft: aiOpen ? '24px' : '0',
             transition: 'padding 280ms cubic-bezier(0.4, 0, 0.2, 1)',
           }"
@@ -372,11 +372,12 @@
         </div>
       </div>
 
-      <!-- Setup guide (minimized), docked bottom-right -->
+      <!-- Setup guide (full checklist), docked bottom-right -->
       <Transition name="setup-dock">
         <SetupGuideCard
-          v-if="setupGuideVisible"
+          v-if="showSetupGuide"
           standalone
+          :start-minimized="false"
           current-step="Account verification"
           class="absolute"
           style="right: 24px; bottom: 24px; z-index: 10;"
@@ -408,11 +409,14 @@ import chevronDownIcon from '../../assets/icons/icon-chevron-down-sm.svg'
 const emit = defineEmits(['close'])
 
 const attested = ref(true)
-// Docked setup widget — hidden for now; flip to true to bring it back
-const setupGuideVisible = ref(false)
+// Docked setup widget (opens with the full checklist)
+const setupGuideVisible = ref(true)
+
 
 // AI Sidekick opens beside the flow so the merchant keeps their progress
 const aiOpen = ref(false)
+// The Sidekick already carries the setup guide, so the docked widget steps aside
+const showSetupGuide = computed(() => setupGuideVisible.value && !aiOpen.value)
 function openAssistant() {
   aiOpen.value = true
 }
@@ -812,7 +816,9 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
 .ai-help:active { transform: translateY(1px); }
 
 /* Setup guide dismiss */
+.setup-dock-enter-active { transition: opacity 220ms ease-out, transform 280ms cubic-bezier(0.32, 0.72, 0, 1); }
 .setup-dock-leave-active { transition: opacity 160ms ease, transform 160ms ease; }
+.setup-dock-enter-from,
 .setup-dock-leave-to { opacity: 0; transform: translateY(8px); }
 
 @media (prefers-reduced-motion: reduce) {
@@ -822,6 +828,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
   .btn-primary,
   .ai-help,
   .field-input,
+  .setup-dock-enter-active,
   .setup-dock-leave-active,
   .step-dot,
   .step-line-fill,
