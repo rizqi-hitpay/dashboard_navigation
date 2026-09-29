@@ -62,7 +62,7 @@
 
       <!-- Sidekick: own card, 4px gap handled by parent, slides in by width -->
       <div
-        class="shrink-0 overflow-hidden rounded-[8px]"
+        class="shrink-0 overflow-hidden rounded-[20px]"
         :class="agentPanelOpen ? 'border border-[#e5e6ea]' : ''"
         :style="{
           width: agentPanelOpen ? '360px' : '0px',
