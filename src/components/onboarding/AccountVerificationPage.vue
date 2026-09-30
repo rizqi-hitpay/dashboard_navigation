@@ -7,15 +7,20 @@
   >
   <div class="av-page flex flex-col flex-1 min-w-0 bg-white overflow-hidden">
     <!-- Top bar -->
-    <div class="flex items-stretch shrink-0" style="height: 64px; border-bottom: 1px solid #e5e6ea;">
-      <div class="flex items-center flex-1 min-w-0" style="padding: 16px 24px; gap: 12px;">
+    <div class="flex items-stretch shrink-0" style="height: 64px; gap: 12px; border-bottom: 1px solid #e5e6ea;">
+      <div class="relative flex items-center flex-1 min-w-0" style="padding: 16px 24px; gap: 12px;">
         <img :src="logoIcon" alt="HitPay" width="32" height="31.9585" class="shrink-0" />
         <span class="shrink-0" style="width: 1px; height: 20px; background: #e5e6ea;"></span>
         <span class="text-[16px] font-medium text-[#03102f] whitespace-nowrap" style="line-height: 1.4;">Account Verification</span>
+        <!-- Figma: message centred in the title area (hidden once it would collide with the title) -->
+        <span
+          class="header-message absolute text-[14px] text-[#61667c] whitespace-nowrap pointer-events-none"
+          style="left: 50%; top: 50%; transform: translate(-50%, -50%); line-height: 1.5;"
+        >Verify your account to start accepting payments</span>
       </div>
       <button
         class="flex items-center justify-center hover:bg-[#f8f9fc] transition-colors duration-150"
-        style="border-left: 1px solid #e5e6ea; padding: 8px 24px; gap: 8px;"
+        style="width: 108px; border-left: 1px solid #e5e6ea; padding: 8px 0; gap: 8px;"
         @click="$emit('close')"
       >
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -31,7 +36,19 @@
 
         <!-- Stepper sidebar (Figma: Sidebar/SubSubmenu) -->
         <div class="flex flex-col shrink-0 bg-white" style="width: 280px; gap: 4px;">
-          <div class="flex flex-col flex-1 min-h-0">
+          <div class="flex flex-col flex-1 min-h-0" style="gap: 8px;">
+            <!-- Progress head (Figma 4865:66080) -->
+            <div class="flex flex-col w-full rounded-[8px]" style="background: #f5f6f9; padding: 8px 12px 12px; gap: 8px;">
+              <div class="flex items-end w-full" style="gap: 8px;">
+                <span class="text-[14px] font-medium text-[#03102f] whitespace-nowrap" style="line-height: 1.5;">Finish the verification</span>
+                <span class="flex-1 min-w-0 truncate text-[13px] text-[#61667c]" style="line-height: 1.5;">{{ timeLeftLabel }}</span>
+              </div>
+              <div class="w-full overflow-hidden bg-white" style="height: 4px; border-radius: 24px;">
+                <div class="progress-fill" :style="{ width: `${progressPct}%` }"></div>
+              </div>
+            </div>
+
+            <div class="flex flex-col w-full">
             <div
               v-for="(step, i) in steps"
               :key="step.label"
@@ -53,21 +70,21 @@
                     <span v-else key="num" style="line-height: 1.5;">{{ i + 1 }}</span>
                   </Transition>
                 </span>
-                <!-- Connector: grey track, blue fill grows downward once the step is done -->
-                <span v-if="i < steps.length - 1" class="step-line shrink-0">
+                <!-- Connector fills the rest of the row: grey track, blue fill grows downward once done -->
+                <span v-if="i < steps.length - 1" class="step-line flex-1">
                   <span class="step-line-fill" :class="{ 'step-line-fill--on': step.done }"></span>
                 </span>
               </div>
 
-              <!-- Label + description -->
-              <div class="flex flex-col flex-1 min-w-0" style="padding: 4px 0 12px; gap: 2px;">
+              <!-- Label (Figma: 44px row, pt 2 / pb 12) -->
+              <div class="flex flex-col justify-center flex-1 min-w-0" style="height: 44px; padding: 2px 0 12px;">
                 <span
                   class="step-label text-[14px]"
                   :class="step.active ? 'font-medium text-[#03102f]' : 'text-[#61667c]'"
                   style="line-height: 1.5;"
                 >{{ step.label }}</span>
-                <span class="text-[13px] text-[#61667c]" style="line-height: 1.5;">{{ step.description }}</span>
               </div>
+            </div>
             </div>
           </div>
 
@@ -92,16 +109,8 @@
           </Transition>
         </div>
 
-        <!-- Step content — reserves a right-hand lane for the docked setup guide (314px + 24px gap).
-             With the Sidekick open the column narrows (Figma: 24px left pad, card fills to 664px) -->
-        <div
-          class="flex flex-1 justify-center items-start min-w-0 min-h-0"
-          :style="{
-            paddingRight: showSetupGuide ? '338px' : '0',
-            paddingLeft: aiOpen ? '24px' : '0',
-            transition: 'padding 280ms cubic-bezier(0.4, 0, 0.2, 1)',
-          }"
-        >
+        <!-- Step content (Figma List: 24px left pad, card left-aligned, 764px max) -->
+        <div class="flex flex-1 justify-start items-start min-w-0 min-h-0" style="padding-left: 24px;">
           <!-- One card shell per step; direction-aware slide + fade between steps -->
           <Transition :name="stepTransition" mode="out-in">
           <div
@@ -372,18 +381,6 @@
         </div>
       </div>
 
-      <!-- Setup guide (full checklist), docked bottom-right -->
-      <Transition name="setup-dock">
-        <SetupGuideCard
-          v-if="showSetupGuide"
-          standalone
-          :start-minimized="false"
-          current-step="Account verification"
-          class="absolute"
-          style="right: 24px; bottom: 24px; z-index: 10;"
-          @dismiss="setupGuideVisible = false"
-        />
-      </Transition>
     </div>
   </div>
 
@@ -398,7 +395,6 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
-import SetupGuideCard from './SetupGuideCard.vue'
 import AskAgentPanel from '../content/AskAgentPanel.vue'
 import logoIcon from '../../assets/icons/logo-hitpay-logogram.svg'
 import aiChatIcon from '../../assets/icons/icon-ai-chat.svg'
@@ -409,25 +405,22 @@ import chevronDownIcon from '../../assets/icons/icon-chevron-down-sm.svg'
 const emit = defineEmits(['close'])
 
 const attested = ref(true)
-// Docked setup widget (opens with the full checklist)
-const setupGuideVisible = ref(true)
 
 
 // AI Sidekick opens beside the flow so the merchant keeps their progress
 const aiOpen = ref(false)
-// The Sidekick already carries the setup guide, so the docked widget steps aside
-const showSetupGuide = computed(() => setupGuideVisible.value && !aiOpen.value)
 function openAssistant() {
   aiOpen.value = true
 }
 
+// minutes: rough time each step takes — drives the "N mins left" estimate
 const stepDefs = [
-  { label: 'Business type',         description: 'Tell us about your company'  },
-  { label: 'Documents',             description: 'Upload business documents'   },
-  { label: 'Business details',      description: 'Name, address and contacts'   },
-  { label: 'Identity verification', description: 'Verify it’s really you'       },
-  { label: 'Personnel',             description: 'Shareholders and directors'   },
-  { label: 'Review & submit',       description: 'Check everything and submit' },
+  { label: 'Business type',         minutes: 1 },
+  { label: 'Documents',             minutes: 2 },
+  { label: 'Business details',      minutes: 1 },
+  { label: 'Identity verification', minutes: 2 },
+  { label: 'Personnel',             minutes: 1 },
+  { label: 'Review & submit',       minutes: 1 },
 ]
 const BUSINESS_DETAILS = 2
 const IDENTITY = 3
@@ -446,6 +439,13 @@ const currentStep = ref(BUSINESS_DETAILS)
 const maxReached = ref(BUSINESS_DETAILS)
 const stepTransition = ref('step-fwd')
 const stepMeta = computed(() => stepCopy[currentStep.value])
+
+// Progress head: share of steps completed + time left on the remaining ones
+const progressPct = computed(() => (currentStep.value / stepDefs.length) * 100)
+const timeLeftLabel = computed(() => {
+  const mins = stepDefs.slice(currentStep.value).reduce((sum, s) => sum + s.minutes, 0)
+  return `${mins} ${mins === 1 ? 'min' : 'mins'} left`
+})
 
 const steps = computed(() => stepDefs.map((s, i) => ({
   ...s,
@@ -624,6 +624,18 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
 .step-back-enter-from { opacity: 0; transform: translateX(-24px); }
 .step-back-leave-to   { opacity: 0; transform: translateX(12px); }
 
+/* ── Progress head ── */
+.progress-fill {
+  height: 100%;
+  background: #2465de;
+  transition: width 400ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Header message: drop it when the title area is too narrow to keep it clear of the title */
+@media (max-width: 900px) {
+  .header-message { display: none; }
+}
+
 /* ── Stepper ── */
 .step-row--link { cursor: pointer; }
 .step-row--link:hover .step-label { color: #03102f; }
@@ -641,7 +653,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
 .step-dot--active {
   border-color: #2465de;
   color: #03102f;
-  box-shadow: 0px 0px 0px 3px rgba(36, 101, 222, 0.12);
+  box-shadow: 0px 0px 0px 3px #e5eeff;
   transition-delay: 180ms;
 }
 .step-dot--done {
@@ -658,7 +670,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
 .step-line {
   position: relative;
   width: 1.5px;
-  height: 31px;
+  min-height: 16px;
   background: #cbcdd4;
   overflow: hidden;
 }
@@ -815,11 +827,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
 .ai-help:hover { box-shadow: 0px 3px 22px 0px rgba(38, 42, 50, 0.09); }
 .ai-help:active { transform: translateY(1px); }
 
-/* Setup guide dismiss */
-.setup-dock-enter-active { transition: opacity 220ms ease-out, transform 280ms cubic-bezier(0.32, 0.72, 0, 1); }
-.setup-dock-leave-active { transition: opacity 160ms ease, transform 160ms ease; }
-.setup-dock-enter-from,
-.setup-dock-leave-to { opacity: 0; transform: translateY(8px); }
 
 @media (prefers-reduced-motion: reduce) {
   .recap-card,
@@ -828,14 +835,13 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
   .btn-primary,
   .ai-help,
   .field-input,
-  .setup-dock-enter-active,
-  .setup-dock-leave-active,
   .step-dot,
   .step-line-fill,
   .step-label,
   .option-card,
   .radio,
   .add-person,
+  .progress-fill,
   .dot-swap-enter-active,
   .dot-swap-leave-active,
   .av-shell,
