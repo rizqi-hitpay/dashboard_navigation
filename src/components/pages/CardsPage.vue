@@ -264,10 +264,11 @@
               type="button"
               class="flex items-center justify-center gap-[6px] h-[28px] px-[8px] rounded-[8px] border border-[#f2f2f4] shrink-0 transition-[filter] duration-150 hover:brightness-95 active:translate-y-[1px]"
               style="background: linear-gradient(to bottom, #ffffff, #f2f2f2); box-shadow: 0px 1.5px 0px 0px rgba(0,0,0,0.1);"
-              @click="copyQuickDetails"
+              :aria-pressed="quickRevealed"
+              @click="quickRevealed = !quickRevealed"
             >
-              <img :src="tileCopyImg" width="16" height="16" alt="" class="shrink-0" />
-              <span class="text-[12px] font-medium text-[#61667c] leading-[1.5] whitespace-nowrap" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.08);">{{ quickDetailsCopied ? 'Copied!' : 'Copy as message' }}</span>
+              <img :src="panelEyeImg" width="16" height="16" alt="" class="shrink-0" />
+              <span class="text-[12px] font-medium text-[#61667c] leading-[1.5] whitespace-nowrap" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.08);">{{ quickRevealed ? 'Hide card details' : 'Show card details' }}</span>
             </button>
           </div>
 
@@ -360,6 +361,7 @@ import rowSeparatorImg from '../../assets/images/cards-list-separator.svg'
 import tileDotsImg from '../../assets/images/cards-list-dots.svg'
 import tileCopyImg from '../../assets/images/cards-list-copy.svg'
 import panelCopyImg from '../../assets/images/cards-panel-copy.svg'
+import panelEyeImg from '../../assets/images/cards-panel-eye.svg'
 import panelMastercardImg from '../../assets/images/cards-panel-mastercard.svg'
 import closeIcon from '../../assets/icons/icon-modal-x.svg'
 
@@ -409,50 +411,45 @@ async function copyNumber(card, event) {
 const quickCard = ref(null)
 const renderCard = ref(null)
 
+// Sensitive details start hidden and re-hide whenever another card opens
+const quickRevealed = ref(false)
+
 function openQuickView(card) {
+  if (renderCard.value?.id !== card.id) quickRevealed.value = false
   quickCard.value = card
   renderCard.value = card
 }
 function closeQuickView() {
   quickCard.value = null
+  quickRevealed.value = false
 }
 function onQuickViewKeydown(e) {
   if (e.key === 'Escape' && quickCard.value) closeQuickView()
 }
 
-// Expiry and billing address mirror the mock values on the card details page
+// Expiry, CVC and billing address mirror the mock values on the card details page
 const quickFields = computed(() => {
   const c = renderCard.value
   if (!c) return []
   return [
-    { label: 'Card number', value: `**** **** **** ${last4(c)}`, copyValue: c.number.replace(/\s/g, ''), copy: true },
+    { label: 'Card number', value: quickRevealed.value ? c.number : `**** **** **** ${last4(c)}`, copyValue: c.number.replace(/\s/g, ''), copy: true },
     { label: 'Nickname', value: c.nickname, copy: true },
     { label: 'Expiration', value: '10/2030', copy: true },
-    { label: 'CVC', value: '***', copy: false },
+    // CVC is only copyable once it's revealed
+    { label: 'CVC', value: quickRevealed.value ? '824' : '***', copy: quickRevealed.value },
     { label: 'Card holder', value: c.holder, copy: true },
     { label: 'Address', value: '30 Cecil Street, #19-08, Singapore 049712', copy: true },
   ]
 })
 
 const quickCopiedField = ref(null)
-const quickDetailsCopied = ref(false)
 let quickFieldTimer = null
-let quickDetailsTimer = null
 
 function copyQuickField(f) {
   navigator.clipboard?.writeText(f.copyValue ?? f.value).catch(() => {})
   quickCopiedField.value = f.label
   clearTimeout(quickFieldTimer)
   quickFieldTimer = setTimeout(() => { quickCopiedField.value = null }, 1600)
-}
-
-// CVC is left out of the shared message
-function copyQuickDetails() {
-  const message = quickFields.value.filter((f) => f.copy).map((f) => `${f.label}: ${f.value}`).join('\n')
-  navigator.clipboard?.writeText(message).catch(() => {})
-  quickDetailsCopied.value = true
-  clearTimeout(quickDetailsTimer)
-  quickDetailsTimer = setTimeout(() => { quickDetailsCopied.value = false }, 1600)
 }
 
 // "View more" → card details page
@@ -544,7 +541,6 @@ onUnmounted(() => {
   clearTimeout(toastTimer)
   clearTimeout(copiedTimer)
   clearTimeout(quickFieldTimer)
-  clearTimeout(quickDetailsTimer)
   cancelAnimationFrame(tiltRaf)
 })
 </script>
