@@ -117,31 +117,6 @@
           </div>
         </div>
 
-        <!-- How it works — same recipe as BillsPage -->
-        <div class="flex flex-col gap-[16px] items-center pb-[24px] shrink-0 w-full max-w-[1084px]">
-          <div class="flex items-center justify-center px-[32px] w-full shrink-0">
-            <p class="flex-1 font-medium text-[16px] text-[#03102f] text-center leading-[1.4] min-w-px">How it works</p>
-          </div>
-          <div class="flex h-[158px] items-start w-full max-w-[960px] px-[2px] rounded-[8px] border border-[#e5e6ea] shrink-0">
-            <div
-              v-for="(step, i) in steps"
-              :key="step.title"
-              class="flex flex-1 h-full items-start min-w-px overflow-hidden pt-[32px] pb-[8px] px-[32px]"
-              :class="i < steps.length - 1 ? 'border-r border-[#e5e6ea]' : ''"
-            >
-              <div class="flex flex-1 flex-col gap-[12px] items-start min-w-px">
-                <div class="bg-[#f5f6f9] flex flex-col items-center justify-center p-[8px] rounded-[8px] shrink-0 size-[38px]">
-                  <p class="font-medium text-[16px] text-[#03102f] text-center leading-[1.4] w-full">{{ i + 1 }}</p>
-                </div>
-                <div class="flex flex-col gap-[2px] items-start w-full shrink-0">
-                  <p class="font-medium text-[14px] text-[#000501] leading-[1.5]">{{ step.title }}</p>
-                  <p class="font-normal text-[12px] text-[#61667c] opacity-75 leading-[1.5] w-full">{{ step.desc }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
       </div>
 
       <!-- Card list (Figma: Card-Issuing 387:10164) — makes room for the
@@ -374,12 +349,6 @@ const cardDetails = [
 
 // Preview switcher: true = empty/onboarding state, false = cards list (Figma: 266:18620)
 const isEmpty = ref(true)
-
-const steps = [
-  { title: 'Upload invoice', desc: 'Upload a file or enter detail manually' },
-  { title: 'Review and approve', desc: 'Route bill for approve if required' },
-  { title: 'Pay or schedule', desc: 'Pay instantly or set future date' },
-]
 
 const STATUS = {
   active: { label: 'Active', bg: '#e6f9f0', color: '#238b5b' },
