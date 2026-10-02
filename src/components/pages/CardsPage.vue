@@ -1,6 +1,8 @@
 <template>
-  <div class="relative bg-white flex flex-col h-full w-full overflow-x-hidden" :class="createCardOpen ? 'overflow-y-hidden' : 'overflow-y-auto'">
-    <div class="flex flex-1 flex-col items-start w-full pt-[4px]">
+  <!-- Root stays fixed so overlays (create card page, quick-view panel) pin to
+       the content card; the page itself scrolls inside -->
+  <div class="relative bg-white flex flex-col h-full w-full overflow-hidden">
+    <div class="flex flex-1 min-h-0 flex-col items-start w-full pt-[4px] overflow-x-hidden" :class="createCardOpen ? 'overflow-y-hidden' : 'overflow-y-auto'">
 
       <!-- Page title + actions -->
       <div class="flex h-[60px] items-center justify-between gap-[32px] px-[24px] w-full shrink-0">
@@ -142,67 +144,60 @@
 
       </div>
 
-      <!-- Card list (Figma: Card-Issuing 322:18723) -->
-      <div v-else key="filled" class="flex flex-col gap-[24px] w-full px-[24px] py-[12px]">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[16px] w-full items-start">
+      <!-- Card list (Figma: Card-Issuing 387:10164) — makes room for the
+           quick-view panel: 480px panel + 24px gap, like Virtual Accounts -->
+      <div
+        v-else
+        key="filled"
+        class="flex flex-col gap-[24px] w-full px-[24px] py-[12px]"
+        :style="{ paddingRight: quickCard ? '504px' : '24px', transition: 'padding-right 280ms cubic-bezier(0.4, 0, 0.2, 1)' }"
+      >
+        <div class="flex flex-col gap-[16px] w-full">
           <div
             v-for="card in cards"
             :key="card.id"
             role="button"
             tabindex="0"
-            class="card-tile group relative flex flex-col overflow-hidden rounded-[12px] border border-[#e5e6ea] cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#2465de]/40"
-            :class="isActive(card) ? 'bg-white' : 'bg-[#f2f2f4]'"
-            @click="viewCard(card)"
-            @keydown.enter="viewCard(card)"
+            class="card-row group flex items-center gap-[12px] h-[76px] pl-px pr-[17px] py-px bg-white rounded-[12px] border border-[#e5e6ea] overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#2465de]/40"
+            :aria-pressed="quickCard?.id === card.id"
+            @click="openQuickView(card)"
+            @keydown.enter="openQuickView(card)"
           >
-            <!-- Hover glow behind the content (Figma: hover state, 322:22533) -->
-            <img
-              v-if="isActive(card)"
-              :src="tileHoverBlurImg"
-              alt=""
-              aria-hidden="true"
-              class="card-tile__blur absolute left-[59.4px] top-[-62.6px] max-w-none pointer-events-none select-none"
-              width="453.554"
-              height="480.579"
-            />
+            <!-- Brand mark -->
+            <span class="relative shrink-0 size-[64px] rounded-[4px] bg-white">
+              <img :src="rowMastercardImg" alt="Mastercard" class="absolute left-[14px] top-[21px]" width="36" height="22.0898" />
+            </span>
 
-            <!-- Header: brand + nickname + status -->
-            <div class="relative flex items-center gap-[8px] p-[12px] border-b border-[#e5e6ea]">
-              <span class="relative shrink-0 w-[35px] h-[24px] rounded-[4px] overflow-hidden" :class="isActive(card) ? 'bg-white' : ''">
-                <img :src="tileMastercardImg" alt="Mastercard" class="absolute left-[6.5px] top-[5px]" width="22.5" height="13.8057" />
-              </span>
-              <p
-                class="flex-1 min-w-px text-[14px] font-medium leading-[1.5] whitespace-nowrap overflow-hidden text-ellipsis"
-                :class="isActive(card) ? 'text-[#03102f]' : 'text-[#9295a5]'"
-              >{{ card.nickname }}</p>
-              <span
-                class="inline-flex items-center justify-center shrink-0 min-h-[24px] min-w-[32px] px-[8px] py-[2px] rounded-[24px] text-[12px] font-medium leading-[1.5] whitespace-nowrap"
-                :class="isActive(card) ? 'bg-[#e6f9f0] text-[#238b5b]' : 'bg-white border border-[#e5e6ea] text-[#61667c]'"
-              >{{ STATUS[card.status].label }}</span>
+            <!-- Masked number + nickname · holder · status -->
+            <div class="flex flex-1 flex-col justify-center gap-[4px] min-w-0 py-[12px]">
+              <div class="flex items-center gap-[10px]">
+                <img v-for="n in 3" :key="n" :src="tileDotsImg" alt="" width="28" height="4" />
+                <p class="text-[16px] font-medium text-[#03102f] leading-[1.4] whitespace-nowrap" style="font-family: 'Reddit Mono', ui-monospace, monospace;">{{ last4(card) }}</p>
+                <button
+                  type="button"
+                  class="card-row__copy flex items-center justify-center shrink-0 size-[16px] cursor-pointer hover:opacity-70"
+                  aria-label="Copy card number"
+                  @click.stop="copyNumber(card, $event)"
+                >
+                  <img :src="tileCopyImg" alt="" width="16" height="16" />
+                </button>
+              </div>
+              <div class="flex items-center gap-[8px] min-w-0 text-[13px] font-normal text-[#61667c] leading-[1.5] whitespace-nowrap">
+                <p class="min-w-0 overflow-hidden text-ellipsis">{{ card.nickname }}</p>
+                <img :src="rowSeparatorImg" alt="" class="shrink-0" width="4" height="4" />
+                <p class="min-w-0 overflow-hidden text-ellipsis">{{ card.holder }}</p>
+                <img :src="rowSeparatorImg" alt="" class="shrink-0" width="4" height="4" />
+                <span
+                  class="inline-flex items-center justify-center shrink-0 min-h-[24px] min-w-[32px] px-[8px] py-[2px] rounded-[24px] text-[12px] font-medium leading-[1.5]"
+                  :style="{ background: STATUS[card.status].bg, color: STATUS[card.status].color }"
+                >{{ STATUS[card.status].label }}</span>
+              </div>
             </div>
 
-            <!-- Body: masked number, holder, monthly spend -->
-            <div class="relative flex flex-col gap-[16px] px-[20px] py-[16px]" :class="isActive(card) ? 'text-[#03102f]' : 'text-[#9295a5]'">
-              <div class="flex flex-col gap-[4px] min-w-0">
-                <div class="flex items-center gap-[10px]">
-                  <img v-for="n in 3" :key="n" :src="isActive(card) ? tileDotsImg : tileDotsMutedImg" alt="" width="28" height="4" />
-                  <p class="text-[16px] font-medium leading-[1.4] whitespace-nowrap" style="font-family: 'Reddit Mono', ui-monospace, monospace;">{{ last4(card) }}</p>
-                  <button
-                    v-if="isActive(card)"
-                    type="button"
-                    class="card-tile__copy flex items-center justify-center shrink-0 size-[16px] cursor-pointer hover:opacity-70"
-                    aria-label="Copy card number"
-                    @click.stop="copyNumber(card, $event)"
-                  >
-                    <img :src="tileCopyImg" alt="" width="16" height="16" />
-                  </button>
-                </div>
-                <p class="text-[14px] font-medium leading-[1.5] whitespace-nowrap overflow-hidden text-ellipsis">{{ card.holder }}</p>
-              </div>
-              <div class="flex flex-col gap-[8px] font-medium whitespace-nowrap">
-                <p class="text-[10px] uppercase tracking-[0.3px] leading-[18px]" :class="isActive(card) ? 'text-[#61667c]' : ''">Spent this month</p>
-                <p class="text-[16px] leading-[1.4] overflow-hidden text-ellipsis" style="font-family: 'Reddit Mono', ui-monospace, monospace;">{{ card.spent }}</p>
-              </div>
+            <!-- Monthly spend -->
+            <div class="flex flex-col gap-[8px] shrink-0 min-w-[121.714px] font-medium whitespace-nowrap">
+              <p class="text-[10px] uppercase tracking-[0.3px] leading-[18px] text-[#61667c]">Spent this month</p>
+              <p class="text-[16px] text-[#03102f] leading-[1.4]" style="font-family: 'Reddit Mono', ui-monospace, monospace;">{{ card.spent }}</p>
             </div>
           </div>
         </div>
@@ -230,6 +225,89 @@
         @click="isEmpty = false"
       >With cards</button>
     </div>
+
+    <!-- Quick-view panel (Figma: Card-Issuing 390:12174) — same off-canvas
+         drawer as Virtual Accounts; "View more" opens the full details page -->
+    <Transition name="drawer">
+      <div
+        v-if="quickCard && !isEmpty && !createCardOpen"
+        class="absolute top-[8px] right-[8px] bottom-[8px] z-40 w-[480px] max-w-[calc(100%-16px)] bg-white flex flex-col rounded-[8px] overflow-hidden"
+        style="box-shadow: -16px 24px 120px 0px rgba(38,42,50,0.2);"
+        role="dialog"
+        :aria-label="renderCard.nickname + ' details'"
+      >
+        <!-- Header: label + brand + nickname + status -->
+        <div class="shrink-0 flex items-start gap-[16px] border-b border-[#e5e6ea] p-[16px]">
+          <div class="flex-1 flex flex-col gap-[2px] min-w-0 pt-[2px]">
+            <span class="text-[10px] font-medium uppercase tracking-[0.3px] text-[#61667c] leading-[18px]">Card</span>
+            <div class="flex items-center gap-[8px] min-w-0">
+              <span class="relative shrink-0 w-[24px] h-[16px] rounded-[4px] bg-white border border-[#e5e6ea] overflow-hidden">
+                <img :src="panelMastercardImg" alt="Mastercard" class="absolute left-[3.46px] top-[2.34px] max-w-none" width="15.4287" height="9.2041" />
+              </span>
+              <p class="font-medium text-[18px] text-[#03102f] leading-[1.35] truncate">{{ renderCard.nickname }}</p>
+              <span
+                class="inline-flex items-center justify-center shrink-0 min-h-[24px] min-w-[32px] px-[8px] py-[2px] rounded-[24px] text-[12px] font-medium leading-[1.5] whitespace-nowrap"
+                :style="{ background: STATUS[renderCard.status].bg, color: STATUS[renderCard.status].color }"
+              >{{ STATUS[renderCard.status].label }}</span>
+            </div>
+          </div>
+          <button type="button" class="flex items-center justify-center size-[32px] rounded-[4px] shrink-0 transition-colors duration-150 hover:bg-[#f0f1f5]" aria-label="Close" @click="closeQuickView">
+            <img :src="closeIcon" width="20" height="20" alt="" />
+          </button>
+        </div>
+
+        <!-- Details -->
+        <div class="flex-1 overflow-y-auto flex flex-col gap-[12px] px-[16px] py-[20px]">
+          <div class="flex items-center gap-[8px]">
+            <p class="flex-1 min-w-px text-[14px] font-medium text-[#03102f] leading-[1.5]">Details</p>
+            <button
+              type="button"
+              class="flex items-center justify-center gap-[6px] h-[28px] px-[8px] rounded-[8px] border border-[#f2f2f4] shrink-0 transition-[filter] duration-150 hover:brightness-95 active:translate-y-[1px]"
+              style="background: linear-gradient(to bottom, #ffffff, #f2f2f2); box-shadow: 0px 1.5px 0px 0px rgba(0,0,0,0.1);"
+              @click="copyQuickDetails"
+            >
+              <img :src="tileCopyImg" width="16" height="16" alt="" class="shrink-0" />
+              <span class="text-[12px] font-medium text-[#61667c] leading-[1.5] whitespace-nowrap" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.08);">{{ quickDetailsCopied ? 'Copied!' : 'Copy as message' }}</span>
+            </button>
+          </div>
+
+          <div class="flex flex-col gap-[4px]">
+            <div
+              v-for="f in quickFields"
+              :key="f.label"
+              class="relative flex flex-col gap-[2px] rounded-[8px] border border-[#e5e6ea] bg-white px-[12px] py-[8px]"
+            >
+              <span class="text-[12px] font-normal text-[#61667c] leading-[1.5]">{{ f.label }}</span>
+              <span class="text-[13px] font-medium text-[#03102f] leading-[1.5] pr-[24px] break-words">{{ f.value }}</span>
+              <button
+                v-if="f.copy"
+                type="button"
+                class="absolute right-[12px] top-[8px] flex items-center justify-center cursor-pointer hover:opacity-70 transition-opacity"
+                :aria-label="'Copy ' + f.label"
+                @click="copyQuickField(f)"
+              >
+                <img :src="panelCopyImg" width="14" height="14" alt="" />
+                <Transition name="copy-tip">
+                  <span
+                    v-if="quickCopiedField === f.label"
+                    class="absolute right-0 bottom-[calc(100%+6px)] px-[8px] py-[4px] rounded-[4px] bg-[#fcfcfd] text-[12px] font-medium text-[#61667c] leading-[1.5] whitespace-nowrap pointer-events-none z-10"
+                    style="box-shadow: 0px 1px 3px 0px rgba(0,0,0,0.1), 0px 3px 22px 0px rgba(38,42,50,0.09);"
+                  >Copied!</span>
+                </Transition>
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="self-center flex items-center justify-center h-[28px] px-[8px] rounded-[8px] cursor-pointer hover:opacity-75 transition-opacity"
+            @click="viewCard(renderCard)"
+          >
+            <span class="text-[12px] font-medium text-[#2465de] leading-[1.5] whitespace-nowrap">View more →</span>
+          </button>
+        </div>
+      </div>
+    </Transition>
 
     <!-- Create card page — fills the main content area so the sidebar stays visible -->
     <Transition name="full-page">
@@ -277,11 +355,13 @@ import cardLogotextImg from '../../assets/images/cards-empty-hitpay-logotext.svg
 import cardDots1Img from '../../assets/images/cards-empty-dots-1.svg'
 import cardDots2Img from '../../assets/images/cards-empty-dots-2.svg'
 import cardDots3Img from '../../assets/images/cards-empty-dots-3.svg'
-import tileMastercardImg from '../../assets/images/cards-list-mastercard.svg'
+import rowMastercardImg from '../../assets/images/cards-list-mastercard-lg.svg'
+import rowSeparatorImg from '../../assets/images/cards-list-separator.svg'
 import tileDotsImg from '../../assets/images/cards-list-dots.svg'
-import tileDotsMutedImg from '../../assets/images/cards-list-dots-muted.svg'
-import tileHoverBlurImg from '../../assets/images/cards-list-hover-blur.svg'
 import tileCopyImg from '../../assets/images/cards-list-copy.svg'
+import panelCopyImg from '../../assets/images/cards-panel-copy.svg'
+import panelMastercardImg from '../../assets/images/cards-panel-mastercard.svg'
+import closeIcon from '../../assets/icons/icon-modal-x.svg'
 
 // Mock details printed on the empty-state card illustration
 const cardDetails = [
@@ -300,13 +380,11 @@ const steps = [
 ]
 
 const STATUS = {
-  active: { label: 'Active' },
-  frozen: { label: 'Frozen' },
-  canceled: { label: 'Canceled' },
+  active: { label: 'Active', bg: '#e6f9f0', color: '#238b5b' },
+  frozen: { label: 'Frozen', bg: '#f2f2f4', color: '#484d61' },
+  canceled: { label: 'Canceled', bg: '#f9e9e9', color: '#c20a1c' },
 }
 
-// Only active cards get the full-colour tile; frozen/canceled render muted
-const isActive = (card) => card.status === 'active'
 const last4 = (card) => card.number.replace(/\s/g, '').slice(-4)
 
 // Copy → brief "Copied" tooltip anchored to the button that was clicked
@@ -325,7 +403,60 @@ async function copyNumber(card, event) {
   copiedTimer = setTimeout(() => { copiedAnchor.value = null }, 1500)
 }
 
-// Tile click → card details page
+// ── Quick-view panel (Figma: Card-Issuing 390:12174) ──
+// Row click opens the off-canvas panel; renderCard keeps the last card
+// rendered while the panel slides shut (same recipe as Virtual Accounts)
+const quickCard = ref(null)
+const renderCard = ref(null)
+
+function openQuickView(card) {
+  quickCard.value = card
+  renderCard.value = card
+}
+function closeQuickView() {
+  quickCard.value = null
+}
+function onQuickViewKeydown(e) {
+  if (e.key === 'Escape' && quickCard.value) closeQuickView()
+}
+
+// Expiry and billing address mirror the mock values on the card details page
+const quickFields = computed(() => {
+  const c = renderCard.value
+  if (!c) return []
+  return [
+    { label: 'Card number', value: `**** **** **** ${last4(c)}`, copyValue: c.number.replace(/\s/g, ''), copy: true },
+    { label: 'Nickname', value: c.nickname, copy: true },
+    { label: 'Expiration', value: '10/2030', copy: true },
+    { label: 'CVC', value: '***', copy: false },
+    { label: 'Card holder', value: c.holder, copy: true },
+    { label: 'Address', value: '30 Cecil Street, #19-08, Singapore 049712', copy: true },
+  ]
+})
+
+const quickCopiedField = ref(null)
+const quickDetailsCopied = ref(false)
+let quickFieldTimer = null
+let quickDetailsTimer = null
+
+function copyQuickField(f) {
+  navigator.clipboard?.writeText(f.copyValue ?? f.value).catch(() => {})
+  quickCopiedField.value = f.label
+  clearTimeout(quickFieldTimer)
+  quickFieldTimer = setTimeout(() => { quickCopiedField.value = null }, 1600)
+}
+
+// CVC is left out of the shared message
+function copyQuickDetails() {
+  const message = quickFields.value.filter((f) => f.copy).map((f) => `${f.label}: ${f.value}`).join('\n')
+  navigator.clipboard?.writeText(message).catch(() => {})
+  quickDetailsCopied.value = true
+  clearTimeout(quickDetailsTimer)
+  quickDetailsTimer = setTimeout(() => { quickDetailsCopied.value = false }, 1600)
+}
+
+// "View more" → card details page
+
 const router = useRouter()
 function viewCard(card) {
   router.push({ path: '/cards/details', query: { id: card.id } })
@@ -353,6 +484,7 @@ function showToast(message) {
 
 // Arriving with a queued message (e.g. after cancelling a card) shows it here
 onMounted(() => {
+  window.addEventListener('keydown', onQuickViewKeydown)
   if (pendingToast.value) {
     showToast(pendingToast.value)
     pendingToast.value = ''
@@ -408,33 +540,50 @@ function onCardArtLeave() {
 }
 
 onUnmounted(() => {
+  window.removeEventListener('keydown', onQuickViewKeydown)
   clearTimeout(toastTimer)
   clearTimeout(copiedTimer)
+  clearTimeout(quickFieldTimer)
+  clearTimeout(quickDetailsTimer)
   cancelAnimationFrame(tiltRaf)
 })
 </script>
 
 <style scoped>
-/* Card tile hover (Figma: 322:19560 "Hover state"): lift with the normal
-   shadow, fade in the soft colour glow, reveal the copy-number button */
-.card-tile {
+/* Card row hover: lift with the normal shadow and reveal the copy button */
+.card-row {
   transition: box-shadow 200ms ease;
 }
-.card-tile:hover {
+.card-row:hover {
   box-shadow: 0px 3px 22px 0px rgba(38, 42, 50, 0.09);
 }
-.card-tile__blur,
-.card-tile__copy {
+.card-row__copy {
   opacity: 0;
-  transition: opacity 250ms ease;
+  transition: opacity 200ms ease;
 }
-.card-tile:hover .card-tile__blur,
-.card-tile:hover .card-tile__copy,
-.card-tile:focus-visible .card-tile__copy {
+.card-row:hover .card-row__copy,
+.card-row:focus-visible .card-row__copy {
   opacity: 1;
 }
 @media (prefers-reduced-motion: reduce) {
-  .card-tile, .card-tile__blur, .card-tile__copy { transition: none; }
+  .card-row, .card-row__copy { transition: none; }
+}
+
+/* Quick-view panel — same slide-over motion as the Virtual Accounts drawer */
+.drawer-enter-active { transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1); }
+.drawer-leave-active { transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1); }
+.drawer-enter-from,
+.drawer-leave-to { transform: translateX(calc(100% + 8px)); }
+
+/* Copied! tooltip on the panel's detail fields */
+.copy-tip-enter-active { transition: opacity 140ms ease-out, transform 140ms ease-out; }
+.copy-tip-leave-active { transition: opacity 100ms ease-in; }
+.copy-tip-enter-from { opacity: 0; transform: translateY(2px); }
+.copy-tip-leave-to { opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer-enter-active, .drawer-leave-active,
+  .copy-tip-enter-active, .copy-tip-leave-active { transition: none; }
 }
 
 /* Create card full page: gentle rise + fade in, quicker fade out */
