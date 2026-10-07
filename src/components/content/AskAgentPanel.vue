@@ -333,7 +333,7 @@ const maxResultBar = computed(() => Math.max(...result.value.bars))
 
 const chartAdded = computed(() => !!conversation.value && isChartAdded(conversation.value.id))
 function addToAnalytics() {
-  addChart(conversation.value.id, result.value.title)
+  addChart(conversation.value.id, result.value.title, conversation.value.prompt)
   if (route.path !== '/analytics') router.push('/analytics')
 }
 

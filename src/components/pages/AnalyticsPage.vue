@@ -7,65 +7,37 @@
         <p class="font-medium text-[18px] text-[#03102f] leading-[1.35] whitespace-nowrap">Analytics</p>
       </div>
 
-      <!-- Charts added from the AI Assistant (Figma Analytics-with-AI: 1:3465) -->
+      <!-- Charts added from the AI Assistant (Figma Analytics-with-AI: 1:3465 · hover 1:5867 / 1:8590) -->
       <div v-if="analyticsCharts.length" class="w-full px-[24px] py-[12px]">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-[16px] py-[4px]">
-          <div
+        <TransitionGroup
+          name="chart-list"
+          tag="div"
+          class="grid grid-cols-1 lg:grid-cols-2 py-[4px] transition-[gap] duration-300"
+          :style="{ gap: agentPanelOpen ? '16px' : '24px' }"
+        >
+          <AnalyticsChartCard
             v-for="chart in analyticsCharts"
             :key="chart.id"
-            class="chart-card-in self-start flex flex-col rounded-[8px] border border-[#e5e6ea] bg-white"
-          >
-            <div class="flex items-center px-[16px] py-[12px]">
-              <p class="text-[14px] font-medium text-[#03102f] leading-[1.5] whitespace-nowrap">{{ chart.title }}</p>
-            </div>
-            <div class="border-t border-[#e5e6ea] p-[16px] overflow-hidden">
-              <div class="relative h-[249px] w-full">
-                <!-- Y axis -->
-                <div class="absolute left-0 top-0 flex flex-col gap-[12px]">
-                  <p
-                    v-for="label in yAxis"
-                    :key="label"
-                    class="w-[32px] p-[4px] box-content text-[10px] font-medium uppercase tracking-[0.3px] leading-[18px] text-[#9295a5] text-center"
-                  >{{ label }}</p>
-                </div>
-                <!-- Bars -->
-                <div class="absolute left-0 right-0 top-[7px] h-[216px] flex items-end gap-[4px] pl-[56px]">
-                  <div
-                    v-for="(h, i) in chart.bars"
-                    :key="i"
-                    class="added-bar flex-1 rounded-t-[4px]"
-                    :class="h === Math.max(...chart.bars) ? 'bg-[#4c8afd]' : 'bg-[#ccdefe] hover:bg-[#b3cdfe]'"
-                    :style="{ height: h + 'px', animationDelay: `${150 + i * 50}ms` }"
-                  />
-                </div>
-                <!-- X axis -->
-                <div class="absolute left-0 right-0 top-[223px]">
-                  <img :src="baselineImg" alt="" class="absolute left-[56px] right-[16px] top-[-1px] w-[calc(100%-72px)] h-px" />
-                  <div class="flex gap-[4px] pl-[56px]">
-                    <p
-                      v-for="label in chart.labels"
-                      :key="label"
-                      class="flex-1 min-w-0 p-[4px] text-[10px] font-medium uppercase tracking-[0.3px] leading-[18px] text-[#9295a5] text-center whitespace-nowrap"
-                    >{{ label }}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Add tile (Figma: 1:3514) -->
-          <button
-            type="button"
-            class="chart-card-in group flex flex-col items-center justify-center gap-[8px] min-h-[169px] p-[16px] rounded-[8px] border border-dashed border-[#cbcdd4] bg-white hover:border-[#2465de] transition-colors duration-150"
+            class="chart-card-in self-start"
+            :class="chart.span === 2 ? 'lg:col-span-2' : ''"
+            :chart="chart"
+            :prompts="prompts"
+            :compact="agentPanelOpen"
+            @remove="removeChart"
+            @ask="askAgent"
+            @edit-ai="editWithAi"
+            @drag-start="draggingId = $event"
+            @drag-over="(id) => draggingId && moveChart(draggingId, id)"
+            @drag-end="draggingId = null"
+          />
+          <AnalyticsAddTile
+            key="add-tile"
+            class="chart-card-in"
             style="animation-delay: 80ms;"
-            @click="agentPanelOpen = true"
-          >
-            <span class="flex items-center p-[8px] rounded-[32px] bg-[#f2f2f4] group-hover:bg-[#e5e6ea] transition-colors duration-150">
-              <img :src="plusCircleIcon" width="18" height="18" alt="" class="block" />
-            </span>
-            <span class="text-[13px] text-[#61667c] leading-[1.5] whitespace-nowrap">Add chart or table</span>
-          </button>
-        </div>
+            :prompts="prompts"
+            @ask="askAgent"
+          />
+        </TransitionGroup>
       </div>
 
       <!-- Empty state (Figma: 4873:38226) -->
@@ -175,13 +147,18 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { askAgent, agentPanelOpen } from '../../composables/useAgentPanel.js'
-import { analyticsCharts } from '../../composables/useAnalytics.js'
+import { askAgent, agentPanelOpen, pendingAgentMessage } from '../../composables/useAgentPanel.js'
+import { analyticsCharts, removeChart, moveChart } from '../../composables/useAnalytics.js'
+import AnalyticsChartCard from '../analytics/AnalyticsChartCard.vue'
+import AnalyticsAddTile from '../analytics/AnalyticsAddTile.vue'
 import trendUpIcon from '../../assets/icons/icon-trend-up-green.svg'
-import plusCircleIcon from '../../assets/icons/icon-plus-circle-grey.svg'
-import baselineImg from '../../assets/icons/chart-baseline.svg'
 
-const yAxis = ['2.5K', '2.0K', '1.5K', '1.0K', '0.5K', '0']
+const draggingId = ref(null)
+
+function editWithAi(chart) {
+  pendingAgentMessage.value = `Update "${chart.title}" to `
+  agentPanelOpen.value = true
+}
 
 const prompts = [
   'Create a line chart of my monthly sales this year',
@@ -304,22 +281,23 @@ onBeforeUnmount(() => {
   transition: height 700ms cubic-bezier(0.34, 1.2, 0.64, 1), background-color 400ms ease;
 }
 
-/* Added chart: card rises in, bars grow from the baseline */
+/* Added chart: card rises in; removing fades it out while the rest slide into place */
 .chart-card-in {
   animation: fade-up 400ms cubic-bezier(0.4, 0, 0.2, 1) both;
 }
-.added-bar {
-  transform-origin: bottom;
-  animation: bar-grow 650ms cubic-bezier(0.34, 1.2, 0.64, 1) both;
-  transition: background-color 150ms ease;
+.chart-list-move {
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
-@keyframes bar-grow {
-  from { transform: scaleY(0); }
-  to { transform: scaleY(1); }
+.chart-list-leave-active {
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+.chart-list-leave-to {
+  opacity: 0;
+  transform: scale(0.96);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .chart-pop, .stagger, .chart-card-in, .added-bar { animation: none; }
-  .pie-seg, .bar { transition: none; }
+  .chart-pop, .stagger, .chart-card-in { animation: none; }
+  .pie-seg, .bar, .chart-list-move { transition: none; }
 }
 </style>
