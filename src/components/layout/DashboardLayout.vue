@@ -60,13 +60,14 @@
         </Transition>
       </Teleport>
 
-      <!-- Sidekick: own card, 4px gap handled by parent, slides in by width -->
+      <!-- Sidekick: own card, 4px gap to the main card, slides in by width -->
       <div
         class="shrink-0 overflow-hidden rounded-[20px]"
         :class="agentPanelOpen ? 'border border-[#e5e6ea]' : ''"
         :style="{
           width: agentPanelOpen ? '360px' : '0px',
-          transition: 'width 280ms cubic-bezier(0.4, 0, 0.2, 1)',
+          marginLeft: agentPanelOpen ? '4px' : '0px',
+          transition: 'width 280ms cubic-bezier(0.4, 0, 0.2, 1), margin-left 280ms cubic-bezier(0.4, 0, 0.2, 1)',
           boxShadow: agentPanelOpen ? '0px 3px 22px 0px rgba(37,41,49,0.08)' : 'none',
         }"
       >

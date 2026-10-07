@@ -48,8 +48,70 @@
       </div>
     </div>
 
+    <!-- ── Main: conversation started from another surface (Figma: 4876:39358) ── -->
+    <div v-if="activeTab === 'ai' && conversation" ref="chatScrollRef" class="flex-1 overflow-y-auto flex flex-col">
+      <div :key="conversation.id" class="mt-auto flex flex-col gap-[8px] px-[12px] pt-[24px] pb-[12px]">
+        <!-- Me -->
+        <div class="chat-in flex justify-end pl-[12px]">
+          <div class="max-w-[309px] rounded-[16px] bg-[#4c8afd] px-[12px] py-[8px]">
+            <p class="text-[13px] text-white leading-[1.5]">{{ conversation.prompt }}</p>
+          </div>
+        </div>
+
+        <!-- AI reply -->
+        <div v-if="replyStep >= 1" class="chat-in p-[8px]">
+          <p class="text-[13px] text-[#03102f] leading-[1.5]">Sure, let me handle it</p>
+        </div>
+
+        <!-- Result card -->
+        <div v-if="replyStep >= 2" class="chat-in flex flex-col gap-[4px]">
+          <div class="flex flex-col gap-[8px] p-[8px] rounded-[16px] bg-[#f2f2f4]">
+            <p class="text-[14px] font-medium text-[#03102f] leading-[1.5]">{{ result.title }}</p>
+            <div class="relative w-full h-[219px] py-[8px] rounded-[8px] border border-[#e5e6ea] bg-white overflow-hidden">
+              <!-- Y axis -->
+              <div class="absolute left-[12px] top-[8px] flex flex-col gap-[8px]">
+                <p
+                  v-for="label in yAxis"
+                  :key="label"
+                  class="w-[32px] p-[4px] box-content text-[10px] font-medium uppercase tracking-[0.3px] leading-[18px] text-[#9295a5] text-center"
+                >{{ label }}</p>
+              </div>
+              <!-- Bars -->
+              <div class="absolute left-[72px] right-[16px] top-[11px] h-[189px] flex items-end gap-[8px]">
+                <div
+                  v-for="(h, i) in result.bars"
+                  :key="i"
+                  class="chat-bar flex-1"
+                  :style="{ height: h + 'px', backgroundColor: h === maxResultBar ? '#80acfe' : '#ccdefe', animationDelay: `${i * 40}ms` }"
+                />
+              </div>
+            </div>
+            <!-- Added state (Figma Analytics-with-AI: 1:3576) -->
+            <div v-if="chartAdded" class="chat-in flex items-center justify-center gap-[6px] w-full h-[28px]">
+              <img :src="checkGreenIcon" width="16" height="16" alt="" class="block" />
+              <span class="text-[12px] font-medium text-[#2bc37d] leading-[1.5]">Added</span>
+            </div>
+            <button
+              v-else
+              type="button"
+              class="flex items-center justify-center w-full h-[28px] rounded-[8px] border border-[#2465de] hover:opacity-90 transition-opacity"
+              style="background: linear-gradient(to bottom, #4179e2, #1f5bcc); box-shadow: 0px 1.5px 0px 0px #1d5fd9;"
+              @click="addToAnalytics"
+            >
+              <span class="text-[12px] font-medium text-white leading-[1.5]" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.12);">Add to analytics</span>
+            </button>
+          </div>
+          <div class="flex items-center justify-end gap-[8px] pr-[8px]">
+            <p class="text-[12px] text-[#61667c] leading-[1.5]">Was it helpful?</p>
+            <button type="button" class="hover:opacity-70 transition-opacity"><img :src="thumbUpIcon" width="14" height="14" alt="Helpful" class="block" /></button>
+            <button type="button" class="hover:opacity-70 transition-opacity"><img :src="thumbDownIcon" width="14" height="14" alt="Not helpful" class="block" /></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── Main: scrollable, To-do vertically centered ── -->
-    <div v-if="activeTab === 'ai'" class="flex-1 overflow-y-auto flex flex-col items-center justify-center">
+    <div v-else-if="activeTab === 'ai'" class="flex-1 overflow-y-auto flex flex-col items-center justify-center">
 
       <!-- To-do: 312px wide, gap 16px between Greeting and Setup Guide -->
       <div style="width: 312px; display: flex; flex-direction: column; gap: 16px; padding: 24px 0;">
@@ -207,8 +269,13 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
-import { pendingAgentMessage } from '../../composables/useAgentPanel.js'
+import { ref, computed, watch, nextTick, onBeforeUnmount, useTemplateRef } from 'vue'
+import { pendingAgentMessage, agentConversation } from '../../composables/useAgentPanel.js'
+import { useRouter, useRoute } from 'vue-router'
+import { addChart, isChartAdded } from '../../composables/useAnalytics.js'
+import checkGreenIcon from '../../assets/icons/icon-check-green-16.svg'
+import thumbUpIcon   from '../../assets/icons/icon-thumb-up-green.svg'
+import thumbDownIcon from '../../assets/icons/icon-thumb-down.svg'
 import composeIcon  from '../../assets/icons/icon-compose.svg'
 import minimizeIcon from '../../assets/icons/icon-minimize.svg'
 import closeIcon    from '../../assets/icons/icon-agent-close.svg'
@@ -218,6 +285,9 @@ import tabChatIcon        from '../../assets/icons/icon-tab-chat.svg'           
 import tabChatActiveIcon  from '../../assets/icons/icon-tab-chat-active.svg'    // active (dark)
 
 defineEmits(['close'])
+
+const router = useRouter()
+const route = useRoute()
 
 const activeTab = ref('ai')   // 'ai' = AI Assistant · 'chat' = Live Chat
 const openIndex = ref(0)   // Account Setup starts expanded
@@ -244,6 +314,44 @@ function sendMessage() {
   if (!chatInput.value.trim()) return
   chatInput.value = ''
 }
+
+// ── Conversation handed off via askAgent() (e.g. Analytics empty state) ──
+const conversation = agentConversation
+const replyStep = ref(0) // 0 = only my message · 1 = AI acknowledges · 2 = result card
+const chatScrollRef = useTemplateRef('chatScrollRef')
+const yAxis = ['2.5K', '2.0K', '1.5K', '1.0K', '0.5K', '0']
+
+const RESULTS = {
+  'Create a line chart of my monthly sales this year': 'Monthly sales this year',
+  'Create a table of my top 10 products last month': 'Top 10 products last month',
+}
+const result = computed(() => ({
+  title: RESULTS[conversation.value?.prompt] || 'Sales by payment method',
+  bars: [74, 138, 40, 74, 7, 189, 79, 138, 17, 106],
+}))
+const maxResultBar = computed(() => Math.max(...result.value.bars))
+
+const chartAdded = computed(() => !!conversation.value && isChartAdded(conversation.value.id))
+function addToAnalytics() {
+  addChart(conversation.value.id, result.value.title)
+  if (route.path !== '/analytics') router.push('/analytics')
+}
+
+let replyTimers = []
+watch(() => conversation.value?.id, (id) => {
+  replyTimers.forEach(clearTimeout)
+  replyStep.value = 0
+  if (!id) return
+  activeTab.value = 'ai'
+  const reveal = (step, delay) => replyTimers.push(setTimeout(async () => {
+    replyStep.value = step
+    await nextTick()
+    chatScrollRef.value?.scrollTo({ top: chatScrollRef.value.scrollHeight, behavior: 'smooth' })
+  }, delay))
+  reveal(1, 500)
+  reveal(2, 1100)
+}, { immediate: true })
+onBeforeUnmount(() => replyTimers.forEach(clearTimeout))
 
 const accordions = [
   {
@@ -287,6 +395,26 @@ const accordions = [
 <style scoped>
 input::placeholder {
   color: #9295a5;
+}
+
+/* Conversation: messages rise in, bars grow from the baseline */
+.chat-in {
+  animation: chat-in 320ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+@keyframes chat-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+.chat-bar {
+  transform-origin: bottom;
+  animation: chat-bar 600ms cubic-bezier(0.34, 1.2, 0.64, 1) both;
+}
+@keyframes chat-bar {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chat-in, .chat-bar { animation: none; }
 }
 
 /* Tab group sliding pill — matches the project's 250ms cubic-bezier(0.4,0,0.2,1) motion */

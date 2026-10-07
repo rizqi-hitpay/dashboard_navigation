@@ -51,6 +51,7 @@
           :expandable="item.expandable && !(item.label === 'Labs' && labsFewApps)"
           :default-open="item.defaultOpen"
           :show-new="item.showNew"
+          :show-beta-chip="item.showBetaChip"
           :submenu-items="item.submenuItems || []"
           @click="activeItem = item.label"
         />
@@ -74,6 +75,7 @@ import plusIcon from '../../assets/icons/icon-plus.svg'
 import gridIcon from '../../assets/icons/icon-grid.svg'
 import transactionIcon from '../../assets/icons/icon-transaction.svg'
 import pieChartIcon from '../../assets/icons/icon-pie-chart.svg'
+import chartIcon from '../../assets/icons/icon-chart.svg'
 import bankIcon from '../../assets/icons/icon-bank.svg'
 import virtualAccountIcon from '../../assets/icons/icon-virtual-account.svg'
 import usersIcon from '../../assets/icons/icon-users.svg'
@@ -140,6 +142,7 @@ const sections = [
       { icon: gridIcon, label: 'Overview', url: '/' },
       { icon: transactionIcon, label: 'Transactions' },
       { icon: pieChartIcon, label: 'Reports' },
+      { icon: chartIcon, label: 'Analytics', showBetaChip: true },
       { icon: bankIcon, label: 'Payouts & Balances', submenuItems: payoutsSubmenu },
       { icon: virtualAccountIcon, label: 'Virtual Accounts', showNew: true },
       { icon: usersIcon, label: 'Customer' },
