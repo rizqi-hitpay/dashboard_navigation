@@ -37,6 +37,7 @@
           :label="labels[hovered]"
           :value="formatK(values[hovered])"
           :change="kind === 'time' ? changeAt(values, hovered) : null"
+          :arrow-at="arrowAt"
           :note="kind === 'category' ? `${share(hovered)}% of total` : ''"
         />
       </Transition>
@@ -88,13 +89,17 @@ const tooltipStyle = computed(() => {
   const i = hovered.value
   const n = props.values.length
   const top = plotH.value - valueToPx(props.values[i], plotH.value) - 56
-  const shift = i === 0 ? '-20%' : i === n - 1 ? '-80%' : '-50%'
+  const shift = '-' + edgeAnchor(i, n)
   return {
     top: Math.max(top, -8) + 'px',
     left: `calc(${PLOT_LEFT}px + (100% - ${PLOT_LEFT}px) * ${(i + 0.5) / n})`,
     transform: `translateX(${shift})`,
   }
 })
+
+// Tooltips at the first/last point shift inward; the arrow follows the point
+const edgeAnchor = (i, n) => (i === 0 ? '20%' : i === n - 1 ? '80%' : '50%')
+const arrowAt = computed(() => (hovered.value === null ? '50%' : edgeAnchor(hovered.value, props.values.length)))
 </script>
 
 <style scoped>

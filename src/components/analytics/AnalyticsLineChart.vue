@@ -47,6 +47,7 @@
         :label="labels[hovered]"
         :value="formatK(values[hovered])"
         :change="changeAt(values, hovered)"
+        :arrow-at="arrowAt"
       />
     </Transition>
 
@@ -114,9 +115,13 @@ const tooltipStyle = computed(() => {
   const i = hovered.value
   const n = props.values.length
   const p = points.value[i]
-  const shift = i === 0 ? '-20%' : i === n - 1 ? '-80%' : '-50%'
+  const shift = '-' + edgeAnchor(i, n)
   return { top: Math.max(p.y - 64, -8) + 'px', left: p.x + 'px', transform: `translateX(${shift})` }
 })
+
+// Tooltips at the first/last point shift inward; the arrow follows the point
+const edgeAnchor = (i, n) => (i === 0 ? '20%' : i === n - 1 ? '80%' : '50%')
+const arrowAt = computed(() => (hovered.value === null ? '50%' : edgeAnchor(hovered.value, props.values.length)))
 </script>
 
 <style scoped>
