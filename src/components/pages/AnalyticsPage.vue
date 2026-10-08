@@ -1,6 +1,6 @@
 <template>
   <div class="relative bg-white flex flex-col h-full w-full overflow-hidden">
-    <div class="flex flex-1 flex-col items-start w-full py-[4px] overflow-y-auto overflow-x-hidden">
+    <div ref="scrollRef" class="flex flex-1 flex-col items-start w-full py-[4px] overflow-y-auto overflow-x-hidden">
 
       <!-- Page title (Figma: 4873:37432) -->
       <div class="flex items-center px-[24px] py-[12px] w-full shrink-0">
@@ -10,6 +10,7 @@
       <!-- Charts added from the AI Assistant (Figma Analytics-with-AI: 1:3465 · hover 1:5867 / 1:8590) -->
       <div v-if="analyticsCharts.length" class="w-full px-[24px] py-[12px]">
         <TransitionGroup
+          ref="gridRef"
           name="chart-list"
           tag="div"
           class="grid grid-cols-1 lg:grid-cols-2 py-[4px] transition-[gap] duration-300"
@@ -18,7 +19,7 @@
           <AnalyticsChartCard
             v-for="chart in analyticsCharts"
             :key="chart.id"
-            class="chart-card-in self-start"
+            class="self-start"
             :class="chart.span === 2 ? 'lg:col-span-2' : ''"
             :chart="chart"
             :prompts="prompts"
@@ -26,13 +27,13 @@
             @remove="removeChart"
             @ask="askAgent"
             @edit-ai="editWithAi"
-            @drag-start="draggingId = $event"
-            @drag-over="(id) => draggingId && moveChart(draggingId, id)"
-            @drag-end="draggingId = null"
+            :placeholder="draggingId === chart.id"
+            @grab="(e) => onGrab(e, chart)"
+            @handle-key="(e) => onHandleKey(e, chart)"
           />
           <AnalyticsAddTile
             key="add-tile"
-            class="chart-card-in"
+            :class="{ 'chart-card-in': !tileIntroDone }"
             style="animation-delay: 80ms;"
             :prompts="prompts"
             @ask="askAgent"
@@ -40,8 +41,26 @@
         </TransitionGroup>
       </div>
 
+      <!-- Dragged chart follows the pointer, then settles into its slot -->
+      <Teleport to="body">
+        <div
+          v-if="ghost"
+          class="chart-ghost fixed left-0 top-0 z-[60] pointer-events-none"
+          :class="{ 'chart-ghost--dropping': ghost.dropping }"
+          :style="{
+            width: ghost.width + 'px',
+            transform: `translate3d(${ghost.x}px, ${ghost.y}px, 0)`,
+            transitionDuration: dropMs + 'ms',
+          }"
+        >
+          <div class="chart-ghost__lift">
+            <AnalyticsChartCard ghost :chart="ghost.chart" :prompts="prompts" />
+          </div>
+        </div>
+      </Teleport>
+
       <!-- Empty state (Figma: 4873:38226) -->
-      <div v-else class="flex flex-1 flex-col w-full min-h-[655px] px-[24px] py-[12px]">
+      <div v-if="!analyticsCharts.length" class="flex flex-1 flex-col w-full min-h-[655px] px-[24px] py-[12px]">
         <div class="flex flex-1 flex-col items-center bg-[#fcfcfd] py-[40px] px-[16px]">
           <div class="flex flex-col items-center gap-[24px] w-full max-w-[500px]">
 
@@ -146,14 +165,24 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, useTemplateRef } from 'vue'
 import { askAgent, agentPanelOpen, pendingAgentMessage } from '../../composables/useAgentPanel.js'
-import { analyticsCharts, removeChart, moveChart } from '../../composables/useAnalytics.js'
+import { analyticsCharts, removeChart } from '../../composables/useAnalytics.js'
+import { useChartDrag } from '../../composables/useChartDrag.js'
 import AnalyticsChartCard from '../analytics/AnalyticsChartCard.vue'
 import AnalyticsAddTile from '../analytics/AnalyticsAddTile.vue'
 import trendUpIcon from '../../assets/icons/icon-trend-up-green.svg'
 
-const draggingId = ref(null)
+// Add tile fades in once; later reorders must not replay it
+const tileIntroDone = ref(false)
+watch(() => analyticsCharts.value.length > 0, (has) => {
+  tileIntroDone.value = false
+  if (has) setTimeout(() => { tileIntroDone.value = true }, 600)
+}, { immediate: true })
+
+const gridRef = useTemplateRef('gridRef')
+const scrollRef = useTemplateRef('scrollRef')
+const { draggingId, ghost, onGrab, onHandleKey, dropMs } = useChartDrag(gridRef, scrollRef)
 
 function editWithAi(chart) {
   pendingAgentMessage.value = `Update "${chart.title}" to `
@@ -296,8 +325,25 @@ onBeforeUnmount(() => {
   transform: scale(0.96);
 }
 
+/* Ghost: tilts up when lifted, glides into the slot on drop */
+.chart-ghost--dropping {
+  transition-property: transform, width;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+.chart-ghost__lift {
+  transform: rotate(1.2deg) scale(1.02);
+  animation: ghost-lift 160ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.chart-ghost--dropping .chart-ghost__lift {
+  transform: none;
+}
+@keyframes ghost-lift {
+  from { transform: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .chart-pop, .stagger, .chart-card-in { animation: none; }
+  .chart-pop, .stagger, .chart-card-in, .chart-ghost__lift { animation: none; }
   .pie-seg, .bar, .chart-list-move { transition: none; }
 }
 </style>

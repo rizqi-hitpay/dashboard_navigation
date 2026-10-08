@@ -2,17 +2,18 @@
   <div
     ref="rootRef"
     class="relative"
-    :draggable="dragArmed"
+    :class="{ 'card-intro': !introDone && !ghost }"
+    :data-chart-id="ghost ? null : chart.id"
     @mouseenter="hovered = true"
     @mouseleave="onMouseLeave"
-    @dragstart="onDragStart"
-    @dragend="onDragEnd"
-    @dragover.prevent="$emit('drag-over', chart.id)"
   >
     <!-- Card (Figma Analytics-with-AI: 1:6281) -->
     <div
       class="chart-card flex flex-col rounded-[8px] border bg-white overflow-hidden"
-      :class="[showChrome ? 'chart-card--hover' : 'border-[#e5e6ea]', dragging ? 'opacity-50' : '']"
+      :class="[
+        placeholder ? 'chart-card--slot' : ghost ? 'chart-card--ghost' : showChrome ? 'chart-card--hover' : 'border-[#e5e6ea]',
+        { 'chart-card--static': ghost },
+      ]"
       :style="{ height: chart.height + 'px' }"
     >
       <!-- Head: title · rename input (Figma: 1:6841) -->
@@ -33,16 +34,18 @@
       <div
         v-else
         class="relative flex items-center gap-[4px] h-[45px] pr-[16px] shrink-0 transition-[padding] duration-200"
-        :style="{ paddingLeft: showChrome ? '28px' : '16px' }"
+        :class="showChrome || ghost ? 'cursor-grab' : ''"
+        :style="{ paddingLeft: showChrome || ghost ? '28px' : '16px' }"
+        @pointerdown="onHeadPointerDown"
       >
-        <!-- Drag handle -->
+        <!-- Drag handle — the whole head drags; arrows on the focused handle move one slot -->
         <button
           type="button"
-          class="absolute left-[8px] top-[14.5px] size-[16px] cursor-grab active:cursor-grabbing transition-opacity duration-150"
-          :class="showChrome ? 'opacity-100' : 'opacity-0 pointer-events-none'"
-          aria-label="Drag to reorder"
-          @pointerdown="dragArmed = true"
-          @pointerup="dragArmed = false"
+          data-drag-handle
+          class="absolute left-[8px] top-[14.5px] size-[16px] rounded-[2px] cursor-grab transition-opacity duration-150 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#2465de]"
+          :class="showChrome || ghost ? 'opacity-100' : 'opacity-0'"
+          aria-label="Drag to reorder (arrow keys move)"
+          @keydown="$emit('handle-key', $event)"
         >
           <img :src="draggableIcon" width="16" height="16" alt="" class="block" />
         </button>
@@ -87,6 +90,7 @@
             >
               <div
                 class="added-bar w-full rounded-t-[4px]"
+                :class="{ 'added-bar--static': ghost || introDone }"
                 :style="{ height: h * barScale + 'px', backgroundColor: barColor(i), animationDelay: `${150 + i * 50}ms` }"
               />
             </div>
@@ -273,8 +277,10 @@ const props = defineProps({
   prompts: { type: Array, required: true },
   compact: { type: Boolean, default: false }, // AI Assistant panel open → narrower grid
   canSpan: { type: Boolean, default: true },  // two-column grid available
+  placeholder: { type: Boolean, default: false }, // being dragged → render as the drop slot
+  ghost: { type: Boolean, default: false },       // the floating copy that follows the pointer
 })
-const emit = defineEmits(['remove', 'ask', 'edit-ai', 'drag-start', 'drag-over', 'drag-end'])
+const emit = defineEmits(['remove', 'ask', 'edit-ai', 'grab', 'handle-key'])
 
 const Y_AXIS = ['2.5K', '2.0K', '1.5K', '1.0K', '0.5K', '0']
 // Head 45 + border 1 + padding 32 + x-axis 26 + top offset 7 → bars fill the rest (216px at 326px)
@@ -289,10 +295,21 @@ const historyOpen = ref(false)
 const addOpen = ref(false)
 const editing = ref(false)
 const resizing = ref(false)
-const dragging = ref(false)
-const dragArmed = ref(false)
 
-const showChrome = computed(() => (hovered.value || historyOpen.value || resizing.value) && !editing.value && !addOpen.value && !dragging.value)
+// Intro animations run once — reordering re-inserts the node, which would replay them
+const introDone = ref(false)
+onMounted(() => setTimeout(() => { introDone.value = true }, 1200))
+
+const showChrome = computed(() =>
+  (hovered.value || historyOpen.value || resizing.value) && !editing.value && !addOpen.value && !props.placeholder && !props.ghost)
+
+// Pressing anywhere on the head (except its buttons) can start a drag
+function onHeadPointerDown(e) {
+  if (e.target.closest('button:not([data-drag-handle])')) return
+  historyOpen.value = false
+  addOpen.value = false
+  emit('grab', e)
+}
 
 function onMouseLeave() {
   hovered.value = false
@@ -423,20 +440,6 @@ function startResize(e) {
   window.addEventListener('pointerup', onUp)
 }
 
-// ── Reorder (drag from the handle) ──
-function onDragStart(e) {
-  if (!dragArmed.value) { e.preventDefault(); return }
-  e.dataTransfer.effectAllowed = 'move'
-  e.dataTransfer.setData('text/plain', String(props.chart.id))
-  dragging.value = true
-  emit('drag-start', props.chart.id)
-}
-function onDragEnd() {
-  dragging.value = false
-  dragArmed.value = false
-  emit('drag-end')
-}
-
 // ── Download: render the chart to a PNG ──
 function downloadChart() {
   const { title, bars, labels } = props.chart
@@ -492,6 +495,31 @@ function downloadChart() {
 .chart-card--hover {
   border-color: #80acfe;
   box-shadow: 0px 0px 0px 3px #e5eeff;
+}
+/* Drop slot left behind by the dragged chart */
+.chart-card--slot {
+  border: 1.5px dashed #80acfe;
+  background: #f5f8ff;
+  box-shadow: none;
+}
+.chart-card--slot > * {
+  visibility: hidden;
+}
+/* Floating copy under the pointer */
+.chart-card--ghost {
+  border-color: #80acfe;
+  box-shadow: 0px 0px 0px 3px #e5eeff, 0px 16px 40px -8px rgba(3, 16, 47, 0.22);
+}
+.card-intro {
+  animation: card-intro 400ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+@keyframes card-intro {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.chart-card--static,
+.added-bar--static {
+  animation: none !important;
 }
 
 .title-input {
@@ -551,7 +579,7 @@ function downloadChart() {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .added-bar { animation: none; }
+  .added-bar, .card-intro { animation: none; }
   .chart-card, .added-bar, .bar-tip { transition: none; }
 }
 </style>

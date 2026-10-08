@@ -33,12 +33,3 @@ export function addChart(sourceId, title, prompt) {
 export function removeChart(id) {
   analyticsCharts.value = analyticsCharts.value.filter((c) => c.id !== id)
 }
-
-export function moveChart(fromId, toId) {
-  const list = [...analyticsCharts.value]
-  const from = list.findIndex((c) => c.id === fromId)
-  const to = list.findIndex((c) => c.id === toId)
-  if (from < 0 || to < 0 || from === to) return
-  list.splice(to, 0, list.splice(from, 1)[0])
-  analyticsCharts.value = list
-}
