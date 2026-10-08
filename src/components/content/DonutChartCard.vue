@@ -1,7 +1,7 @@
 <template>
   <div>
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-1" style="height: 40px;">
+    <!-- Header (hidden in bare mode, where the parent card owns the title) -->
+    <div v-if="!bare" class="flex items-center justify-between mb-1" style="height: 40px;">
       <span class="text-[16px] font-medium text-[#03102f]">{{ title }}</span>
 
       <!-- Tab group -->
@@ -27,10 +27,10 @@
     </div>
 
     <!-- Chart card -->
-    <div style="border: 1px solid #e5e6ea; border-radius: 8px; padding: 24px; background: white;">
+    <div :style="bare ? {} : { border: '1px solid #e5e6ea', borderRadius: '8px', padding: '24px', background: 'white' }">
 
       <!-- Donut chart -->
-      <div class="flex justify-center" style="margin-bottom: 24px;">
+      <div class="flex justify-center" :style="{ marginBottom: bare ? '16px' : '24px' }">
         <div class="relative" style="width: 210px; height: 210px;">
           <svg
             width="210"
@@ -50,7 +50,7 @@
               :style="{
                 fill: segFill(i),
                 cursor: 'pointer',
-                transition: 'fill 180ms ease',
+                transition: 'fill 180ms ease, d 500ms cubic-bezier(0.4, 0, 0.2, 1)',
               }"
               transform="rotate(-90, 105, 105)"
             />
@@ -67,14 +67,14 @@
             >{{ centerTitle }}</span>
             <span
               class="text-[16px] font-medium text-[#03102f]"
-              style="line-height: 1.4;"
+              :style="{ lineHeight: 1.4, fontFamily: bare ? `'Reddit Mono', monospace` : undefined }"
             >{{ centerValue }}</span>
           </div>
         </div>
       </div>
 
       <!-- Legend -->
-      <div class="flex items-center justify-center" style="gap: 8px; margin-bottom: 24px;">
+      <div class="flex items-center justify-center" :style="{ gap: '8px', marginBottom: bare ? '0' : '24px' }">
         <div
           v-for="(seg, i) in segments"
           :key="seg.label"
@@ -119,6 +119,7 @@ const props = defineProps({
   centerLabel:  { type: String, default: 'Total' },
   discoverText: { type: String, default: '' },
   tabs:         { type: Array,  default: () => [{ label: '7d' }, { label: '30d' }] },
+  bare:         { type: Boolean, default: false }, // just the ring + legend, for embedding in another card
 })
 
 const activeTab    = ref('30d')

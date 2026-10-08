@@ -64,75 +64,16 @@
         </button>
       </div>
 
-      <!-- Graph (Figma: 1:6286) -->
-      <div class="flex-1 min-h-0 border-t border-[#e5e6ea] p-[16px]">
-        <div class="relative w-full h-full">
-          <!-- Y axis -->
-          <div class="absolute left-0 top-0 flex flex-col justify-between" :style="{ height: barsArea + 'px' }">
-            <p
-              v-for="label in Y_AXIS"
-              :key="label"
-              class="w-[32px] p-[4px] box-content text-[10px] font-medium uppercase tracking-[0.3px] leading-[18px] text-[#9295a5] text-center"
-            >{{ label }}</p>
-          </div>
-
-          <!-- Bars: whole column is the hover target -->
-          <div
-            class="absolute left-0 right-0 top-[7px] flex items-end gap-[4px] pl-[56px]"
-            :style="{ height: barsArea + 'px' }"
-            @mouseleave="hoveredBar = null"
-          >
-            <div
-              v-for="(h, i) in chart.bars"
-              :key="i"
-              class="relative flex-1 min-w-0 h-full flex items-end"
-              @mouseenter="hoveredBar = i"
-            >
-              <div
-                class="added-bar w-full rounded-t-[4px]"
-                :class="{ 'added-bar--static': ghost || introDone }"
-                :style="{ height: h * barScale + 'px', backgroundColor: barColor(i), animationDelay: `${150 + i * 50}ms` }"
-              />
-            </div>
-
-            <!-- Bar tooltip (Figma: 1:6330) -->
-            <Transition name="bar-tip">
-              <div
-                v-if="hoveredBar !== null"
-                class="bar-tip absolute z-10 flex flex-col justify-center px-[12px] py-[4px] rounded-[8px] bg-[#fcfcfd] pointer-events-none whitespace-nowrap"
-                :style="tooltipStyle"
-              >
-                <p class="text-[10px] font-medium uppercase tracking-[0.3px] leading-[18px] text-[#9295a5]">{{ chart.labels[hoveredBar] }}</p>
-                <div class="flex items-center gap-[8px]">
-                  <p class="text-[14px] font-medium text-[#03102f] leading-[1.5]">{{ formatK(chart.values[hoveredBar]) }}</p>
-                  <div v-if="hoveredChange !== null" class="flex items-center gap-[2px]">
-                    <img
-                      :src="hoveredChange < 0 ? downIcon : upIcon"
-                      :width="hoveredChange < 0 ? 12 : 10"
-                      height="9"
-                      alt=""
-                      class="block"
-                    />
-                    <p class="text-[12px] font-medium text-[#61667c] leading-[1.5]">{{ Math.abs(hoveredChange) }}%</p>
-                  </div>
-                </div>
-              </div>
-            </Transition>
-          </div>
-
-          <!-- X axis -->
-          <div class="absolute left-0 right-0" :style="{ top: barsArea + 7 + 'px' }">
-            <img :src="baselineImg" alt="" class="absolute left-[56px] top-[-1px] w-[calc(100%-72px)] h-px" />
-            <div class="flex gap-[4px] pl-[56px]">
-              <p
-                v-for="(label, i) in chart.labels"
-                :key="label"
-                class="flex-1 min-w-0 p-[4px] text-[10px] font-medium uppercase tracking-[0.3px] leading-[18px] text-center whitespace-nowrap transition-colors duration-150"
-                :class="hoveredBar === i ? 'text-[#03102f]' : 'text-[#9295a5]'"
-              >{{ label }}</p>
-            </div>
-          </div>
-        </div>
+      <!-- Body: bar · line · donut · table (Figma Analytics-with-AI: 1:6286 / 1:5180 / 1:5156 / 1:5738) -->
+      <div
+        class="flex-1 min-h-0 border-t border-[#e5e6ea]"
+        :class="{
+          'p-[16px]': chart.type === 'bar' || chart.type === 'line',
+          'flex items-center justify-center p-[16px] overflow-hidden': chart.type === 'donut',
+          'overflow-auto': chart.type === 'table',
+        }"
+      >
+        <AnalyticsChartBody :chart="chart" :height="chart.height - 78" :static="ghost || introDone" />
       </div>
     </div>
 
@@ -256,8 +197,8 @@
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount, useTemplateRef } from 'vue'
 import AnalyticsPromptInput from './AnalyticsPromptInput.vue'
-import { CHART_DEFAULT_HEIGHT } from '../../composables/useAnalytics.js'
-import baselineImg from '../../assets/icons/chart-baseline.svg'
+import AnalyticsChartBody from './AnalyticsChartBody.vue'
+import { downloadChartPng } from './chartExport.js'
 import draggableIcon from '../../assets/icons/chart-draggable.svg'
 import pencilIcon from '../../assets/icons/chart-pencil.svg'
 import resizeIcon from '../../assets/icons/chart-resize-handle.svg'
@@ -269,8 +210,6 @@ import downloadIcon from '../../assets/icons/chart-action-download.svg'
 import removeIcon from '../../assets/icons/chart-action-remove.svg'
 import plusBlueIcon from '../../assets/icons/chart-plus-blue-14.svg'
 import closeBlueIcon from '../../assets/icons/chart-close-blue-14.svg'
-import downIcon from '../../assets/icons/chart-tooltip-down.svg'
-import upIcon from '../../assets/icons/icon-trend-up-green.svg'
 
 const props = defineProps({
   chart: { type: Object, required: true },
@@ -282,14 +221,8 @@ const props = defineProps({
 })
 const emit = defineEmits(['remove', 'ask', 'edit-ai', 'grab', 'handle-key'])
 
-const Y_AXIS = ['2.5K', '2.0K', '1.5K', '1.0K', '0.5K', '0']
-// Head 45 + border 1 + padding 32 + x-axis 26 + top offset 7 → bars fill the rest (216px at 326px)
-const barsArea = computed(() => props.chart.height - 111)
-const barScale = computed(() => barsArea.value / (CHART_DEFAULT_HEIGHT - 111))
-
 const rootRef = useTemplateRef('rootRef')
 const hovered = ref(false)
-const hoveredBar = ref(null)
 const hoveredAction = ref(null)
 const historyOpen = ref(false)
 const addOpen = ref(false)
@@ -313,32 +246,8 @@ function onHeadPointerDown(e) {
 
 function onMouseLeave() {
   hovered.value = false
-  hoveredBar.value = null
   hoveredAction.value = null
 }
-
-// ── Bars ──
-const maxIndex = computed(() => props.chart.values.indexOf(Math.max(...props.chart.values)))
-function barColor(i) {
-  if (i === maxIndex.value) return hoveredBar.value === i ? '#2465de' : '#4c8afd'
-  return hoveredBar.value === i ? '#b3cdfe' : '#ccdefe'
-}
-const formatK = (v) => (v / 1000).toFixed(2) + 'K'
-const hoveredChange = computed(() => {
-  const i = hoveredBar.value
-  if (i === null || i === 0) return null
-  const prev = props.chart.values[i - 1]
-  return Math.round(((props.chart.values[i] - prev) / prev) * 100)
-})
-// Tooltip sits above the hovered bar, kept inside the plot
-const tooltipStyle = computed(() => {
-  const i = hoveredBar.value
-  const n = props.chart.bars.length
-  const top = barsArea.value - props.chart.bars[i] * barScale.value - 56
-  const left = `calc(56px + (100% - 56px) * ${(i + 0.5) / n})`
-  const shift = i === 0 ? '-20%' : i === n - 1 ? '-80%' : '-50%'
-  return { top: Math.max(top, -8) + 'px', left, transform: `translateX(${shift})` }
-})
 
 // ── Toolbar ──
 const actions = computed(() => [
@@ -440,51 +349,9 @@ function startResize(e) {
   window.addEventListener('pointerup', onUp)
 }
 
-// ── Download: render the chart to a PNG ──
+// ── Download ──
 function downloadChart() {
-  const { title, bars, labels } = props.chart
-  const W = 640, H = 400, S = 2
-  const canvas = document.createElement('canvas')
-  canvas.width = W * S
-  canvas.height = H * S
-  const ctx = canvas.getContext('2d')
-  ctx.scale(S, S)
-  ctx.fillStyle = '#ffffff'
-  ctx.fillRect(0, 0, W, H)
-  ctx.fillStyle = '#03102f'
-  ctx.font = '500 16px Inter, sans-serif'
-  ctx.fillText(title, 24, 36)
-
-  const plotTop = 72, plotBottom = H - 48, plotLeft = 72, plotRight = W - 24
-  const plotH = plotBottom - plotTop
-  ctx.font = '500 10px Inter, sans-serif'
-  ctx.fillStyle = '#9295a5'
-  ctx.textAlign = 'right'
-  Y_AXIS.forEach((label, i) => ctx.fillText(label, plotLeft - 16, plotTop + (plotH * i) / (Y_AXIS.length - 1) + 4))
-
-  const step = (plotRight - plotLeft) / bars.length
-  const scale = plotH / 216
-  ctx.textAlign = 'center'
-  bars.forEach((h, i) => {
-    const x = plotLeft + i * step + 2
-    const bh = h * scale
-    ctx.fillStyle = i === maxIndex.value ? '#4c8afd' : '#ccdefe'
-    ctx.beginPath()
-    ctx.roundRect(x, plotBottom - bh, step - 4, bh, [4, 4, 0, 0])
-    ctx.fill()
-    ctx.fillStyle = '#9295a5'
-    ctx.fillText(labels[i].toUpperCase(), x + (step - 4) / 2, plotBottom + 20)
-  })
-  ctx.strokeStyle = '#f2f2f4'
-  ctx.beginPath()
-  ctx.moveTo(plotLeft, plotBottom + 0.5)
-  ctx.lineTo(plotRight, plotBottom + 0.5)
-  ctx.stroke()
-
-  const a = document.createElement('a')
-  a.download = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.png`
-  a.href = canvas.toDataURL('image/png')
-  a.click()
+  downloadChartPng(props.chart)
 }
 </script>
 
@@ -517,8 +384,7 @@ function downloadChart() {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
 }
-.chart-card--static,
-.added-bar--static {
+.chart-card--static {
   animation: none !important;
 }
 
@@ -528,19 +394,8 @@ function downloadChart() {
 
 .action-bar,
 .popover,
-.bar-tip,
 .dark-tip {
   box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.1), 0px 3px 22px 0px rgba(38, 42, 50, 0.09);
-}
-
-.added-bar {
-  transform-origin: bottom;
-  animation: bar-grow 650ms cubic-bezier(0.34, 1.2, 0.64, 1) both;
-  transition: background-color 150ms ease, height 200ms ease;
-}
-@keyframes bar-grow {
-  from { transform: scaleY(0); }
-  to { transform: scaleY(1); }
 }
 
 .chrome-enter-active,
@@ -553,21 +408,13 @@ function downloadChart() {
 }
 
 .tip-enter-active,
-.tip-leave-active,
-.bar-tip-enter-active,
-.bar-tip-leave-active {
+.tip-leave-active {
   transition: opacity 120ms ease;
 }
 .tip-enter-from,
-.tip-leave-to,
-.bar-tip-enter-from,
-.bar-tip-leave-to {
+.tip-leave-to {
   opacity: 0;
 }
-.bar-tip {
-  transition: left 150ms cubic-bezier(0.4, 0, 0.2, 1), top 150ms cubic-bezier(0.4, 0, 0.2, 1), transform 150ms ease;
-}
-
 .pop-enter-active,
 .pop-leave-active {
   transition: opacity 160ms ease, margin-top 160ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -579,7 +426,7 @@ function downloadChart() {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .added-bar, .card-intro { animation: none; }
-  .chart-card, .added-bar, .bar-tip { transition: none; }
+  .card-intro { animation: none; }
+  .chart-card { transition: none; }
 }
 </style>

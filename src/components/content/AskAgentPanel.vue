@@ -67,24 +67,15 @@
         <div v-if="replyStep >= 2" class="chat-in flex flex-col gap-[4px]">
           <div class="flex flex-col gap-[8px] p-[8px] rounded-[16px] bg-[#f2f2f4]">
             <p class="text-[14px] font-medium text-[#03102f] leading-[1.5]">{{ result.title }}</p>
-            <div class="relative w-full h-[219px] py-[8px] rounded-[8px] border border-[#e5e6ea] bg-white overflow-hidden">
-              <!-- Y axis -->
-              <div class="absolute left-[12px] top-[8px] flex flex-col gap-[8px]">
-                <p
-                  v-for="label in yAxis"
-                  :key="label"
-                  class="w-[32px] p-[4px] box-content text-[10px] font-medium uppercase tracking-[0.3px] leading-[18px] text-[#9295a5] text-center"
-                >{{ label }}</p>
-              </div>
-              <!-- Bars -->
-              <div class="absolute left-[72px] right-[16px] top-[11px] h-[189px] flex items-end gap-[8px]">
-                <div
-                  v-for="(h, i) in result.bars"
-                  :key="i"
-                  class="chat-bar flex-1"
-                  :style="{ height: h + 'px', backgroundColor: h === maxResultBar ? '#80acfe' : '#ccdefe', animationDelay: `${i * 40}ms` }"
-                />
-              </div>
+            <!-- Same chart the dashboard will show: bar · line · donut · table -->
+            <div
+              class="w-full rounded-[8px] border border-[#e5e6ea] bg-white overflow-hidden"
+              :class="{
+                'px-[12px] py-[8px]': result.type === 'bar' || result.type === 'line',
+                'flex justify-center p-[16px]': result.type === 'donut',
+              }"
+            >
+              <AnalyticsChartBody :chart="result" :height="203" preview />
             </div>
             <!-- Added state (Figma Analytics-with-AI: 1:3576) -->
             <div v-if="chartAdded" class="chat-in flex items-center justify-center gap-[6px] w-full h-[28px]">
@@ -272,7 +263,8 @@
 import { ref, computed, watch, nextTick, onBeforeUnmount, useTemplateRef } from 'vue'
 import { pendingAgentMessage, agentConversation } from '../../composables/useAgentPanel.js'
 import { useRouter, useRoute } from 'vue-router'
-import { addChart, isChartAdded } from '../../composables/useAnalytics.js'
+import { addChart, isChartAdded, buildChartSpec } from '../../composables/useAnalytics.js'
+import AnalyticsChartBody from '../analytics/AnalyticsChartBody.vue'
 import checkGreenIcon from '../../assets/icons/icon-check-green-16.svg'
 import thumbUpIcon   from '../../assets/icons/icon-thumb-up-green.svg'
 import thumbDownIcon from '../../assets/icons/icon-thumb-down.svg'
@@ -319,21 +311,12 @@ function sendMessage() {
 const conversation = agentConversation
 const replyStep = ref(0) // 0 = only my message · 1 = AI acknowledges · 2 = result card
 const chatScrollRef = useTemplateRef('chatScrollRef')
-const yAxis = ['2.5K', '2.0K', '1.5K', '1.0K', '0.5K', '0']
-
-const RESULTS = {
-  'Create a line chart of my monthly sales this year': 'Monthly sales this year',
-  'Create a table of my top 10 products last month': 'Top 10 products last month',
-}
-const result = computed(() => ({
-  title: RESULTS[conversation.value?.prompt] || 'Sales by payment method',
-  bars: [74, 138, 40, 74, 7, 189, 79, 138, 17, 106],
-}))
-const maxResultBar = computed(() => Math.max(...result.value.bars))
+// The answer: chart type read from the question, data randomised (no real AI in the prototype)
+const result = ref(null)
 
 const chartAdded = computed(() => !!conversation.value && isChartAdded(conversation.value.id))
 function addToAnalytics() {
-  addChart(conversation.value.id, result.value.title, conversation.value.prompt)
+  addChart(conversation.value.id, result.value, conversation.value.prompt)
   if (route.path !== '/analytics') router.push('/analytics')
 }
 
@@ -342,6 +325,7 @@ watch(() => conversation.value?.id, (id) => {
   replyTimers.forEach(clearTimeout)
   replyStep.value = 0
   if (!id) return
+  result.value = buildChartSpec(conversation.value.prompt)
   activeTab.value = 'ai'
   const reveal = (step, delay) => replyTimers.push(setTimeout(async () => {
     replyStep.value = step
@@ -397,7 +381,7 @@ input::placeholder {
   color: #9295a5;
 }
 
-/* Conversation: messages rise in, bars grow from the baseline */
+/* Conversation: messages rise in */
 .chat-in {
   animation: chat-in 320ms cubic-bezier(0.4, 0, 0.2, 1) both;
 }
@@ -405,16 +389,8 @@ input::placeholder {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: none; }
 }
-.chat-bar {
-  transform-origin: bottom;
-  animation: chat-bar 600ms cubic-bezier(0.34, 1.2, 0.64, 1) both;
-}
-@keyframes chat-bar {
-  from { transform: scaleY(0); }
-  to   { transform: scaleY(1); }
-}
 @media (prefers-reduced-motion: reduce) {
-  .chat-in, .chat-bar { animation: none; }
+  .chat-in { animation: none; }
 }
 
 /* Tab group sliding pill — matches the project's 250ms cubic-bezier(0.4,0,0.2,1) motion */
