@@ -96,16 +96,14 @@
             @click="onAction(action.key)"
           >
             <img :src="action.icon" width="16" height="16" alt="" class="block" />
-            <!-- Dark tooltip (Figma: 1:6336) -->
+            <!-- Action tooltip (Figma: 1:6336), in the app's light tooltip style -->
             <Transition name="tip">
               <span
                 v-if="hoveredAction === action.key && !(action.key === 'history' && historyOpen)"
-                class="dark-tip absolute bottom-[calc(100%+12px)] left-1/2 -translate-x-1/2 flex items-center px-[8px] py-[4px] rounded-[4px] bg-[#343848] pointer-events-none"
+                class="action-tip absolute bottom-[calc(100%+12px)] left-1/2 -translate-x-1/2 flex items-center px-[8px] py-[4px] rounded-[4px] bg-[#fcfcfd] pointer-events-none"
               >
-                <span class="text-[12px] font-medium text-[#cbcdd4] leading-[1.5] whitespace-nowrap">{{ action.tooltip || action.label }}</span>
-                <span class="absolute bottom-[-6px] left-1/2 -translate-x-1/2 rotate-180">
-                  <img :src="tipArrowIcon" width="12" height="7.33" alt="" class="block" />
-                </span>
+                <span class="text-[12px] font-medium text-[#61667c] leading-[1.5] whitespace-nowrap">{{ action.tooltip || action.label }}</span>
+                <span class="action-tip__arrow" />
               </span>
             </Transition>
           </button>
@@ -202,7 +200,6 @@ import { downloadChartPng } from './chartExport.js'
 import draggableIcon from '../../assets/icons/chart-draggable.svg'
 import pencilIcon from '../../assets/icons/chart-pencil.svg'
 import resizeIcon from '../../assets/icons/chart-resize-handle.svg'
-import tipArrowIcon from '../../assets/icons/tooltip-arrow-dark.svg'
 import aiIcon from '../../assets/icons/chart-action-ai.svg'
 import historyIcon from '../../assets/icons/chart-action-history.svg'
 import fullWidthIcon from '../../assets/icons/chart-action-fullwidth.svg'
@@ -388,13 +385,27 @@ function downloadChart() {
   animation: none !important;
 }
 
+/* Same light tooltip as the rest of the app (NavTooltip, Bills copy tooltip) */
+.action-tip__arrow {
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #fcfcfd;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.06));
+}
+
 .title-input {
   box-shadow: 0px 0px 0px 3px #b3cdfe, inset 0px 2px 4px 0px rgba(0, 0, 0, 0.24);
 }
 
 .action-bar,
 .popover,
-.dark-tip {
+.action-tip {
   box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.1), 0px 3px 22px 0px rgba(38, 42, 50, 0.09);
 }
 
