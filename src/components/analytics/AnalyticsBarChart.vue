@@ -88,7 +88,7 @@ const share = (i) => Math.round((props.values[i] / props.values.reduce((a, b) =>
 const tooltipStyle = computed(() => {
   const i = hovered.value
   const n = props.values.length
-  const top = plotH.value - valueToPx(props.values[i], plotH.value) - 56
+  const top = plotH.value - valueToPx(props.values[i], plotH.value) - 36
   const shift = '-' + edgeAnchor(i, n)
   return {
     top: Math.max(top, -8) + 'px',

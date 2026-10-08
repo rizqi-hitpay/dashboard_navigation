@@ -1,17 +1,16 @@
 <template>
-  <!-- Chart detail tooltip — content of Tooltip/Detail Chart (1:6330), styled as Tooltip/Dark (1:6336) -->
-  <div class="chart-tip flex flex-col justify-center px-[8px] py-[4px] rounded-[4px] bg-[#343848] pointer-events-none whitespace-nowrap">
-    <p class="text-[10px] font-medium uppercase tracking-[0.3px] leading-[18px] text-[#9295a5]">{{ label }}</p>
-    <div class="flex items-center gap-[8px]">
-      <p class="text-[14px] font-medium text-white leading-[1.5]">{{ value }}</p>
-      <div v-if="change !== null" class="flex items-center gap-[2px]">
-        <img :src="change < 0 ? downIcon : upIcon" :width="change < 0 ? 12 : 10" height="9" alt="" class="block" />
-        <p class="text-[12px] font-medium text-[#cbcdd4] leading-[1.5]">{{ Math.abs(change) }}%</p>
-      </div>
-      <p v-else-if="note" class="text-[12px] font-medium text-[#cbcdd4] leading-[1.5]">{{ note }}</p>
+  <!-- Chart hover tooltip — Tooltip/Dark (Figma Analytics-with-AI: 1:6336) carrying the
+       Tooltip/Detail Chart content (1:6330): date · value · change, in one row -->
+  <div class="chart-tip flex items-center justify-center gap-[8px] px-[8px] py-[4px] rounded-[4px] bg-[#343848] pointer-events-none whitespace-nowrap">
+    <p class="tip-text">{{ label }}</p>
+    <p class="tip-text">{{ value }}</p>
+    <div v-if="change !== null" class="flex items-center gap-[2px]">
+      <img :src="change < 0 ? downIcon : upIcon" :width="change < 0 ? 12 : 10" height="9" alt="" class="block" />
+      <p class="tip-text">{{ Math.abs(change) }}%</p>
     </div>
+    <p v-else-if="note" class="tip-text">{{ note }}</p>
     <!-- Arrow points at the hovered bar / point -->
-    <span class="absolute bottom-[-6px] -translate-x-1/2 rotate-180" :style="{ left: arrowAt }">
+    <span class="absolute bottom-[-6px] -translate-x-1/2 rotate-180" :style="{ left: `calc(${arrowAt} + 0.5px)` }">
       <img :src="arrowIcon" width="12" height="7.33" alt="" class="block" />
     </span>
   </div>
@@ -34,5 +33,13 @@ defineProps({
 <style scoped>
 .chart-tip {
   box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.1), 0px 3px 22px 0px rgba(38, 42, 50, 0.09);
+}
+/* Sans/Body Small/Medium in text/200 */
+.tip-text {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #cbcdd4;
+  text-align: center;
 }
 </style>

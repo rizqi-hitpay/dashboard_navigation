@@ -116,7 +116,7 @@ const tooltipStyle = computed(() => {
   const n = props.values.length
   const p = points.value[i]
   const shift = '-' + edgeAnchor(i, n)
-  return { top: Math.max(p.y - 64, -8) + 'px', left: p.x + 'px', transform: `translateX(${shift})` }
+  return { top: Math.max(p.y - 42, -8) + 'px', left: p.x + 'px', transform: `translateX(${shift})` }
 })
 
 // Tooltips at the first/last point shift inward; the arrow follows the point
