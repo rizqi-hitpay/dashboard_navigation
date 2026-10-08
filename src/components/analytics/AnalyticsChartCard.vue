@@ -88,14 +88,19 @@
           <button
             v-else
             type="button"
-            class="relative flex items-center justify-center size-[16px] rounded-[4px] transition-opacity duration-150"
-            :class="action.key === 'ai' ? '' : 'hover:opacity-60'"
+            class="relative flex items-center justify-center size-[16px] rounded-[4px]"
             :aria-label="action.label"
             @mouseenter="hoveredAction = action.key"
             @mouseleave="hoveredAction = null"
             @click="onAction(action.key)"
           >
-            <img :src="action.icon" width="16" height="16" alt="" class="block" />
+            <!-- Fade only the icon — fading the button would also fade its tooltip -->
+            <img
+              :src="action.icon"
+              width="16" height="16" alt=""
+              class="block transition-opacity duration-150"
+              :class="action.key !== 'ai' && hoveredAction === action.key ? 'opacity-60' : ''"
+            />
             <!-- Dark tooltip (Figma: 1:6336) -->
             <Transition name="tip">
               <span
