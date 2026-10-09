@@ -39,26 +39,8 @@
         <!-- Page actions, once there are charts (Figma Analytics-with-AI: 34:6746) -->
         <Transition name="page-actions">
           <div v-if="analyticsCharts.length" class="ml-auto flex items-center gap-[8px]">
-            <button
-              type="button"
-              class="btn-secondary flex items-center gap-[8px] h-[36px] px-[12px] py-[8px] rounded-[8px] border border-[#f2f2f4] hover:brightness-[0.98] active:brightness-95 transition-[filter] duration-150"
-              @click="exportCharts"
-            >
-              <span class="relative w-[14px] h-[18px] shrink-0">
-                <img :src="exportIcon" width="18" height="18" alt="" class="absolute left-[-2px] top-0 block" />
-              </span>
-              <span class="text-[14px] font-medium text-[#61667c] leading-[1.5] whitespace-nowrap" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.08);">Export</span>
-            </button>
-            <button
-              type="button"
-              class="ask-ai-btn flex items-center gap-[8px] h-[36px] min-w-[36px] px-[12px] py-[8px] rounded-[8px] border border-[#2465de] hover:brightness-110 active:brightness-95 transition-[filter] duration-150"
-              @click="openAgentStarter({ prompts, placeholder: 'Create a line chart of my....' })"
-            >
-              <span class="relative w-[14px] h-[18px] shrink-0">
-                <img :src="plusWhiteIcon" width="18" height="18" alt="" class="absolute left-[-2px] top-0 block" />
-              </span>
-              <span class="text-[14px] font-medium text-white leading-[1.5] whitespace-nowrap" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.12);">New chart</span>
-            </button>
+            <VerificationButton variant="secondary" :icon="exportIcon" @click="exportCharts">Export</VerificationButton>
+            <VerificationButton variant="primary" :icon="plusWhiteIcon" @click="openAgentStarter({ prompts, placeholder: 'Create a line chart of my....' })">New chart</VerificationButton>
           </div>
         </Transition>
       </div>
@@ -196,17 +178,13 @@
             </div>
 
             <!-- Primary CTA (Figma Analytics-with-AI: 33:3125) -->
-            <button
-              type="button"
-              class="stagger ask-ai-btn flex items-center justify-center gap-[8px] h-[36px] px-[12px] py-[8px] rounded-[8px] border border-[#2465de] hover:brightness-110 active:brightness-95 transition-[filter] duration-150"
+            <VerificationButton
+              variant="primary"
+              :icon="aiChatWhiteIcon"
+              class="stagger"
               :style="stagger(2)"
               @click="openAgentStarter({ prompts, placeholder: 'Create a line chart of my....' })"
-            >
-              <span class="relative w-[14px] h-[18px] shrink-0">
-                <img :src="aiChatWhiteIcon" width="18" height="18" alt="" class="absolute left-[-2px] top-0 block" />
-              </span>
-              <span class="text-[14px] font-medium text-white leading-[1.5] whitespace-nowrap" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.12);">Ask AI Assistant</span>
-            </button>
+            >Ask AI Assistant</VerificationButton>
 
             <p class="stagger text-[14px] text-[#61667c] leading-[1.5] text-center whitespace-nowrap" :style="stagger(3)">Or start with this</p>
 
@@ -245,6 +223,7 @@ import aiChatWhiteIcon from '../../assets/icons/icon-ai-chat-white.svg'
 import exportIcon from '../../assets/icons/icon-export.svg'
 import plusWhiteIcon from '../../assets/icons/icon-plus-white.svg'
 import { exportChartsCsv } from '../analytics/chartExport.js'
+import VerificationButton from '../verification/VerificationButton.vue'
 
 const exportCharts = () => exportChartsCsv(analyticsCharts.value)
 
@@ -401,11 +380,6 @@ onBeforeUnmount(() => {
   margin-top: -4px;
 }
 
-/* Button/Secondary/Default */
-.btn-secondary {
-  background: linear-gradient(to bottom, #ffffff, #f2f2f2);
-  box-shadow: 0px 1.5px 0px 0px #e5e5e5;
-}
 .page-actions-enter-active,
 .page-actions-leave-active {
   transition: opacity 200ms ease, transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -414,12 +388,6 @@ onBeforeUnmount(() => {
 .page-actions-leave-to {
   opacity: 0;
   transform: translateY(-4px);
-}
-
-/* Button/Primary/Default */
-.ask-ai-btn {
-  background: linear-gradient(to bottom, #4179e2, #1f5bcc);
-  box-shadow: 0px 1.5px 0px 0px #1d5fd9;
 }
 
 /* Added chart: card rises in; removing fades it out while the rest slide into place */
