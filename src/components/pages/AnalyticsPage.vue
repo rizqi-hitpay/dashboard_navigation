@@ -2,9 +2,39 @@
   <div class="relative bg-white flex flex-col h-full w-full overflow-hidden">
     <div ref="scrollRef" class="flex flex-1 flex-col items-start w-full py-[4px] overflow-y-auto overflow-x-hidden">
 
-      <!-- Page title (Figma: 4873:37432) -->
-      <div class="flex items-center px-[24px] py-[12px] w-full shrink-0">
+      <!-- Page title · Beta chip · info tooltip (Figma Analytics-with-AI: 34:6311, 34:8387) -->
+      <div class="flex items-center gap-[8px] px-[24px] py-[12px] w-full shrink-0">
         <p class="font-medium text-[18px] text-[#03102f] leading-[1.35] whitespace-nowrap">Analytics</p>
+        <span class="flex items-center justify-center min-w-[32px] min-h-[24px] px-[8px] py-[2px] rounded-[24px] bg-[#edfbfd] text-[12px] font-medium text-[#0495a9] leading-[1.5]">Beta</span>
+        <span
+          class="relative flex"
+          @mouseenter="infoOpen = true"
+          @mouseleave="infoOpen = false"
+        >
+          <button
+            type="button"
+            class="flex size-[18px] rounded-full hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#2465de] transition-opacity duration-150"
+            aria-label="About Analytics"
+            :aria-describedby="infoOpen ? 'analytics-info-tip' : undefined"
+            @focus="infoOpen = true"
+            @blur="infoOpen = false"
+          >
+            <img :src="infoIcon" width="18" height="18" alt="" class="block" />
+          </button>
+          <Transition name="info-tip">
+            <div
+              v-if="infoOpen"
+              id="analytics-info-tip"
+              role="tooltip"
+              class="info-tip absolute left-1/2 -translate-x-1/2 top-[calc(100%+14px)] z-40 w-[294px] p-[12px] rounded-[8px] bg-[#fcfcfd] pointer-events-none"
+            >
+              <img :src="tipArrowLight" width="15.59" height="8.47" alt="" class="absolute left-1/2 -translate-x-1/2 top-[-6px] block" />
+              <p class="text-[12px] text-[#61667c] leading-[1.5]">
+                <span class="font-medium text-[#03102f]">Only you can see these chart</span>. Teammates has their own analytics.
+              </p>
+            </div>
+          </Transition>
+        </span>
       </div>
 
       <!-- Charts added from the AI Assistant (Figma Analytics-with-AI: 1:3465 · hover 1:5867 / 1:8590) -->
@@ -135,13 +165,24 @@
             <div class="flex flex-col gap-[8px] w-full text-center">
               <p class="stagger font-medium text-[18px] text-[#03102f] leading-[1.35]" :style="stagger(0)">Add your first chart</p>
               <p class="stagger text-[16px] text-[#61667c] leading-[1.4]" :style="stagger(1)">
-                Ask the
-                <button type="button" class="font-medium text-[#2465de] underline hover:opacity-75 transition-opacity duration-150" @click="askAgent(prompts[2])">AI Assistant</button>
-                in your own words, then add the answer here. You can rearrange charts and edit them later.
+                Ask the AI Assistant in your own words, then add the answer here. You can rearrange charts and edit them later.
               </p>
             </div>
 
-            <p class="stagger text-[14px] text-[#61667c] leading-[1.5] text-center whitespace-nowrap" :style="stagger(2)">Or start with this</p>
+            <!-- Primary CTA (Figma Analytics-with-AI: 33:3125) -->
+            <button
+              type="button"
+              class="stagger ask-ai-btn flex items-center justify-center gap-[8px] h-[36px] px-[12px] py-[8px] rounded-[8px] border border-[#2465de] hover:brightness-110 active:brightness-95 transition-[filter] duration-150"
+              :style="stagger(2)"
+              @click="agentPanelOpen = true"
+            >
+              <span class="relative w-[14px] h-[18px] shrink-0">
+                <img :src="aiChatWhiteIcon" width="18" height="18" alt="" class="absolute left-[-2px] top-0 block" />
+              </span>
+              <span class="text-[14px] font-medium text-white leading-[1.5] whitespace-nowrap" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.12);">Ask AI Assistant</span>
+            </button>
+
+            <p class="stagger text-[14px] text-[#61667c] leading-[1.5] text-center whitespace-nowrap" :style="stagger(3)">Or start with this</p>
 
             <!-- Suggested prompts (Figma: 4873:38338) -->
             <div class="flex flex-col items-center gap-[8px]">
@@ -150,7 +191,7 @@
                 :key="prompt"
                 type="button"
                 class="stagger flex items-center justify-center px-[12px] py-[4px] rounded-[40px] border border-[#e5e6ea] bg-white hover:bg-[#f6f7f9] transition-colors duration-150"
-                :style="stagger(3 + i)"
+                :style="stagger(4 + i)"
                 @click="askAgent(prompt)"
               >
                 <span class="text-[13px] text-[#03102f] leading-[1.5] text-center whitespace-nowrap">{{ prompt }}</span>
@@ -172,6 +213,11 @@ import { useChartDrag } from '../../composables/useChartDrag.js'
 import AnalyticsChartCard from '../analytics/AnalyticsChartCard.vue'
 import AnalyticsAddTile from '../analytics/AnalyticsAddTile.vue'
 import trendUpIcon from '../../assets/icons/icon-trend-up-green.svg'
+import infoIcon from '../../assets/icons/icon-information.svg'
+import tipArrowLight from '../../assets/icons/tooltip-arrow-light.svg'
+import aiChatWhiteIcon from '../../assets/icons/icon-ai-chat-white.svg'
+
+const infoOpen = ref(false)
 
 // Add tile fades in once; later reorders must not replay it
 const tileIntroDone = ref(false)
@@ -308,6 +354,26 @@ onBeforeUnmount(() => {
 }
 .bar {
   transition: height 700ms cubic-bezier(0.34, 1.2, 0.64, 1), background-color 400ms ease;
+}
+
+/* Title info tooltip (Figma Tooltip/Light: 34:8387) */
+.info-tip {
+  box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.1), 0px 3px 22px 0px rgba(38, 42, 50, 0.09);
+}
+.info-tip-enter-active,
+.info-tip-leave-active {
+  transition: opacity 150ms ease, margin-top 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.info-tip-enter-from,
+.info-tip-leave-to {
+  opacity: 0;
+  margin-top: -4px;
+}
+
+/* Button/Primary/Default */
+.ask-ai-btn {
+  background: linear-gradient(to bottom, #4179e2, #1f5bcc);
+  box-shadow: 0px 1.5px 0px 0px #1d5fd9;
 }
 
 /* Added chart: card rises in; removing fades it out while the rest slide into place */
