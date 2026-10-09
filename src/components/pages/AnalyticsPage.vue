@@ -35,6 +35,32 @@
             </div>
           </Transition>
         </span>
+
+        <!-- Page actions, once there are charts (Figma Analytics-with-AI: 34:6746) -->
+        <Transition name="page-actions">
+          <div v-if="analyticsCharts.length" class="ml-auto flex items-center gap-[8px]">
+            <button
+              type="button"
+              class="btn-secondary flex items-center gap-[8px] h-[36px] px-[12px] py-[8px] rounded-[8px] border border-[#f2f2f4] hover:brightness-[0.98] active:brightness-95 transition-[filter] duration-150"
+              @click="exportCharts"
+            >
+              <span class="relative w-[14px] h-[18px] shrink-0">
+                <img :src="exportIcon" width="18" height="18" alt="" class="absolute left-[-2px] top-0 block" />
+              </span>
+              <span class="text-[14px] font-medium text-[#61667c] leading-[1.5] whitespace-nowrap" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.08);">Export</span>
+            </button>
+            <button
+              type="button"
+              class="ask-ai-btn flex items-center gap-[8px] h-[36px] min-w-[36px] px-[12px] py-[8px] rounded-[8px] border border-[#2465de] hover:brightness-110 active:brightness-95 transition-[filter] duration-150"
+              @click="openAgentStarter({ prompts, placeholder: 'Create a line chart of my....' })"
+            >
+              <span class="relative w-[14px] h-[18px] shrink-0">
+                <img :src="plusWhiteIcon" width="18" height="18" alt="" class="absolute left-[-2px] top-0 block" />
+              </span>
+              <span class="text-[14px] font-medium text-white leading-[1.5] whitespace-nowrap" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.12);">New chart</span>
+            </button>
+          </div>
+        </Transition>
       </div>
 
       <!-- Charts added from the AI Assistant (Figma Analytics-with-AI: 1:3465 · hover 1:5867 / 1:8590) -->
@@ -216,6 +242,11 @@ import trendUpIcon from '../../assets/icons/icon-trend-up-green.svg'
 import infoIcon from '../../assets/icons/icon-information.svg'
 import tipArrowLight from '../../assets/icons/tooltip-arrow-light.svg'
 import aiChatWhiteIcon from '../../assets/icons/icon-ai-chat-white.svg'
+import exportIcon from '../../assets/icons/icon-export.svg'
+import plusWhiteIcon from '../../assets/icons/icon-plus-white.svg'
+import { exportChartsCsv } from '../analytics/chartExport.js'
+
+const exportCharts = () => exportChartsCsv(analyticsCharts.value)
 
 const infoOpen = ref(false)
 
@@ -368,6 +399,21 @@ onBeforeUnmount(() => {
 .info-tip-leave-to {
   opacity: 0;
   margin-top: -4px;
+}
+
+/* Button/Secondary/Default */
+.btn-secondary {
+  background: linear-gradient(to bottom, #ffffff, #f2f2f2);
+  box-shadow: 0px 1.5px 0px 0px #e5e5e5;
+}
+.page-actions-enter-active,
+.page-actions-leave-active {
+  transition: opacity 200ms ease, transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.page-actions-enter-from,
+.page-actions-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 
 /* Button/Primary/Default */

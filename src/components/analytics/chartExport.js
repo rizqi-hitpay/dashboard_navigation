@@ -6,6 +6,37 @@ const DEFAULT_TABLE_COLUMNS = [
   { key: 'amount', label: 'Amount', mono: true },
 ]
 
+// ── Page export: every chart's data in one CSV, one titled block per chart ──
+const csvCell = (v) => {
+  const s = String(v ?? '')
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+}
+const csvRow = (cells) => cells.map(csvCell).join(',')
+
+function chartCsvBlock(chart) {
+  const rows = [[chart.title]]
+  if (chart.type === 'bar' || chart.type === 'line') {
+    rows.push(['Label', 'Sales (SGD)'], ...chart.labels.map((l, i) => [l, chart.values[i]]))
+  } else if (chart.type === 'donut') {
+    rows.push(['Payment method', 'Share (%)', 'Amount'], ...chart.segments.map((s) => [s.label, s.pct, s.value]))
+    rows.push(['Total', 100, `SGD ${chart.total.toLocaleString('en-US')}`])
+  } else {
+    const cols = chart.columns || DEFAULT_TABLE_COLUMNS
+    rows.push(cols.map((c) => c.label), ...chart.rows.map((r) => cols.map((c) => r[c.key])))
+  }
+  return rows.map(csvRow).join('\n')
+}
+
+export function exportChartsCsv(charts) {
+  const csv = charts.map(chartCsvBlock).join('\n\n')
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
+  const a = document.createElement('a')
+  a.download = `analytics-${new Date().toISOString().slice(0, 10)}.csv`
+  a.href = url
+  a.click()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
 // Renders a chart spec to a 2× PNG and downloads it
 export function downloadChartPng(chart) {
   const W = 640
