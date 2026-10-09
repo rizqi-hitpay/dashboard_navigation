@@ -6,19 +6,22 @@
     <Transition name="plus-menu">
       <div
         v-if="modelValue"
-        class="fixed w-[207px] bg-white rounded-[8px] z-50 py-1 px-1"
-        :style="menuStyle"
+        class="fixed bg-white rounded-[8px] z-50 py-1 px-1"
+        :style="{ ...menuStyle, width: width + 'px' }"
         style="box-shadow: 0px 4px 6px -2px rgba(16,24,40,0.03), 0px 12px 16px -4px rgba(16,24,40,0.08), 0px 0px 0px 1px rgba(0,0,0,0.06);"
       >
         <button
           v-for="item in items"
           :key="item.label"
-          class="w-full flex items-center justify-between rounded-[4px] cursor-pointer transition-colors duration-150 group"
-          :class="'hover:bg-[#f5f6f9]'"
+          type="button"
+          class="w-full flex items-center rounded-[4px] cursor-pointer transition-colors duration-150 group"
+          :class="[item.icon ? 'gap-[8px]' : 'justify-between', 'hover:bg-[#f5f6f9]']"
           style="height: 36px; padding: 0 10px;"
+          @click="select(item)"
         >
-          <span class="text-[12px] text-[#03102f]">{{ item.label }}</span>
-          <div class="flex items-center gap-0.5">
+          <img v-if="item.icon" :src="item.icon" width="16" height="16" alt="" class="block shrink-0" />
+          <span class="text-[12px] text-[#03102f]" :class="item.icon ? 'flex-1 text-left' : ''">{{ item.label }}</span>
+          <div v-if="item.shortcut" class="flex items-center gap-0.5">
             <span
               v-for="key in item.shortcut"
               :key="key"
@@ -36,25 +39,34 @@ import { ref, watch } from 'vue'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
-  items: { type: Array, default: () => [] },
+  items: { type: Array, default: () => [] }, // [{ label, shortcut?: [key, key], icon?: url }]
   anchor: { type: Object, default: null },
+  width: { type: Number, default: 207 },
+  offsetX: { type: Number, default: 8 },  // how far the menu's right edge overhangs the anchor's
+  offsetY: { type: Number, default: 4 },  // gap below the anchor
+  closeOnSelect: { type: Boolean, default: false },
 })
-defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'select'])
+
+function select(item) {
+  emit('select', item)
+  if (props.closeOnSelect) emit('update:modelValue', false)
+}
 
 const menuStyle = ref({})
 
 watch(() => props.modelValue, (open) => {
   if (open && props.anchor) {
     const rect = props.anchor.getBoundingClientRect()
-    const menuWidth = 207
+    const menuWidth = props.width
     const gap = 8
 
     // Prefer right-aligned (menu extends left from button), fall back to left-aligned
-    let left = rect.right + gap - menuWidth
+    let left = rect.right + props.offsetX - menuWidth
     if (left < gap) left = rect.left
 
     menuStyle.value = {
-      top: rect.bottom + 4 + 'px',
+      top: rect.bottom + props.offsetY + 'px',
       left: Math.min(left, window.innerWidth - menuWidth - gap) + 'px',
     }
   }

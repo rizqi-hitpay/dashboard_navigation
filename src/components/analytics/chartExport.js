@@ -6,42 +6,19 @@ const DEFAULT_TABLE_COLUMNS = [
   { key: 'amount', label: 'Amount', mono: true },
 ]
 
-// ── Page export: every chart's data in one CSV, one titled block per chart ──
-const csvCell = (v) => {
-  const s = String(v ?? '')
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
-}
-const csvRow = (cells) => cells.map(csvCell).join(',')
+// ── Rendering ─────────────────────────────────────────────────────────
 
-function chartCsvBlock(chart) {
-  const rows = [[chart.title]]
-  if (chart.type === 'bar' || chart.type === 'line') {
-    rows.push(['Label', 'Sales (SGD)'], ...chart.labels.map((l, i) => [l, chart.values[i]]))
-  } else if (chart.type === 'donut') {
-    rows.push(['Payment method', 'Share (%)', 'Amount'], ...chart.segments.map((s) => [s.label, s.pct, s.value]))
-    rows.push(['Total', 100, `SGD ${chart.total.toLocaleString('en-US')}`])
-  } else {
-    const cols = chart.columns || DEFAULT_TABLE_COLUMNS
-    rows.push(cols.map((c) => c.label), ...chart.rows.map((r) => cols.map((c) => r[c.key])))
-  }
-  return rows.map(csvRow).join('\n')
+const S = 2 // render at 2× for crisp output
+const slug = (t) => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+const today = () => new Date().toISOString().slice(0, 10)
+
+function chartSize(chart) {
+  return { W: 640, H: chart.type === 'table' ? 72 + 34 + chart.rows.length * 40 + 24 : 400 }
 }
 
-export function exportChartsCsv(charts) {
-  const csv = charts.map(chartCsvBlock).join('\n\n')
-  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
-  const a = document.createElement('a')
-  a.download = `analytics-${new Date().toISOString().slice(0, 10)}.csv`
-  a.href = url
-  a.click()
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
-}
-
-// Renders a chart spec to a 2× PNG and downloads it
-export function downloadChartPng(chart) {
-  const W = 640
-  const H = chart.type === 'table' ? 72 + 34 + chart.rows.length * 40 + 24 : 400
-  const S = 2
+// Draws one chart spec onto a fresh 2× canvas
+function renderChartCanvas(chart) {
+  const { W, H } = chartSize(chart)
   const canvas = document.createElement('canvas')
   canvas.width = W * S
   canvas.height = H * S
@@ -52,14 +29,102 @@ export function downloadChartPng(chart) {
   ctx.fillStyle = '#03102f'
   ctx.font = '500 16px Inter, sans-serif'
   ctx.fillText(chart.title, 24, 36)
-
   const draw = { bar: drawXY, line: drawXY, donut: drawDonut, table: drawTable }[chart.type]
   draw(ctx, chart, W, H)
+  return canvas
+}
 
+function download(href, filename) {
   const a = document.createElement('a')
-  a.download = `${chart.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.png`
-  a.href = canvas.toDataURL('image/png')
+  a.download = filename
+  a.href = href
   a.click()
+}
+
+// Single chart → PNG (chart toolbar "Download chart")
+export function downloadChartPng(chart) {
+  download(renderChartCanvas(chart).toDataURL('image/png'), `${slug(chart.title)}.png`)
+}
+
+// ── Page export (Export ▸ Download PNG / PDF) ────────────────────────
+
+// Every chart stacked into one image under an "Analytics" heading
+export function exportDashboardPng(charts) {
+  const W = 640, HEAD = 64, GAP = 16
+  const canvases = charts.map(renderChartCanvas)
+  const H = HEAD + canvases.reduce((sum, c) => sum + c.height / S + GAP, 0)
+  const out = document.createElement('canvas')
+  out.width = W * S
+  out.height = H * S
+  const ctx = out.getContext('2d')
+  ctx.scale(S, S)
+  ctx.fillStyle = '#f8f9fc'
+  ctx.fillRect(0, 0, W, H)
+  ctx.fillStyle = '#03102f'
+  ctx.font = '500 18px Inter, sans-serif'
+  ctx.fillText('Analytics', 24, 36)
+  ctx.fillStyle = '#61667c'
+  ctx.font = '400 12px Inter, sans-serif'
+  ctx.fillText(new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }), 24, 54)
+  let y = HEAD
+  for (const c of canvases) {
+    ctx.drawImage(c, 0, y, c.width / S, c.height / S)
+    y += c.height / S + GAP
+  }
+  download(out.toDataURL('image/png'), `analytics-${today()}.png`)
+}
+
+// One PDF page per chart, each page sized to its chart
+export function exportDashboardPdf(charts) {
+  const pages = charts.map((chart) => {
+    const canvas = renderChartCanvas(chart)
+    const { W, H } = chartSize(chart)
+    const b64 = canvas.toDataURL('image/jpeg', 0.92).split(',')[1]
+    return { jpeg: Uint8Array.from(atob(b64), (ch) => ch.charCodeAt(0)), w: W, h: H, pxW: canvas.width, pxH: canvas.height }
+  })
+  const url = URL.createObjectURL(new Blob([buildPdf(pages)], { type: 'application/pdf' }))
+  download(url, `analytics-${today()}.pdf`)
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
+// Minimal PDF 1.4 writer: each page shows one full-bleed JPEG (DCTDecode)
+function buildPdf(pages) {
+  const enc = new TextEncoder()
+  const chunks = []
+  const offsets = []
+  let length = 0
+  const push = (part) => {
+    const bytes = typeof part === 'string' ? enc.encode(part) : part
+    chunks.push(bytes)
+    length += bytes.length
+  }
+  const obj = (id, body) => { offsets[id] = length; push(`${id} 0 obj\n`); body(); push('\nendobj\n') }
+
+  const pageIds = pages.map((_, i) => 3 + i * 3)
+  push('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n')
+  obj(1, () => push('<< /Type /Catalog /Pages 2 0 R >>'))
+  obj(2, () => push(`<< /Type /Pages /Count ${pages.length} /Kids [${pageIds.map((id) => `${id} 0 R`).join(' ')}] >>`))
+  pages.forEach((pg, i) => {
+    const [pageId, contentId, imageId] = [pageIds[i], pageIds[i] + 1, pageIds[i] + 2]
+    const content = `q ${pg.w} 0 0 ${pg.h} 0 0 cm /Im0 Do Q`
+    obj(pageId, () => push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pg.w} ${pg.h}] /Resources << /XObject << /Im0 ${imageId} 0 R >> >> /Contents ${contentId} 0 R >>`))
+    obj(contentId, () => push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`))
+    obj(imageId, () => {
+      push(`<< /Type /XObject /Subtype /Image /Width ${pg.pxW} /Height ${pg.pxH} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${pg.jpeg.length} >>\nstream\n`)
+      push(pg.jpeg)
+      push('\nendstream')
+    })
+  })
+  const count = 3 + pages.length * 3
+  const xrefAt = length
+  push(`xref\n0 ${count}\n0000000000 65535 f \n`)
+  for (let id = 1; id < count; id++) push(`${String(offsets[id]).padStart(10, '0')} 00000 n \n`)
+  push(`trailer\n<< /Size ${count} /Root 1 0 R >>\nstartxref\n${xrefAt}\n%%EOF`)
+
+  const out = new Uint8Array(length)
+  let at = 0
+  for (const c of chunks) { out.set(c, at); at += c.length }
+  return out
 }
 
 function drawXY(ctx, chart, W, H) {

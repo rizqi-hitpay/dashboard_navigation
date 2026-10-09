@@ -39,7 +39,25 @@
         <!-- Page actions, once there are charts (Figma Analytics-with-AI: 34:6746) -->
         <Transition name="page-actions">
           <div v-if="analyticsCharts.length" class="ml-auto flex items-center gap-[8px]">
-            <VerificationButton variant="secondary" :icon="exportIcon" @click="exportCharts">Export</VerificationButton>
+            <VerificationButton
+              ref="exportBtnRef"
+              variant="secondary"
+              :icon="exportIcon"
+              :aria-expanded="exportOpen"
+              aria-haspopup="menu"
+              @click="exportOpen = !exportOpen"
+            >Export</VerificationButton>
+            <!-- Export options (Figma Analytics-with-AI: 40:5693), reusing the sidebar + menu -->
+            <PlusMenu
+              v-model="exportOpen"
+              :items="exportItems"
+              :anchor="exportBtnRef?.$el"
+              :width="162"
+              :offset-x="0"
+              :offset-y="8"
+              close-on-select
+              @select="(item) => item.run()"
+            />
             <VerificationButton variant="primary" :icon="plusWhiteIcon" @click="openAgentStarter({ prompts, placeholder: 'Create a line chart of my....' })">New chart</VerificationButton>
           </div>
         </Transition>
@@ -222,10 +240,18 @@ import tipArrowLight from '../../assets/icons/tooltip-arrow-light.svg'
 import aiChatWhiteIcon from '../../assets/icons/icon-ai-chat-white.svg'
 import exportIcon from '../../assets/icons/icon-export.svg'
 import plusWhiteIcon from '../../assets/icons/icon-plus-white.svg'
-import { exportChartsCsv } from '../analytics/chartExport.js'
+import { exportDashboardPng, exportDashboardPdf } from '../analytics/chartExport.js'
 import VerificationButton from '../verification/VerificationButton.vue'
+import PlusMenu from '../navigation/PlusMenu.vue'
+import filePngIcon from '../../assets/icons/icon-file-png.svg'
+import filePdfIcon from '../../assets/icons/icon-file-pdf.svg'
 
-const exportCharts = () => exportChartsCsv(analyticsCharts.value)
+const exportOpen = ref(false)
+const exportBtnRef = useTemplateRef('exportBtnRef')
+const exportItems = [
+  { label: 'Download PNG', icon: filePngIcon, run: () => exportDashboardPng(analyticsCharts.value) },
+  { label: 'Download PDF', icon: filePdfIcon, run: () => exportDashboardPdf(analyticsCharts.value) },
+]
 
 const infoOpen = ref(false)
 
