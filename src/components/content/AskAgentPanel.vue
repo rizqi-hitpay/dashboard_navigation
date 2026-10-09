@@ -101,6 +101,27 @@
       </div>
     </div>
 
+    <!-- ── Main: suggested prompts before a conversation (Figma Analytics-with-AI: 36:3813) ── -->
+    <div v-else-if="activeTab === 'ai' && starter" class="flex-1 overflow-y-auto flex flex-col">
+      <div :key="starter.id" class="mt-auto flex flex-col gap-[8px] px-[12px] pt-[24px] pb-[12px]">
+        <div class="chat-in p-[8px]">
+          <p class="text-[13px] text-[#03102f] leading-[1.5]">You can start with this</p>
+        </div>
+        <div class="flex flex-col gap-[8px] pb-[2px]">
+          <button
+            v-for="(prompt, i) in starter.prompts"
+            :key="prompt"
+            type="button"
+            class="chat-in flex items-center w-full px-[12px] py-[4px] rounded-[40px] border border-[#e5e6ea] bg-white text-left hover:bg-[#f6f7f9] hover:border-[#cbcdd4] transition-colors duration-150"
+            :style="{ animationDelay: `${80 + i * 60}ms` }"
+            @click="askAgent(prompt)"
+          >
+            <span class="flex-1 min-w-0 text-[12px] text-[#61667c] leading-[1.5]">{{ prompt }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- ── Main: scrollable, To-do vertically centered ── -->
     <div v-else-if="activeTab === 'ai'" class="flex-1 overflow-y-auto flex flex-col items-center justify-center">
 
@@ -239,7 +260,8 @@
           v-model="chatInput"
           class="flex-1 outline-none bg-transparent"
           style="font-size: 14px; color: #03102f;"
-          placeholder="Ask anything..."
+          ref="chatInputRef"
+          :placeholder="starter?.placeholder || 'Ask anything...'"
           @keydown.enter="sendMessage"
           @focus="isFocused = true"
           @blur="isFocused = false"
@@ -261,7 +283,7 @@
 
 <script setup>
 import { ref, computed, watch, nextTick, onBeforeUnmount, useTemplateRef } from 'vue'
-import { pendingAgentMessage, agentConversation } from '../../composables/useAgentPanel.js'
+import { pendingAgentMessage, agentConversation, agentStarter, askAgent } from '../../composables/useAgentPanel.js'
 import { useRouter, useRoute } from 'vue-router'
 import { addChart, isChartAdded, buildChartSpec } from '../../composables/useAnalytics.js'
 import AnalyticsChartBody from '../analytics/AnalyticsChartBody.vue'
@@ -302,10 +324,23 @@ watch(pendingAgentMessage, (msg) => {
   pendingAgentMessage.value = ''
 }, { immediate: true })
 
+// Sending from the starter or an Analytics conversation asks a new chart question
 function sendMessage() {
-  if (!chatInput.value.trim()) return
+  const text = chatInput.value.trim()
+  if (!text) return
   chatInput.value = ''
+  if (starter.value || conversation.value) askAgent(text)
 }
+
+// Starter: show suggested prompts and focus the input, ready to type
+const starter = agentStarter
+const chatInputRef = useTemplateRef('chatInputRef')
+watch(() => starter.value?.id, async (id) => {
+  if (!id) return
+  activeTab.value = 'ai'
+  await nextTick()
+  chatInputRef.value?.focus({ preventScroll: true })
+})
 
 // ── Conversation handed off via askAgent() (e.g. Analytics empty state) ──
 const conversation = agentConversation

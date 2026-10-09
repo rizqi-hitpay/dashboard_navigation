@@ -174,7 +174,7 @@
               type="button"
               class="stagger ask-ai-btn flex items-center justify-center gap-[8px] h-[36px] px-[12px] py-[8px] rounded-[8px] border border-[#2465de] hover:brightness-110 active:brightness-95 transition-[filter] duration-150"
               :style="stagger(2)"
-              @click="agentPanelOpen = true"
+              @click="openAgentStarter({ prompts, placeholder: 'Create a line chart of my....' })"
             >
               <span class="relative w-[14px] h-[18px] shrink-0">
                 <img :src="aiChatWhiteIcon" width="18" height="18" alt="" class="absolute left-[-2px] top-0 block" />
@@ -207,7 +207,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount, useTemplateRef } from 'vue'
-import { askAgent, agentPanelOpen, pendingAgentMessage } from '../../composables/useAgentPanel.js'
+import { askAgent, agentPanelOpen, pendingAgentMessage, openAgentStarter } from '../../composables/useAgentPanel.js'
 import { analyticsCharts, removeChart } from '../../composables/useAnalytics.js'
 import { useChartDrag } from '../../composables/useChartDrag.js'
 import AnalyticsChartCard from '../analytics/AnalyticsChartCard.vue'
