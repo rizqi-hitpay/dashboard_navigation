@@ -23,15 +23,16 @@
       <!-- Empty state (Figma: 266:18620) -->
       <div v-if="isEmpty" key="empty" class="bg-white flex flex-1 flex-col gap-[40px] items-center justify-center min-h-[600px] px-[24px] py-[12px] w-full">
 
-        <!-- Paper card — hovering warms the blurred backdrop (Figma: Card-Issuing 322:22878) -->
+        <!-- Paper card — hovering warms the blurred backdrop (Figma: Card-Issuing 322:22878).
+             The paper clips, not the illustration, so the gradient bleeds across it -->
         <div
-          class="empty-hero bg-white border border-[#e5e6ea] flex flex-col items-center justify-end p-[32px] rounded-[12px] shrink-0 w-full max-w-[900px]"
-          style="filter: drop-shadow(0px 16px 16px rgba(0,0,0,0.05));"
+          class="empty-hero relative overflow-hidden bg-white border border-[#e5e6ea] flex flex-col items-center justify-end p-[32px] rounded-[12px] shrink-0 w-full max-w-[900px]"
+          style="box-shadow: 0px 16px 32px 0px rgba(0,0,0,0.05);"
         >
           <div class="flex gap-[24px] items-center justify-center w-full shrink-0">
 
-            <!-- Left: copy + CTA -->
-            <div class="flex flex-1 flex-col gap-[24px] items-start justify-center min-w-px">
+            <!-- Left: copy + CTA — stacked above the bleeding gradient -->
+            <div class="relative z-[1] flex flex-1 flex-col gap-[24px] items-start justify-center min-w-px">
               <div class="flex flex-col gap-[8px] items-start w-full shrink-0">
                 <p class="font-medium text-[18px] text-[#03102f] leading-[1.35] w-full">Spend management</p>
                 <p class="font-normal text-[16px] text-[#61667c] leading-[1.4] w-full">You can pay your vendors and suppliers directly from HitPay using the HitPay balance</p>
@@ -48,71 +49,13 @@
               </div>
             </div>
 
-            <!-- Right: card illustration (Figma: Card-Issuing 322:22886) — the card
-                 rises in from the bottom, then floats; on hover it tilts toward the
-                 cursor in 3D and its lighting follows, and the backdrop warms -->
-            <div
-              ref="cardArtEl"
-              class="relative hidden md:block w-[411px] h-[184px] shrink-0 overflow-hidden rounded-[8px]"
-              aria-hidden="true"
-              @pointermove="onCardArtMove"
-              @pointerleave="onCardArtLeave"
-            >
+            <!-- Right: card illustration (Figma: Card-Issuing 322:22886) — shared
+                 HitPayCard at 0.55 scale (220px); the backdrop warms on hover -->
+            <div class="relative hidden md:block w-[411px] h-[184px] shrink-0">
               <!-- Blurred backdrop crossfades to the warm/mint variant on hover -->
               <img :src="emptyBlurImg" alt="" class="empty-blur empty-blur--idle absolute pointer-events-none select-none max-w-none left-[-115.8px] top-[-96.7px]" width="821.015" height="702.168" />
               <img :src="emptyBlurHoverImg" alt="" class="empty-blur empty-blur--hover absolute pointer-events-none select-none max-w-none left-[-115.8px] top-[-96.7px]" width="821.015" height="702.168" />
-
-              <div class="empty-card-enter absolute left-1/2 top-1/2 ml-[-110px] mt-[-69.25px]">
-                <div class="empty-card-tilt">
-                <div
-                  class="empty-card-float relative w-[220px] h-[137.5px] overflow-hidden rounded-[9.621px] backdrop-blur-[13.75px]"
-                  style="background-image: linear-gradient(90deg, #2465de 0%, #2465de 100%), linear-gradient(-58.27deg, rgba(255,255,255,0) 0.78%, rgba(246,248,250,0.6) 44.26%); box-shadow: 0px 108.35px 30.25px 0px rgba(23,29,109,0), 0px 69.3px 28.05px 0px rgba(23,29,109,0.01), 0px 39.05px 23.65px 0px rgba(23,29,109,0.04), 0px 17.6px 17.6px 0px rgba(23,29,109,0.07), 0px 4.4px 9.35px 0px rgba(23,29,109,0.08);"
-                >
-                  <!-- Soft light blobs on the card face -->
-                  <div class="empty-card-blob absolute flex items-center justify-center mix-blend-hard-light left-[-31.22px] top-[77.69px] w-[224.088px] h-[156.899px]">
-                    <div class="relative w-[212.63px] h-[138.577px] rotate-[5.09deg]">
-                      <img :src="cardEllipse1Img" alt="" class="absolute max-w-none left-[-110px] top-[-110px]" width="432.63" height="358.577" />
-                    </div>
-                  </div>
-                  <div class="empty-card-blob empty-card-blob--far absolute flex items-center justify-center mix-blend-hard-light left-[86.83px] top-[-10.4px] w-[278.671px] h-[255.06px]">
-                    <div class="relative w-[227.749px] h-[162.763px] rotate-[30.11deg]">
-                      <img :src="cardEllipse2Img" alt="" class="absolute max-w-none left-[-110px] top-[-110px]" width="447.749" height="382.763" />
-                    </div>
-                  </div>
-
-                  <!-- Halftone texture -->
-                  <div class="absolute inset-0 mix-blend-overlay opacity-10 pointer-events-none">
-                    <div class="absolute inset-0 opacity-20" :style="{ backgroundImage: `url(${cardHalftoneImg})`, backgroundSize: '1.65px 1.65px' }" />
-                    <div class="absolute inset-0 opacity-50" :style="{ backgroundImage: `url(${cardHalftoneImg})`, backgroundSize: '1.65px 1.65px' }" />
-                    <div class="absolute inset-0" :style="{ backgroundImage: `url(${cardHalftone2Img})`, backgroundSize: '1.65px 1.65px' }" />
-                  </div>
-
-                  <img :src="cardMastercardImg" alt="" class="absolute left-[13.2px] top-[11px]" width="32.0354" height="19.8003" />
-                  <div class="absolute flex items-end gap-[5.776px] right-[9.7px] top-[11px]">
-                    <img :src="cardLogogramImg" alt="" width="17.6228" height="17.6" />
-                    <img :src="cardLogotextImg" alt="" width="48.8467" height="14.959" />
-                  </div>
-
-                  <p class="absolute left-[13.27px] top-[51.06px] font-medium text-[6.6px] text-white leading-[1.5] whitespace-nowrap" style="font-family: 'Reddit Mono', monospace;">TRAVEL CARD</p>
-                  <div class="absolute flex items-center gap-[5.5px] left-[13.27px] top-[67.65px]">
-                    <img :src="cardDots1Img" alt="" width="19.8001" height="3.30004" />
-                    <img :src="cardDots2Img" alt="" width="19.8" height="3.30004" />
-                    <img :src="cardDots3Img" alt="" width="19.8" height="3.30004" />
-                    <p class="font-medium text-[9.9px] text-white leading-[1.35] whitespace-nowrap" style="font-family: 'Reddit Mono', monospace;">4567</p>
-                  </div>
-
-                  <div class="absolute flex items-center gap-[17.6px] left-[13.27px] top-[102.85px] font-medium text-white leading-[1.5] whitespace-nowrap">
-                    <div v-for="item in cardDetails" :key="item.label" class="flex flex-col items-start">
-                      <p class="text-[6.6px]" style="font-family: 'Reddit Mono', monospace;">{{ item.label }}</p>
-                      <p class="text-[7.7px]">{{ item.value }}</p>
-                    </div>
-                  </div>
-
-                  <!-- Specular glare that tracks the cursor on hover -->
-                  <div class="empty-card-glare absolute inset-0 pointer-events-none" />
-                </div>
-                </div>
-              </div>
+              <HitPayCard class="absolute inset-0" nickname="Travel card" holder="John Almaz" number="5412 7534 8821 4567" masked :scale="0.55" />
             </div>
           </div>
         </div>
@@ -127,20 +70,45 @@
         class="flex flex-col gap-[24px] w-full px-[24px] py-[12px]"
         :style="{ paddingRight: quickCard ? '504px' : '24px', transition: 'padding-right 280ms cubic-bezier(0.4, 0, 0.2, 1)' }"
       >
-        <div class="flex flex-col gap-[16px] w-full">
+        <!-- While a row is out as the panel it leaves the list, and the rows
+             below slide up to close the gap (and back down when it returns) -->
+        <TransitionGroup tag="div" name="row-shift" class="relative flex flex-col gap-[16px] w-full">
           <div
-            v-for="card in cards"
+            v-for="card in listedCards"
             :key="card.id"
             role="button"
             tabindex="0"
-            class="card-row group flex items-center gap-[12px] h-[76px] pl-px pr-[17px] py-px bg-white rounded-[12px] border border-[#e5e6ea] overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#2465de]/40"
+            class="card-row group flex items-center gap-[16px] h-[76px] px-[17px] py-px bg-white rounded-[12px] border border-[#e5e6ea] overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#2465de]/40"
             :aria-pressed="quickCard?.id === card.id"
+            :data-card-id="card.id"
+            :class="{ 'opacity-0': liftedRowId === card.id }"
             @click="openQuickView(card)"
             @keydown.enter="openQuickView(card)"
           >
-            <!-- Brand mark -->
-            <span class="relative shrink-0 size-[64px] rounded-[4px] bg-white">
-              <img :src="rowMastercardImg" alt="Mastercard" class="absolute left-[14px] top-[21px]" width="36" height="22.0898" />
+            <!-- Card thumbnail — the HitPay card at 0.16 scale, details swapped
+                 for placeholder bars (Figma: Card-Issuing 467:16842) -->
+            <span class="relative shrink-0 size-[64px]" aria-hidden="true">
+              <span class="card-thumb absolute left-0 top-[12px] w-[64px] h-[40px] overflow-hidden rounded-[6px] backdrop-blur-[4px]">
+                <span class="absolute flex items-center justify-center mix-blend-hard-light left-[-9.08px] top-[22.6px] w-[65.189px] h-[45.643px]">
+                  <span class="relative w-[61.856px] h-[40.313px] rotate-[5.09deg]">
+                    <img :src="thumbEllipse1Img" alt="" class="absolute max-w-none left-[-32px] top-[-32px]" width="125.856" height="104.313" />
+                  </span>
+                </span>
+                <span class="absolute flex items-center justify-center mix-blend-hard-light left-[25.26px] top-[-3.03px] w-[81.068px] h-[74.199px]">
+                  <span class="relative w-[66.254px] h-[47.349px] rotate-[30.11deg]">
+                    <img :src="thumbEllipse2Img" alt="" class="absolute max-w-none left-[-32px] top-[-32px]" width="130.254" height="111.349" />
+                  </span>
+                </span>
+                <span class="absolute inset-0 mix-blend-overlay opacity-10">
+                  <span class="absolute inset-0 opacity-20" :style="{ backgroundImage: `url(${thumbHalftoneImg})`, backgroundSize: '0.48px 0.48px' }" />
+                  <span class="absolute inset-0 opacity-50" :style="{ backgroundImage: `url(${thumbHalftoneImg})`, backgroundSize: '0.48px 0.48px' }" />
+                  <span class="absolute inset-0" :style="{ backgroundImage: `url(${thumbHalftone2Img})`, backgroundSize: '0.48px 0.48px' }" />
+                </span>
+                <img :src="thumbMastercardImg" alt="" class="absolute left-[4px] top-[5px]" width="19.4154" height="12" />
+                <span class="absolute right-[4.82px] top-[5.2px] w-[20px] h-[5px] rounded-[40px] bg-white/20" />
+                <span class="absolute left-[5px] top-[25px] w-[20px] h-[3px] rounded-[40px] bg-white/20" />
+                <span class="absolute left-[5px] top-[30px] w-[41px] h-[3px] rounded-[40px] bg-white/20" />
+              </span>
             </span>
 
             <!-- Masked number + nickname · holder · status -->
@@ -175,14 +143,14 @@
               <p class="text-[16px] text-[#03102f] leading-[1.4]" style="font-family: 'Reddit Mono', ui-monospace, monospace;">{{ card.spent }}</p>
             </div>
           </div>
-        </div>
+        </TransitionGroup>
       </div>
       </Transition>
     </div>
 
     <!-- Floating preview switcher: empty state ↔ cards list (same recipe as BillsPage) -->
     <div
-      v-if="!createCardOpen"
+      v-if="!createCardOpen && !createdCard"
       class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-[4px] p-[4px] rounded-full bg-white border border-[#e5e6ea]"
       style="box-shadow: 0px 8px 24px rgba(3,16,47,0.16);"
     >
@@ -201,18 +169,20 @@
       >With cards</button>
     </div>
 
-    <!-- Quick-view panel (Figma: Card-Issuing 390:12174) — same off-canvas
-         drawer as Virtual Accounts; "View more" opens the full details page -->
-    <Transition name="drawer">
-      <div
-        v-if="quickCard && !isEmpty && !createCardOpen"
-        class="absolute top-[8px] right-[8px] bottom-[8px] z-40 w-[480px] max-w-[calc(100%-16px)] bg-white flex flex-col rounded-[8px] overflow-hidden"
-        style="box-shadow: -16px 24px 120px 0px rgba(38,42,50,0.2);"
-        role="dialog"
-        :aria-label="renderCard.nickname + ' details'"
-      >
+    <!-- Quick-view panel (Figma: Card-Issuing 390:12174). The clicked row
+         expands into the panel (and collapses back into it on close) — see
+         morphShell; the panel stays hidden until the shell lands on it -->
+    <div
+      v-if="quickCard && !isEmpty && !createCardOpen && !createdCard"
+      ref="quickPanelEl"
+      class="quick-panel absolute top-[8px] right-[8px] bottom-[8px] z-40 w-[480px] max-w-[calc(100%-16px)] bg-white flex flex-col rounded-[8px] overflow-hidden"
+      :class="{ 'is-landed': panelLanded, invisible: !panelLanded }"
+      style="box-shadow: -16px 24px 120px 0px rgba(38,42,50,0.2);"
+      role="dialog"
+      :aria-label="renderCard.nickname + ' details'"
+    >
         <!-- Header: label + brand + nickname + status -->
-        <div class="shrink-0 flex items-start gap-[16px] border-b border-[#e5e6ea] p-[16px]">
+        <div class="quick-panel__fade shrink-0 flex items-start gap-[16px] border-b border-[#e5e6ea] p-[16px]">
           <div class="flex-1 flex flex-col gap-[2px] min-w-0 pt-[2px]">
             <span class="text-[10px] font-medium uppercase tracking-[0.3px] text-[#61667c] leading-[18px]">Card</span>
             <div class="flex items-center gap-[8px] min-w-0">
@@ -231,63 +201,83 @@
           </button>
         </div>
 
-        <!-- Details -->
-        <div class="flex-1 overflow-y-auto flex flex-col gap-[12px] px-[16px] py-[20px]">
-          <div class="flex items-center gap-[8px]">
-            <p class="flex-1 min-w-px text-[14px] font-medium text-[#03102f] leading-[1.5]">Details</p>
+        <div class="quick-panel__fade quick-panel__fade--late flex-1 overflow-y-auto flex flex-col items-center gap-[12px] px-[16px] py-[20px]">
+          <!-- Card + reveal toggle -->
+          <div class="flex flex-col items-center gap-[8px] w-[400px] max-w-full">
+            <div class="w-[400px] h-[250px] shrink-0">
+              <HitPayCard
+                :key="renderCard.id"
+                :nickname="renderCard.nickname"
+                :holder="renderCard.holder"
+                :number="renderCard.number"
+                :masked="!quickRevealed"
+                :cvc="quickRevealed ? '824' : '***'"
+                :animate-in="false"
+              />
+            </div>
             <button
               type="button"
-              class="flex items-center justify-center gap-[6px] h-[28px] px-[8px] rounded-[8px] border border-[#f2f2f4] shrink-0 transition-[filter] duration-150 hover:brightness-95 active:translate-y-[1px]"
-              style="background: linear-gradient(to bottom, #ffffff, #f2f2f2); box-shadow: 0px 1.5px 0px 0px rgba(0,0,0,0.1);"
+              class="flex items-center justify-center gap-[8px] h-[36px] px-[12px] rounded-[8px] cursor-pointer transition-colors duration-150 hover:bg-[#f6f7f9]"
               :aria-pressed="quickRevealed"
               @click="quickRevealed = !quickRevealed"
             >
-              <img :src="panelEyeImg" width="16" height="16" alt="" class="shrink-0" />
-              <span class="text-[12px] font-medium text-[#61667c] leading-[1.5] whitespace-nowrap" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.08);">{{ quickRevealed ? 'Hide card details' : 'Show card details' }}</span>
+              <img :src="panelEyeImg" width="18" height="18" alt="" class="shrink-0 -mx-[2px]" />
+              <span class="text-[14px] font-medium text-[#484d61] leading-[1.5] whitespace-nowrap">{{ quickRevealed ? 'Hide card details' : 'Show card details' }}</span>
             </button>
           </div>
 
-          <div class="flex flex-col gap-[4px]">
-            <div
-              v-for="f in quickFields"
-              :key="f.label"
-              class="relative flex flex-col gap-[2px] rounded-[8px] border border-[#e5e6ea] bg-white px-[12px] py-[8px]"
-            >
-              <span class="text-[12px] font-normal text-[#61667c] leading-[1.5]">{{ f.label }}</span>
-              <span class="text-[13px] font-medium text-[#03102f] leading-[1.5] pr-[24px] break-words">{{ f.value }}</span>
-              <button
-                v-if="f.copy"
-                type="button"
-                class="absolute right-[12px] top-[8px] flex items-center justify-center cursor-pointer hover:opacity-70 transition-opacity"
-                :aria-label="'Copy ' + f.label"
-                @click="copyQuickField(f)"
-              >
-                <img :src="panelCopyImg" width="14" height="14" alt="" />
-                <Transition name="copy-tip">
+          <div class="flex flex-col items-center gap-[12px] w-full">
+            <!-- Card details table -->
+            <div class="flex flex-col gap-[8px] w-full">
+              <p class="text-[14px] font-medium text-[#03102f] leading-[1.5]">Card details</p>
+              <div class="w-full rounded-[8px] border border-[#e5e6ea] overflow-hidden">
+                <div
+                  v-for="(f, i) in quickFields"
+                  :key="f.label"
+                  class="flex items-center gap-[8px] bg-white"
+                  :class="{ 'border-b border-[#e5e6ea]': i < quickFields.length - 1 }"
+                >
+                  <span class="flex-1 min-w-0 px-[12px] py-[8px] text-[12px] font-medium text-[#61667c] leading-[1.5]">{{ f.label }}</span>
                   <span
-                    v-if="quickCopiedField === f.label"
-                    class="absolute right-0 bottom-[calc(100%+6px)] px-[8px] py-[4px] rounded-[4px] bg-[#fcfcfd] text-[12px] font-medium text-[#61667c] leading-[1.5] whitespace-nowrap pointer-events-none z-10"
-                    style="box-shadow: 0px 1px 3px 0px rgba(0,0,0,0.1), 0px 3px 22px 0px rgba(38,42,50,0.09);"
-                  >Copied!</span>
-                </Transition>
-              </button>
+                    class="min-w-[88px] px-[12px] py-[4px] text-right whitespace-nowrap overflow-hidden text-ellipsis"
+                    :class="f.status ? 'text-[12px] font-medium leading-[1.5]' : 'text-[14px] font-normal text-[#03102f] leading-[1.5]'"
+                    :style="f.status ? { color: STATUS[renderCard.status].color } : null"
+                  >{{ f.value }}</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="flex items-center justify-center h-[28px] px-[8px] mb-[8px] rounded-[8px] cursor-pointer hover:opacity-75 transition-opacity"
+              @click="viewCard(renderCard)"
+            >
+              <span class="text-[12px] font-medium text-[#2465de] leading-[1.5] whitespace-nowrap">View more →</span>
+            </button>
+
+            <!-- Spend this month -->
+            <div class="flex items-center gap-[8px] w-full rounded-[8px] border border-[#e5e6ea] p-[12px] text-[#03102f] font-medium">
+              <p class="flex-1 min-w-0 text-[14px] leading-[1.5]">Spend this month</p>
+              <p class="text-[16px] leading-[1.4] whitespace-nowrap" style="font-family: 'Reddit Mono', ui-monospace, monospace;">{{ renderCard.spent }}</p>
             </div>
           </div>
-
-          <button
-            type="button"
-            class="self-center flex items-center justify-center h-[28px] px-[8px] rounded-[8px] cursor-pointer hover:opacity-75 transition-opacity"
-            @click="viewCard(renderCard)"
-          >
-            <span class="text-[12px] font-medium text-[#2465de] leading-[1.5] whitespace-nowrap">View more →</span>
-          </button>
         </div>
       </div>
-    </Transition>
 
     <!-- Create card page — fills the main content area so the sidebar stays visible -->
     <Transition name="full-page">
       <CreateCardPage v-if="createCardOpen" @close="createCardOpen = false" @create="onCardCreated" />
+    </Transition>
+
+    <!-- Card created success (Figma: Card-Issuing 467:17054) -->
+    <Transition name="full-page">
+      <CardCreatedPage
+        v-if="createdCard"
+        :card="createdCard"
+        @close="createdCard = null"
+        @view="viewCard"
+        @create-another="createAnotherCard"
+      />
     </Transition>
 
     <!-- "Copied" confirmation beside the tile's copy button -->
@@ -317,35 +307,23 @@ import { ref, reactive, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { cards, addCard, pendingToast } from '../../composables/useCards.js'
 import CreateCardPage from './CreateCardPage.vue'
+import CardCreatedPage from './CardCreatedPage.vue'
+import HitPayCard from '../content/HitPayCard.vue'
 import NavTooltip from '../navigation/NavTooltip.vue'
 import snackbarCheckIcon from '../../assets/icons/icon-snackbar-check.svg'
 import emptyBlurImg from '../../assets/images/cards-empty-blur.svg'
 import emptyBlurHoverImg from '../../assets/images/cards-empty-blur-hover.svg'
-import cardEllipse1Img from '../../assets/images/cards-empty-ellipse-1.svg'
-import cardEllipse2Img from '../../assets/images/cards-empty-ellipse-2.svg'
-import cardHalftoneImg from '../../assets/images/cards-empty-halftone.png'
-import cardHalftone2Img from '../../assets/images/cards-empty-halftone-2.png'
-import cardMastercardImg from '../../assets/images/cards-empty-mastercard.svg'
-import cardLogogramImg from '../../assets/images/cards-empty-hitpay-logogram.svg'
-import cardLogotextImg from '../../assets/images/cards-empty-hitpay-logotext.svg'
-import cardDots1Img from '../../assets/images/cards-empty-dots-1.svg'
-import cardDots2Img from '../../assets/images/cards-empty-dots-2.svg'
-import cardDots3Img from '../../assets/images/cards-empty-dots-3.svg'
-import rowMastercardImg from '../../assets/images/cards-list-mastercard-lg.svg'
+import thumbEllipse1Img from '../../assets/images/cards-thumb-ellipse-1.svg'
+import thumbEllipse2Img from '../../assets/images/cards-thumb-ellipse-2.svg'
+import thumbMastercardImg from '../../assets/images/cards-thumb-mastercard.svg'
+import thumbHalftoneImg from '../../assets/images/cards-empty-halftone.png'
+import thumbHalftone2Img from '../../assets/images/cards-empty-halftone-2.png'
 import rowSeparatorImg from '../../assets/images/cards-list-separator.svg'
 import tileDotsImg from '../../assets/images/cards-list-dots.svg'
 import tileCopyImg from '../../assets/images/cards-list-copy.svg'
-import panelCopyImg from '../../assets/images/cards-panel-copy.svg'
 import panelEyeImg from '../../assets/images/cards-panel-eye.svg'
 import panelMastercardImg from '../../assets/images/cards-panel-mastercard.svg'
 import closeIcon from '../../assets/icons/icon-modal-x.svg'
-
-// Mock details printed on the empty-state card illustration
-const cardDetails = [
-  { label: 'VALID THRU', value: '10/30' },
-  { label: 'CARD HOLDER', value: 'John Almaz' },
-  { label: 'CVC', value: '***' },
-]
 
 // Preview switcher: true = empty/onboarding state, false = cards list (Figma: 266:18620)
 const isEmpty = ref(true)
@@ -375,51 +353,155 @@ async function copyNumber(card, event) {
 }
 
 // ── Quick-view panel (Figma: Card-Issuing 390:12174) ──
-// Row click opens the off-canvas panel; renderCard keeps the last card
-// rendered while the panel slides shut (same recipe as Virtual Accounts)
+const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
+// renderCard keeps the last card rendered while the panel fades out
 const quickCard = ref(null)
 const renderCard = ref(null)
 
 // Sensitive details start hidden and re-hide whenever another card opens
 const quickRevealed = ref(false)
 
-function openQuickView(card) {
+// Container transform: a white shell grows out of the clicked row into the
+// panel's frame (row content fading out inside it), then the panel takes
+// over and its content fades in. Closing runs it backwards into the row.
+// The shell is a fixed element on <body> so nothing on the page clips it.
+const quickPanelEl = ref(null)
+const panelLanded = ref(false)
+// The row that "became" the panel is taken out of the list (removedRowId)
+// so the others close the gap. On close it comes back invisible
+// (liftedRowId) to give the panel a slot to collapse into, then shows.
+const removedRowId = ref(null)
+const liftedRowId = ref(null)
+const listedCards = computed(() => cards.filter((c) => c.id !== removedRowId.value))
+let activeShell = null
+
+const MORPH_MS = 460
+const MORPH_EASE = 'cubic-bezier(0.2, 0.8, 0.2, 1)'
+const ROW_SHADOW = '0px 3px 22px 0px rgba(38, 42, 50, 0.09)'
+const PANEL_SHADOW = '-16px 24px 120px 0px rgba(38, 42, 50, 0.2)'
+// The list gives the panel 480px more right padding (504 vs 24) while open
+const LIST_PANEL_GUTTER = 480
+
+// A static copy of a row for the shell (the live row may leave the list)
+function copyRow(row) {
+  const copy = row.cloneNode(true)
+  copy.removeAttribute('data-card-id')
+  copy.classList.remove('opacity-0')
+  return copy
+}
+const rowFor = (card) => document.querySelector(`.card-row[data-card-id="${card.id}"]`)
+const box = (r) => ({ left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` })
+
+// Animate a shell from one rect to another, with a copy of the row inside
+// that fades out (opening) or in (closing). Resolves with the shell still on
+// screen so the caller can swap in the real element before removing it.
+async function morphShell(rowCopy, from, to, { opening }) {
+  activeShell?.remove()
+  const shell = document.createElement('div')
+  shell.style.cssText = 'position:fixed;z-index:70;pointer-events:none;overflow:hidden;box-sizing:border-box;background:#fff;border:1px solid #e5e6ea;'
+  Object.assign(shell.style, box(from))
+  // The row's own markup (scoped styles still apply), pinned to the row's width
+  const rowWidth = opening ? from.width : to.width
+  const ghost = rowCopy
+  Object.assign(ghost.style, { position: 'absolute', left: '-1px', top: '-1px', width: `${rowWidth}px`, margin: '0', borderColor: 'transparent', boxShadow: 'none' })
+  shell.appendChild(ghost)
+  document.body.appendChild(shell)
+  activeShell = shell
+
+  const rowLook = { borderRadius: '12px', boxShadow: ROW_SHADOW }
+  const panelLook = { borderRadius: '8px', boxShadow: PANEL_SHADOW }
+  const timing = { duration: MORPH_MS, easing: MORPH_EASE, fill: 'forwards' }
+  const shellAnim = shell.animate([
+    { ...box(from), ...(opening ? rowLook : panelLook) },
+    { ...box(to), ...(opening ? panelLook : rowLook) },
+  ], timing)
+  // The row copy fades on its own short, linear clock so it's actually seen
+  // leaving (opening) or arriving (closing) rather than snapping
+  const FADE_MS = 200
+  ghost.animate(
+    opening ? [{ opacity: 1 }, { opacity: 0 }] : [{ opacity: 0 }, { opacity: 1 }],
+    { duration: FADE_MS, delay: opening ? 0 : MORPH_MS - FADE_MS, easing: 'linear', fill: 'both' },
+  )
+  try { await shellAnim.finished } catch { return null }
+  return shell
+}
+
+function dropShell(shell) {
+  if (!shell) return
+  shell.remove()
+  if (activeShell === shell) activeShell = null
+}
+
+async function openQuickView(card) {
+  const switching = !!quickCard.value && panelLanded.value
   if (renderCard.value?.id !== card.id) quickRevealed.value = false
   quickCard.value = card
   renderCard.value = card
+  // Already open: just swap what the panel shows (and which row it came from)
+  if (switching) {
+    removedRowId.value = card.id
+    return
+  }
+
+  const row = rowFor(card)
+  const from = row?.getBoundingClientRect()
+  const rowCopy = row && copyRow(row)
+  panelLanded.value = false
+  removedRowId.value = card.id
+  await nextTick()
+  const to = quickPanelEl.value?.getBoundingClientRect()
+  if (!row || !from || !to || prefersReducedMotion()) {
+    panelLanded.value = true
+    return
+  }
+  const shell = await morphShell(rowCopy, from, to, { opening: true })
+  if (!shell) return
+  if (quickCard.value?.id === card.id) panelLanded.value = true
+  await nextTick()
+  dropShell(shell)
 }
-function closeQuickView() {
+
+async function closeQuickView() {
+  const card = renderCard.value
+  const from = quickPanelEl.value?.getBoundingClientRect()
   quickCard.value = null
   quickRevealed.value = false
+  panelLanded.value = false
+  // Put the row back (invisible) so the others slide apart around its slot
+  if (card) liftedRowId.value = card.id
+  removedRowId.value = null
+  await nextTick()
+  const row = card && rowFor(card)
+  if (!row || !from || prefersReducedMotion()) {
+    liftedRowId.value = null
+    return
+  }
+  // Aim for where the row ends up once the list has widened back
+  const r = row.getBoundingClientRect()
+  const to = { left: r.left, top: r.top, width: r.width + LIST_PANEL_GUTTER, height: r.height }
+  const shell = await morphShell(copyRow(row), from, to, { opening: false })
+  if (!shell) return
+  if (!quickCard.value) liftedRowId.value = null
+  await nextTick()
+  dropShell(shell)
 }
+
 function onQuickViewKeydown(e) {
   if (e.key === 'Escape' && quickCard.value) closeQuickView()
 }
 
-// Expiry, CVC and billing address mirror the mock values on the card details page
+// Expiry and CVC mirror the mock values on the card details page
 const quickFields = computed(() => {
   const c = renderCard.value
   if (!c) return []
   return [
-    { label: 'Card number', value: quickRevealed.value ? c.number : `**** **** **** ${last4(c)}`, copyValue: c.number.replace(/\s/g, ''), copy: true },
-    { label: 'Nickname', value: c.nickname, copy: true },
-    { label: 'Expiration', value: '10/2030', copy: true },
-    // CVC is only copyable once it's revealed
-    { label: 'CVC', value: quickRevealed.value ? '824' : '***', copy: quickRevealed.value },
-    { label: 'Card holder', value: c.holder, copy: true },
-    { label: 'Address', value: '30 Cecil Street, #19-08, Singapore 049712', copy: true },
+    { label: 'Card number', value: quickRevealed.value ? c.number : `**** **** **** ${last4(c)}` },
+    { label: 'Nickname', value: c.nickname },
+    { label: 'Expiration', value: '10/2030' },
+    { label: 'CVC', value: quickRevealed.value ? '824' : '***' },
+    { label: 'Status', value: STATUS[c.status].label, status: true },
   ]
 })
-
-const quickCopiedField = ref(null)
-let quickFieldTimer = null
-
-function copyQuickField(f) {
-  navigator.clipboard?.writeText(f.copyValue ?? f.value).catch(() => {})
-  quickCopiedField.value = f.label
-  clearTimeout(quickFieldTimer)
-  quickFieldTimer = setTimeout(() => { quickCopiedField.value = null }, 1600)
-}
 
 // "View more" → card details page
 
@@ -428,18 +510,24 @@ function viewCard(card) {
   router.push({ path: '/cards/details', query: { id: card.id } })
 }
 
-// Create card full-page overlay
+// Create card full-page overlay, then the success screen for the new card
 const createCardOpen = ref(false)
+const createdCard = ref(null)
 
 // New card lands in the grid; snackbar confirms and fades after a moment
 const toast = ref('')
 let toastTimer = null
 
 function onCardCreated({ nickname, holder, number }) {
-  addCard({ nickname, holder, number })
+  createdCard.value = addCard({ nickname, holder, number })
   createCardOpen.value = false
-  isEmpty.value = false // a card now exists — show the list
-  showToast(`${nickname} has been created successfully`)
+  isEmpty.value = false // a card now exists — the list sits behind the success screen
+}
+
+// Success screen → straight back into a fresh create card form
+function createAnotherCard() {
+  createdCard.value = null
+  createCardOpen.value = true
 }
 
 function showToast(message) {
@@ -457,64 +545,27 @@ onMounted(() => {
   }
 })
 
-// Empty-state card: 3D tilt + cursor-tracked lighting on hover. The pointer
-// sets a target (-1..1 on each axis), and a rAF loop eases toward it so the
-// card glides rather than snapping; values reach the CSS through custom props.
-const cardArtEl = ref(null)
-const tiltTarget = { x: 0, y: 0, hover: 0 }
-const tiltCurrent = { x: 0, y: 0, hover: 0 }
-let tiltRaf = 0
-const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-function stepTilt() {
-  const el = cardArtEl.value
-  if (!el) { tiltRaf = 0; return }
-  let settled = true
-  for (const k of ['x', 'y', 'hover']) {
-    const delta = tiltTarget[k] - tiltCurrent[k]
-    tiltCurrent[k] += delta * 0.12
-    if (Math.abs(delta) > 0.001) settled = false
-    else tiltCurrent[k] = tiltTarget[k]
-  }
-  const { x, y, hover } = tiltCurrent
-  el.style.setProperty('--tilt-rx', `${(-y * 12).toFixed(2)}deg`)
-  el.style.setProperty('--tilt-ry', `${(x * 16).toFixed(2)}deg`)
-  el.style.setProperty('--tilt-lift', `${(hover * 28).toFixed(2)}px`)
-  el.style.setProperty('--glare-x', `${((x + 1) * 50).toFixed(1)}%`)
-  el.style.setProperty('--glare-y', `${((y + 1) * 50).toFixed(1)}%`)
-  el.style.setProperty('--glare-o', hover.toFixed(3))
-  el.style.setProperty('--blob-x', `${(-x * 14).toFixed(2)}px`)
-  el.style.setProperty('--blob-y', `${(-y * 10).toFixed(2)}px`)
-  tiltRaf = settled ? 0 : requestAnimationFrame(stepTilt)
-}
-function kickTilt() {
-  if (!tiltRaf) tiltRaf = requestAnimationFrame(stepTilt)
-}
-function onCardArtMove(e) {
-  if (prefersReducedMotion() || !cardArtEl.value) return
-  const r = cardArtEl.value.getBoundingClientRect()
-  tiltTarget.x = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1))
-  tiltTarget.y = Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height) * 2 - 1))
-  tiltTarget.hover = 1
-  kickTilt()
-}
-function onCardArtLeave() {
-  tiltTarget.x = 0
-  tiltTarget.y = 0
-  tiltTarget.hover = 0
-  kickTilt()
-}
-
 onUnmounted(() => {
   window.removeEventListener('keydown', onQuickViewKeydown)
   clearTimeout(toastTimer)
   clearTimeout(copiedTimer)
-  clearTimeout(quickFieldTimer)
-  cancelAnimationFrame(tiltRaf)
 })
 </script>
 
 <style scoped>
+/* Row card thumbnail — same face as HitPayCard, at 64×40 */
+.card-thumb {
+  background-image:
+    linear-gradient(90deg, #2465de 0%, #2465de 100%),
+    linear-gradient(-58.27deg, rgba(255, 255, 255, 0) 0.78%, rgba(246, 248, 250, 0.6) 44.26%);
+  box-shadow:
+    0px 31.52px 8.8px 0px rgba(23, 29, 109, 0),
+    0px 20.16px 8.16px 0px rgba(23, 29, 109, 0.01),
+    0px 11.36px 6.88px 0px rgba(23, 29, 109, 0.04),
+    0px 5.12px 5.12px 0px rgba(23, 29, 109, 0.07),
+    0px 1.28px 2.72px 0px rgba(23, 29, 109, 0.08);
+}
+
 /* Card row hover: lift with the normal shadow and reveal the copy button */
 .card-row {
   transition: box-shadow 200ms ease;
@@ -534,21 +585,28 @@ onUnmounted(() => {
   .card-row, .card-row__copy { transition: none; }
 }
 
-/* Quick-view panel — same slide-over motion as the Virtual Accounts drawer */
-.drawer-enter-active { transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1); }
-.drawer-leave-active { transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1); }
-.drawer-enter-from,
-.drawer-leave-to { transform: translateX(calc(100% + 8px)); }
+/* Card list reflow while a row is out as the panel: the leaving row drops
+   out of the flow at once (the shell stands in for it), the rest glide */
+.row-shift-move { transition: transform 380ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.row-shift-leave-active { position: absolute; width: 100%; opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .row-shift-move { transition: none; }
+}
 
-/* Copied! tooltip on the panel's detail fields */
-.copy-tip-enter-active { transition: opacity 140ms ease-out, transform 140ms ease-out; }
-.copy-tip-leave-active { transition: opacity 100ms ease-in; }
-.copy-tip-enter-from { opacity: 0; transform: translateY(2px); }
-.copy-tip-leave-to { opacity: 0; }
+/* Quick-view panel content fades up once the row-to-panel shell lands */
+.quick-panel__fade {
+  opacity: 0;
+  transform: translateY(6px);
+}
+.quick-panel.is-landed .quick-panel__fade {
+  opacity: 1;
+  transform: none;
+  transition: opacity 220ms ease-out, transform 220ms ease-out;
+}
+.quick-panel.is-landed .quick-panel__fade--late { transition-delay: 60ms; }
 
 @media (prefers-reduced-motion: reduce) {
-  .drawer-enter-active, .drawer-leave-active,
-  .copy-tip-enter-active, .copy-tip-leave-active { transition: none; }
+  .quick-panel.is-landed .quick-panel__fade { transition: none; }
 }
 
 /* Create card full page: gentle rise + fade in, quicker fade out */
@@ -564,55 +622,6 @@ onUnmounted(() => {
 .full-page-leave-to   { opacity: 0; transform: translateY(12px); }
 
 /* Snackbar motion — same as the Approval Rules success snackbar */
-/* Empty-state card: rises in from below the frame, then drifts in a slow,
-   continuous float. Enter and float live on separate layers so their
-   transforms don't fight. */
-.empty-card-enter {
-  animation: empty-card-rise 900ms cubic-bezier(0.22, 1, 0.36, 1) 150ms both;
-}
-.empty-card-float {
-  animation: empty-card-float 6s ease-in-out 1050ms infinite;
-  will-change: transform;
-}
-@keyframes empty-card-rise {
-  from { opacity: 0; transform: translateY(140px) rotate(-6deg); }
-  60%  { opacity: 1; }
-  to   { opacity: 1; transform: translateY(0) rotate(0deg); }
-}
-@keyframes empty-card-float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  25%      { transform: translateY(-5px) rotate(-1.2deg); }
-  75%      { transform: translateY(4px) rotate(1.2deg); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .empty-card-enter, .empty-card-float { animation: none; }
-}
-
-/* Hover: the card tilts toward the cursor and lifts off the page (custom
-   props are eased in JS — see stepTilt). The light blobs drift opposite the
-   cursor for parallax, and a soft glare follows it like a light source. */
-.empty-card-tilt {
-  transform: perspective(700px) rotateX(var(--tilt-rx, 0deg)) rotateY(var(--tilt-ry, 0deg)) translateZ(var(--tilt-lift, 0px));
-  transform-style: preserve-3d;
-  will-change: transform;
-}
-.empty-card-blob {
-  transform: translate(var(--blob-x, 0px), var(--blob-y, 0px));
-}
-.empty-card-blob--far {
-  transform: translate(calc(var(--blob-x, 0px) * -0.6), calc(var(--blob-y, 0px) * -0.6));
-}
-.empty-card-glare {
-  background: radial-gradient(
-    circle at var(--glare-x, 50%) var(--glare-y, 50%),
-    rgba(255, 255, 255, 0.55) 0%,
-    rgba(255, 255, 255, 0.18) 28%,
-    rgba(255, 255, 255, 0) 60%
-  );
-  mix-blend-mode: overlay;
-  opacity: var(--glare-o, 0);
-}
-
 /* Blurred backdrop: grey-and-blue at rest, mint-and-amber on hover */
 .empty-blur {
   transition: opacity 400ms ease;
