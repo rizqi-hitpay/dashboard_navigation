@@ -34,8 +34,9 @@
     <div class="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
       <template v-for="section in sections" :key="section.header || 'main'">
         <template v-if="section.header">
-          <div v-if="sidebarExpanded" class="pt-3 pb-1 px-2">
-            <span class="text-[10px] font-medium tracking-widest uppercase" :style="{ color: section.headerColor }">{{ section.header }}</span>
+          <div v-if="sidebarExpanded" class="flex items-center gap-2 pt-3 pb-1 px-2">
+            <span class="flex-1 text-[10px] font-medium tracking-widest uppercase" :style="{ color: section.headerColor }">{{ section.header }}</span>
+            <span v-if="section.headerNew" class="inline-flex items-center justify-center min-w-[36px] px-1 rounded-[24px] text-[12px] font-medium leading-[1.5] text-[#7d1ab7] bg-[#f7edfd]">New</span>
           </div>
           <div v-else class="py-2">
             <div class="h-px w-full bg-[#e5e6ea]" />
@@ -77,6 +78,8 @@ import documentIcon from '../../assets/icons/icon-document.svg'
 import bankCardIcon from '../../assets/icons/icon-bank-card.svg'
 import transactionIcon from '../../assets/icons/icon-transaction.svg'
 import wallet3Icon from '../../assets/icons/icon-wallet-3.svg'
+import billIcon from '../../assets/icons/icon-bill.svg'
+import cardOutIcon from '../../assets/icons/icon-card-out.svg'
 
 const activeItem = activeItems.finance
 const plusOpen = ref(false)
@@ -132,6 +135,15 @@ const sections = [
       { icon: bankCardIcon, label: 'Cards' },
       { icon: transactionIcon, label: 'Transactions', url: '/cards/transactions' },
       { icon: wallet3Icon, label: 'Balance', url: '/cards/balance' },
+    ],
+  },
+  {
+    header: 'Claims',
+    headerColor: '#8093b8',
+    headerNew: true,
+    items: [
+      { icon: billIcon, label: 'Claims', url: '/claims' },
+      { icon: cardOutIcon, label: 'Reimbursements', url: '/claims/reimbursements' },
     ],
   },
   {

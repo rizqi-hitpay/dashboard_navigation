@@ -10,6 +10,7 @@ import TransactionsPage from '../components/pages/TransactionsPage.vue'
 import BalancePage from '../components/pages/BalancePage.vue'
 import CardDetailsPage from '../components/pages/CardDetailsPage.vue'
 import VendorDetailsPage from '../components/pages/VendorDetailsPage.vue'
+import ClaimsPage from '../components/pages/ClaimsPage.vue'
 import BillPaySettingsPage from '../components/pages/BillPaySettingsPage.vue'
 import RequestForInformationPage from '../components/pages/RequestForInformationPage.vue'
 import AccountVerificationWithChatPage from '../components/pages/AccountVerificationWithChatPage.vue'
@@ -38,6 +39,7 @@ const routes = [
   { path: '/cards/transactions', name: 'card-transactions', component: TransactionsPage },
   { path: '/cards/balance', name: 'card-balance', component: BalancePage },
   { path: '/cards/details', name: 'card-details', component: CardDetailsPage },
+  { path: '/claims', name: 'claims', component: ClaimsPage },
   { path: '/settings', name: 'settings', component: BillPaySettingsPage },
   { path: '/settings/account-verification', name: 'account-verification', component: AccountVerificationWithChatPage, alias: '/settings/account-verification-with-chat' },
   { path: '/settings/request-for-information', name: 'request-for-information', component: RequestForInformationPage },
