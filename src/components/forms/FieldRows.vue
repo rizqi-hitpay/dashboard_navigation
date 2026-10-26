@@ -58,20 +58,37 @@
         />
       </div>
 
-      <!-- Text input (optional dial-style prefix, e.g. "SGD"; optional calendar trailing icon) -->
-      <div v-else class="aba-control">
-        <span v-if="field.prefix" class="aba-prefix">{{ field.prefix }}</span>
+      <!-- Text input (optional dial-style prefix, e.g. "SGD", with an optional
+           dropdown chevron — or a real picker via prefixOptions, stored under
+           values[prefixKey]; calendar icon trails by default, or leads with iconLeading) -->
+      <div v-else class="aba-control" :class="{ 'aba-control--error': errors[field.label] }">
+        <span v-if="field.prefix || field.prefixOptions" class="aba-prefix" :class="{ 'aba-prefix--picker': field.prefixOptions }">
+          {{ field.prefixOptions ? values[field.prefixKey] : field.prefix }}
+          <select
+            v-if="field.prefixOptions"
+            v-model="values[field.prefixKey]"
+            class="aba-prefix-select"
+            :aria-label="field.label + ' currency'"
+          >
+            <option v-for="opt in field.prefixOptions" :key="opt" :value="opt">{{ opt }}</option>
+          </select>
+          <svg v-if="field.prefixChevron || field.prefixOptions" width="14" height="14" viewBox="0 0 16 16" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.4714 10.4715C8.21107 10.7318 7.78893 10.7318 7.5286 10.4715L3.75736 6.7002C3.49701 6.43988 3.49701 6.01777 3.75736 5.75742C4.01771 5.49707 4.43982 5.49707 4.70017 5.75742L8 9.05727L11.2998 5.75742C11.5602 5.49707 11.9823 5.49707 12.2427 5.75742C12.503 6.01777 12.503 6.43988 12.2427 6.7002L8.4714 10.4715Z" fill="#61667C"/></svg>
+        </span>
+        <img v-if="field.type === 'date' && field.iconLeading" :src="calendarIcon" width="16" height="16" alt="" class="shrink-0" style="margin-left: 8px;" />
         <input
           v-model="values[field.label]"
           type="text"
           :placeholder="field.placeholder"
           class="aba-input"
+          :aria-invalid="!!errors[field.label]"
+          :aria-describedby="errors[field.label] ? errorId(field.label) : undefined"
         />
-        <img v-if="field.type === 'date'" :src="calendarIcon" width="16" height="16" alt="" class="shrink-0" style="margin-right: 8px;" />
+        <img v-if="field.type === 'date' && !field.iconLeading" :src="calendarIcon" width="16" height="16" alt="" class="shrink-0" style="margin-right: 8px;" />
       </div>
 
-      <!-- Helper -->
-      <span v-if="field.helper" class="text-[12px] text-[#61667c] w-full" style="line-height: 1.5;">{{ field.helper }}</span>
+      <!-- Error replaces the helper (Figma: Input / State=Error — red hint text) -->
+      <span v-if="errors[field.label]" :id="errorId(field.label)" class="text-[12px] text-[#dc3545] w-full" style="line-height: 1.5;" role="alert">{{ errors[field.label] }}</span>
+      <span v-else-if="field.helper" class="text-[12px] text-[#61667c] w-full" style="line-height: 1.5;">{{ field.helper }}</span>
     </div>
   </div>
 </template>
@@ -87,7 +104,11 @@ defineProps({
   values: { type: Object, required: true },
   // Extra 16px horizontal padding per row (Figma "Payment details" variant)
   inset: { type: Boolean, default: false },
+  // Error messages keyed by field label (text inputs): red border + ring and a red hint
+  errors: { type: Object, default: () => ({}) },
 })
+
+const errorId = (label) => `field-error-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
 </script>
 
 <style scoped>
@@ -108,6 +129,12 @@ defineProps({
 .aba-control:focus-within {
   border-color: #2465de;
   box-shadow: 0px 0px 0px 3px #b3cdfe, inset 0px 2px 4px 0px rgba(0, 0, 0, 0.24);
+}
+/* Error: red border + ring, focused or not (Figma: Input / State=Error) */
+.aba-control--error,
+.aba-control--error:focus-within {
+  border-color: #dc3545;
+  box-shadow: 0px 0px 0px 3px #e7a6a6;
 }
 
 .aba-select {
@@ -159,6 +186,7 @@ defineProps({
 .aba-prefix {
   display: flex;
   align-items: center;
+  gap: 4px;
   height: 100%;
   min-width: 24px;
   padding: 0 8px;
@@ -172,6 +200,18 @@ defineProps({
 }
 
 /* Multiline variant — control grows with content, min 100px (Figma: Billing address) */
+/* Prefix picker: an invisible native select over the prefix keeps it keyboard-accessible */
+.aba-prefix--picker {
+  position: relative;
+  cursor: pointer;
+}
+.aba-prefix-select {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
 .aba-control--area {
   height: auto;
   min-height: 100px;

@@ -75,7 +75,7 @@ export function exportDashboardPng(charts) {
 }
 
 // One PDF page per chart, each page sized to its chart
-export function exportDashboardPdf(charts) {
+export function exportDashboardPdf(charts, name = 'analytics') {
   const pages = charts.map((chart) => {
     const canvas = renderChartCanvas(chart)
     const { W, H } = chartSize(chart)
@@ -83,7 +83,7 @@ export function exportDashboardPdf(charts) {
     return { jpeg: Uint8Array.from(atob(b64), (ch) => ch.charCodeAt(0)), w: W, h: H, pxW: canvas.width, pxH: canvas.height }
   })
   const url = URL.createObjectURL(new Blob([buildPdf(pages)], { type: 'application/pdf' }))
-  download(url, `analytics-${today()}.pdf`)
+  download(url, `${slug(name)}-${today()}.pdf`)
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 

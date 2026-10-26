@@ -51,6 +51,7 @@
           :active="activeItem === (item.id || item.label)"
           :expandable="item.expandable"
           :submenu-items="item.submenuItems || []"
+          :show-new-chip="item.showNewChip"
           @click="handleItemClick(item)"
         />
       </template>
@@ -60,12 +61,13 @@
 </template>
 
 <script setup>
-import { ref, watch, useTemplateRef } from 'vue'
+import { ref, computed, watch, useTemplateRef } from 'vue'
 import SidebarMenuItem from './SidebarMenuItem.vue'
 import PlusMenu from './PlusMenu.vue'
 import { settingsOpen } from '../../composables/useSettingsPanel.js'
 import { sidebarExpanded, sidebarPinned, sidebarCollapsed } from '../../composables/useSidebarCollapsed.js'
 import { activeItems } from '../../composables/useSidebarActiveItem.js'
+import { claimsRole } from '../../composables/useClaimsRole.js'
 
 import plusIcon from '../../assets/icons/icon-plus.svg'
 import dollarPaperIcon from '../../assets/icons/icon-dollar-paper.svg'
@@ -104,7 +106,7 @@ const plusItems = [
   { label: 'Payroll',    shortcut: ['c', 'p'] },
 ]
 
-const sections = [
+const sections = computed(() => [
   {
     items: [
       { icon: dollarPaperIcon, label: 'Fee invoice' },
@@ -137,14 +139,19 @@ const sections = [
       { icon: wallet3Icon, label: 'Balance', url: '/cards/balance' },
     ],
   },
+  // Admin/Owner: "New" on the section + Reimbursements; Employee: Claims only, "New" on the item
   {
     header: 'Claims',
     headerColor: '#8093b8',
-    headerNew: true,
-    items: [
-      { icon: billIcon, label: 'Claims', url: '/claims' },
-      { icon: cardOutIcon, label: 'Reimbursements', url: '/claims/reimbursements' },
-    ],
+    headerNew: claimsRole.value === 'admin',
+    items: claimsRole.value === 'admin'
+      ? [
+          { icon: billIcon, label: 'Claims', url: '/claims' },
+          { icon: cardOutIcon, label: 'Reimbursements', url: '/claims/reimbursements' },
+        ]
+      : [
+          { icon: billIcon, label: 'Claims', url: '/claims', showNewChip: true },
+        ],
   },
   {
     header: 'Others',
@@ -153,5 +160,5 @@ const sections = [
       { icon: settingIcon, label: 'Settings', expandable: true, drilldown: true },
     ],
   },
-]
+])
 </script>

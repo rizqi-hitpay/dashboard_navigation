@@ -1,5 +1,9 @@
 <template>
-  <div class="flex h-screen bg-[#f8f9fc] overflow-hidden">
+  <div class="flex flex-col h-screen bg-[#f8f9fc] overflow-hidden">
+  <!-- Claims prototype: Employee ↔ Admin switcher spans the top of the window -->
+  <ClaimsRoleBar v-if="showClaimsRoleBar" />
+
+  <div class="flex flex-1 min-h-0 overflow-hidden">
     <!-- Left nav rail: 81px -->
     <NavRail />
 
@@ -76,6 +80,7 @@
 
     </div>
   </div>
+  </div>
 
   <!-- Intro modal -->
   <VideoIntroModal v-model="introModalOpen" />
@@ -102,6 +107,7 @@ import FinanceGate from './FinanceGate.vue'
 import { financeUnlocked } from '../../composables/useFinanceAuth.js'
 import LabsSidebar from '../navigation/LabsSidebar.vue'
 import { labsFewApps } from '../../composables/useLabsPreview.js'
+import ClaimsRoleBar from './ClaimsRoleBar.vue'
 
 // Finance (product 2) is gated behind the shared passcode
 const financeLocked = computed(() => activeProduct.value === 2 && !financeUnlocked.value)
@@ -111,6 +117,9 @@ const mobileNavOpen = ref(false)
 const route = useRoute()
 const router = useRouter()
 watch(() => route.fullPath, () => { mobileNavOpen.value = false })
+
+// Employee/Admin switcher only matters on the Claims pages
+const showClaimsRoleBar = computed(() => route.path.startsWith('/claims') && !financeLocked.value)
 
 // Direction-aware sidebar transition
 const sidebarTransition = ref('sidebar')

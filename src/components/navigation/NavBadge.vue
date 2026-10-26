@@ -11,6 +11,9 @@
   <span v-else-if="variant === 'beta-chip'" class="inline-flex items-center justify-center min-w-[36px] px-1 rounded-[24px] text-[12px] font-medium text-[#0495a9] bg-[#edfbfd] leading-[1.5] shrink-0">
     Beta
   </span>
+  <span v-else-if="variant === 'new-chip'" class="inline-flex items-center justify-center min-w-[36px] px-1 rounded-[24px] text-[12px] font-medium text-[#7d1ab7] bg-[#f7edfd] leading-[1.5] shrink-0">
+    New
+  </span>
   <span v-else-if="variant === 'warning'" class="inline-flex items-center justify-center w-5 h-5 rounded bg-white shrink-0">
     <img :src="alertIcon" alt="warning" class="w-3.5 h-3.5" style="filter: invert(72%) sepia(51%) saturate(826%) hue-rotate(353deg) brightness(102%) contrast(96%);" />
   </span>

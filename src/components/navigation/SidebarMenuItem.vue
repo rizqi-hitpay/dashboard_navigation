@@ -33,6 +33,7 @@
           <NavBadge v-if="showCount" variant="count" :text="countText" />
           <NavBadge v-if="showBeta" variant="beta" />
           <NavBadge v-if="showBetaChip" variant="beta-chip" />
+          <NavBadge v-if="showNewChip" variant="new-chip" />
           <NavBadge v-if="showWarning" variant="warning" />
           <img
             v-if="expandable"
@@ -108,6 +109,7 @@ const props = defineProps({
   countText: { type: String, default: '9+' },
   showBeta: { type: Boolean, default: false },
   showBetaChip: { type: Boolean, default: false },
+  showNewChip: { type: Boolean, default: false },
   showWarning: { type: Boolean, default: false },
   iconSize: { type: String, default: 'sm' },
 })
