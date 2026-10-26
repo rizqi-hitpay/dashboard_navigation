@@ -4,7 +4,7 @@
     <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
 
       <!-- Page title -->
-      <div class="flex items-center gap-[32px] px-[24px] py-[12px] pt-[16px] w-full">
+      <div class="flex items-center gap-[24px] px-[24px] py-[12px] pt-[16px] w-full">
         <div class="flex flex-1 flex-col gap-[8px] items-start justify-center min-w-0">
           <button type="button" class="flex items-center gap-[6px] h-[28px] text-[12px] font-medium text-[#484d61] leading-[1.5] transition-colors duration-150 hover:text-[#03102f]" @click="router.push('/claims/reimbursements')">
             <img :src="backIcon" width="16" height="16" alt="" class="-mx-[1px]" />
