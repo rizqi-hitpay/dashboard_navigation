@@ -3,7 +3,7 @@
   <div
     ref="stageEl"
     class="hp-card-stage flex items-center justify-center"
-    aria-hidden="true"
+    :aria-hidden="showCopy ? null : 'true'"
     :style="stageStyle"
     @pointermove="onMove"
     @pointerleave="onLeave"
@@ -53,12 +53,20 @@
                 <span>{{ groups[groups.length - 1] }}</span>
               </template>
               <span v-for="(g, i) in groups" v-else :key="i">{{ g }}</span>
+              <button v-if="showCopy" type="button" class="hp-card-copy" aria-label="Copy card number" @click.stop="copy('number', $event)">
+                <img :src="copyImg" alt="" width="16" height="16" />
+              </button>
             </div>
 
             <div class="absolute flex items-center gap-[32px] left-[24.13px] top-[187px] font-medium text-white leading-[1.5] whitespace-nowrap">
               <div v-for="d in details" :key="d.label" class="flex flex-col">
                 <p class="text-[12px]" :style="mono">{{ d.label }}</p>
-                <p class="text-[14px]">{{ d.value }}</p>
+                <div class="flex items-center gap-[8px]">
+                  <p class="text-[14px]">{{ d.value }}</p>
+                  <button v-if="showCopy && d.copy" type="button" class="hp-card-copy" :aria-label="d.copy === 'cvc' ? 'Copy CVC' : 'Copy expiry date'" @click.stop="copy(d.copy, $event)">
+                    <img :src="copyImg" alt="" width="16" height="16" />
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -81,6 +89,7 @@ import mastercardImg from '../../assets/icons/logo-mastercard-card.svg'
 import logogramImg from '../../assets/icons/logo-hitpay-white.svg'
 import logotextImg from '../../assets/icons/hitpay-logotext-white.svg'
 import dotsImg from '../../assets/icons/card-dots.svg'
+import copyImg from '../../assets/images/hitpay-card-copy.svg'
 
 // HitPay card art with its signature motion: rises in from below, floats,
 // and on hover tilts toward the cursor in 3D while a glare and the light
@@ -97,10 +106,13 @@ const props = defineProps({
   animateIn: { type: Boolean, default: true },
   // Gentle idle float + hover tilt (off for a card that's only in transit)
   idle: { type: Boolean, default: true },
+  // Hover-only copy buttons on the number, expiry and CVC once revealed
+  // (Figma: Card-Issuing 532:20671); emits 'copy' with { field, value, el }
+  copyable: { type: Boolean, default: false },
   scale: { type: Number, default: 1 },
 })
 // 'entered' fires once the rise-in animation has landed
-const emit = defineEmits(['entered'])
+const emit = defineEmits(['entered', 'copy'])
 
 const W = 400
 const H = 250
@@ -108,10 +120,16 @@ const mono = { fontFamily: "'Reddit Mono', ui-monospace, monospace" }
 
 const groups = computed(() => props.number.trim().split(/\s+/))
 const details = computed(() => [
-  { label: 'VALID THRU', value: props.expiry },
+  { label: 'VALID THRU', value: props.expiry, copy: 'expiry' },
   { label: 'CARD HOLDER', value: props.holder },
-  { label: 'CVC', value: props.cvc },
+  { label: 'CVC', value: props.cvc, copy: 'cvc' },
 ])
+
+const showCopy = computed(() => props.copyable && !props.masked)
+function copy(field, event) {
+  const value = { number: props.number.replace(/\s/g, ''), expiry: props.expiry, cvc: props.cvc }[field]
+  emit('copy', { field, value, el: event.currentTarget })
+}
 
 // Motion was tuned on the 220px empty-state card (scale 0.55); k keeps it
 // proportional at any size
@@ -206,6 +224,23 @@ onUnmounted(() => cancelAnimationFrame(raf))
 .hp-card-blob--far {
   transform: translate(calc(var(--blob-x, 0px) * -0.6), calc(var(--blob-y, 0px) * -0.6));
 }
+/* Copy buttons only appear while the card is hovered (or a button has focus) */
+.hp-card-copy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 150ms ease;
+}
+.hp-card-stage:hover .hp-card-copy,
+.hp-card-copy:focus-visible { opacity: 0.85; }
+.hp-card-stage .hp-card-copy:hover { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .hp-card-copy { transition: none; }
+}
+
 .hp-card-glare {
   background: radial-gradient(
     circle at var(--glare-x, 50%) var(--glare-y, 50%),

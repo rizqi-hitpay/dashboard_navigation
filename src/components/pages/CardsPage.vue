@@ -213,6 +213,8 @@
                 :masked="!quickRevealed"
                 :cvc="quickRevealed ? '824' : '***'"
                 :animate-in="false"
+                copyable
+                @copy="copyPanelValue($event.value, $event.el)"
               />
             </div>
             <button
@@ -221,7 +223,7 @@
               :aria-pressed="quickRevealed"
               @click="quickRevealed = !quickRevealed"
             >
-              <img :src="panelEyeImg" width="18" height="18" alt="" class="shrink-0 -mx-[2px]" />
+              <img :src="quickRevealed ? panelEyeCloseImg : panelEyeImg" width="18" height="18" alt="" class="shrink-0 -mx-[2px]" />
               <span class="text-[14px] font-medium text-[#484d61] leading-[1.5] whitespace-nowrap">{{ quickRevealed ? 'Hide card details' : 'Show card details' }}</span>
             </button>
           </div>
@@ -238,11 +240,23 @@
                   :class="{ 'border-b border-[#e5e6ea]': i < quickFields.length - 1 }"
                 >
                   <span class="flex-1 min-w-0 px-[12px] py-[8px] text-[12px] font-medium text-[#61667c] leading-[1.5]">{{ f.label }}</span>
-                  <span
-                    class="min-w-[88px] px-[12px] py-[4px] text-right whitespace-nowrap overflow-hidden text-ellipsis"
-                    :class="f.status ? 'text-[12px] font-medium leading-[1.5]' : 'text-[14px] font-normal text-[#03102f] leading-[1.5]'"
-                    :style="f.status ? { color: STATUS[renderCard.status].color } : null"
-                  >{{ f.value }}</span>
+                  <span class="flex items-center justify-end gap-[8px] min-w-0 px-[12px] py-[4px]">
+                    <span
+                      class="min-w-[88px] text-right whitespace-nowrap overflow-hidden text-ellipsis"
+                      :class="f.status ? 'text-[12px] font-medium leading-[1.5]' : 'text-[14px] font-normal text-[#03102f] leading-[1.5]'"
+                      :style="f.status ? { color: STATUS[renderCard.status].color } : null"
+                    >{{ f.value }}</span>
+                    <!-- Copy appears once details are revealed (Figma: Card-Issuing 532:20671) -->
+                    <button
+                      v-if="quickRevealed && f.copyValue"
+                      type="button"
+                      class="flex items-center justify-center shrink-0 size-[16px] cursor-pointer hover:opacity-70 transition-opacity"
+                      :aria-label="'Copy ' + (f.label === 'CVC' ? f.label : f.label.toLowerCase())"
+                      @click="copyPanelValue(f.copyValue, $event.currentTarget)"
+                    >
+                      <img :src="panelCopyImg" width="16" height="16" alt="" />
+                    </button>
+                  </span>
                 </div>
               </div>
             </div>
@@ -282,6 +296,7 @@
 
     <!-- "Copied" confirmation beside the tile's copy button -->
     <NavTooltip label="Copied" :anchor="copiedAnchor" :visible="!!copiedAnchor" />
+    <NavTooltip label="Copied" placement="top" :anchor="panelCopiedAnchor" :visible="!!panelCopiedAnchor" />
 
     <!-- Success snackbar (Figma: Snackbar/Default) -->
     <Teleport to="body">
@@ -322,6 +337,8 @@ import rowSeparatorImg from '../../assets/images/cards-list-separator.svg'
 import tileDotsImg from '../../assets/images/cards-list-dots.svg'
 import tileCopyImg from '../../assets/images/cards-list-copy.svg'
 import panelEyeImg from '../../assets/images/cards-panel-eye.svg'
+import panelEyeCloseImg from '../../assets/images/cards-panel-eye-close.svg'
+import panelCopyImg from '../../assets/images/reimb-copy.svg'
 import panelMastercardImg from '../../assets/images/cards-panel-mastercard.svg'
 import closeIcon from '../../assets/icons/icon-modal-x.svg'
 
@@ -335,6 +352,20 @@ const STATUS = {
 }
 
 const last4 = (card) => card.number.replace(/\s/g, '').slice(-4)
+
+// Panel copies (card face + details table) confirm with a "Copied" tooltip
+// above the button — the panel hugs the right edge, so "right" would clip
+const panelCopiedAnchor = ref(null)
+let panelCopiedTimer = null
+
+async function copyPanelValue(value, el) {
+  navigator.clipboard?.writeText(value).catch(() => {})
+  clearTimeout(panelCopiedTimer)
+  panelCopiedAnchor.value = null
+  await nextTick()
+  panelCopiedAnchor.value = el
+  panelCopiedTimer = setTimeout(() => { panelCopiedAnchor.value = null }, 1500)
+}
 
 // Copy → brief "Copied" tooltip anchored to the button that was clicked
 const copiedAnchor = ref(null)
@@ -495,10 +526,10 @@ const quickFields = computed(() => {
   const c = renderCard.value
   if (!c) return []
   return [
-    { label: 'Card number', value: quickRevealed.value ? c.number : `**** **** **** ${last4(c)}` },
+    { label: 'Card number', value: quickRevealed.value ? c.number : `**** **** **** ${last4(c)}`, copyValue: c.number.replace(/\s/g, '') },
     { label: 'Nickname', value: c.nickname },
-    { label: 'Expiration', value: '10/2030' },
-    { label: 'CVC', value: quickRevealed.value ? '824' : '***' },
+    { label: 'Expiration', value: '10/2030', copyValue: '10/2030' },
+    { label: 'CVC', value: quickRevealed.value ? '824' : '***', copyValue: '824' },
     { label: 'Status', value: STATUS[c.status].label, status: true },
   ]
 })
@@ -549,6 +580,7 @@ onUnmounted(() => {
   window.removeEventListener('keydown', onQuickViewKeydown)
   clearTimeout(toastTimer)
   clearTimeout(copiedTimer)
+  clearTimeout(panelCopiedTimer)
 })
 </script>
 
