@@ -91,8 +91,7 @@
             key="add-tile"
             :class="{ 'chart-card-in': !tileIntroDone }"
             style="animation-delay: 80ms;"
-            :prompts="prompts"
-            @ask="askAgent"
+            @add="openAgentStarter({ prompts, placeholder: 'Create a line chart of my....' })"
           />
         </TransitionGroup>
       </div>
