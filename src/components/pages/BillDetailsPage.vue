@@ -1,24 +1,7 @@
 <template>
-  <div class="relative bg-white flex flex-col h-full w-full overflow-hidden">
-
-    <!-- Header: title + stepper -->
-    <div class="border-b border-[#e5e6ea] w-full shrink-0">
-      <div class="relative flex items-center h-[74px] px-[24px] py-[12px] w-full">
-        <p class="font-medium text-[18px] text-[#03102f] leading-[1.35] whitespace-nowrap">Bill Pay</p>
-        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-[8px] items-start">
-          <div v-for="step in steps" :key="step.label" class="flex flex-col gap-[8px] items-center w-[100px]">
-            <div class="h-[4px] w-full rounded-[16px] bg-[#2465de]" :class="step.state === 'upcoming' ? 'opacity-[0.12]' : ''" />
-            <p
-              class="text-[12px] leading-[1.5] whitespace-nowrap"
-              :class="[
-                step.state === 'upcoming' ? 'text-[#9295a5]' : 'text-[#03102f]',
-                step.state === 'current' ? 'font-medium' : 'font-normal',
-              ]"
-            >{{ step.label }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
+  <div class="relative flex flex-1 min-h-0 w-full flex-col bg-white">
+    <!-- Upload bills — Review + Payment steps. Rendered inside UploadBillFlow (header + AI dock).
+         Single element root (no comment above it): <Transition> in the flow needs one element. -->
 
     <!-- Body -->
     <div class="bg-[#fcfcfd] flex flex-1 w-full min-h-0 overflow-hidden">
@@ -27,44 +10,12 @@
       <!-- Split view: invoice preview + right-pane steps — animates in/out as one unit -->
       <div v-if="stage !== 'payment'" key="split" class="flex flex-1 items-start justify-center w-full min-h-0">
 
-      <!-- Left: invoice preview + zoom -->
-      <div class="flex flex-1 flex-col gap-[8px] h-full items-center min-w-px px-[24px] py-[8px]">
-        <div class="flex-1 min-h-0 overflow-hidden relative w-full">
-          <div
-            class="absolute -translate-x-1/2 h-[656px] left-1/2 top-0 w-[459px]"
-            style="box-shadow: 0px 3px 22px 0px rgba(38,42,50,0.09);"
-          >
-            <img :src="invoice" alt="Invoice INV-0128HYY" class="block size-full object-cover" />
-          </div>
-        </div>
+      <!-- Left: invoice paper — drawn by UploadBillFlow's persistent InvoicePaperPane over this
+           column (it stays still between Bill details and Review). This column is the spacer. -->
+      <section class="shrink-0 h-full bg-[#fcfcfd] transition-[width] duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)]" :class="aiOpen ? 'w-[40.75%] min-w-[360px]' : 'w-[44.45%] min-w-[420px]'" />
 
-        <!-- Zoom control -->
-        <div class="shrink-0">
-          <div
-            class="bg-white border border-[#e5e6ea] flex gap-[8px] h-[36px] items-center overflow-hidden px-[4px] rounded-[8px]"
-            style="box-shadow: 0px 1px 3px 0px rgba(0,0,0,0.04), 0px 1.5px 1.5px 0px rgba(0,0,0,0.09);"
-          >
-            <button
-              class="flex items-center justify-center size-[28px] rounded-[8px] border border-[#f2f2f4] shrink-0"
-              style="background: linear-gradient(to bottom, #ffffff, #f2f2f2); box-shadow: 0px 1.5px 0px 0px #e5e5e5;"
-              @click="zoom = Math.max(25, zoom - 25)"
-            >
-              <img :src="zoomOut" alt="zoom out" class="size-[16px]" />
-            </button>
-            <span class="text-[14px] text-[#03102f] leading-[1.5] text-center min-w-[36px]">{{ zoom }}%</span>
-            <button
-              class="flex items-center justify-center size-[28px] rounded-[8px] border border-[#f2f2f4] shrink-0"
-              style="background: linear-gradient(to bottom, #ffffff, #f2f2f2); box-shadow: 0px 1.5px 0px 0px #e5e5e5;"
-              @click="zoom = Math.min(200, zoom + 25)"
-            >
-              <img :src="zoomIn" alt="zoom in" class="size-[16px]" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right: extraction -->
-      <div class="flex flex-1 h-full min-w-px overflow-hidden border-l border-[#e5e6ea]">
+      <!-- Right: extraction — flow-right: only this column animates between Bill details ↔ Review -->
+      <div class="flow-right flex flex-1 h-full min-w-px overflow-hidden border-l border-[#e5e6ea]">
         <Transition :name="stepName" mode="out-in">
         <div :key="stage" class="flex flex-col h-full w-full min-w-px bg-white">
 
@@ -538,83 +489,76 @@
           </Transition>
         </div>
 
-        <!-- Review step -->
+        <!-- Review step (Figma BillPay 16166:179148) — paid from HitPay Balance only -->
         <div v-else class="flex flex-col flex-1 min-h-0 w-full">
           <div class="flex-1 overflow-y-auto flex flex-col gap-[16px] items-start px-[48px] pt-[24px] pb-[24px]">
             <p class="font-medium text-[16px] text-[#03102f] leading-[1.4]">Review</p>
 
-            <!-- Amount info -->
-            <div class="flex flex-col gap-[4px] items-start p-[4px] rounded-[8px] border border-[#e5e6ea] bg-[#f2f2f4] w-full">
-              <div class="flex flex-col bg-white rounded-[4px] w-full overflow-hidden">
-                <!-- Amount to pay -->
-                <div class="flex items-center justify-between px-[12px] py-[8px] border-b border-[#e5e6ea] w-full">
-                  <span class="font-medium text-[12px] text-[#61667c] leading-[1.5]">Amount to pay</span>
-                  <span class="font-semibold text-[14px] text-[#03102f] leading-[1.4]" style="font-family: 'Reddit Mono', ui-monospace, monospace;">{{ amountToPayText }}</span>
-                </div>
-                <!-- Paying with -->
-                <div class="flex flex-col gap-[2px] items-start py-[8px] border-b border-[#e5e6ea] w-full">
-                  <span class="px-[12px] font-medium text-[12px] text-[#61667c] leading-[1.5]">Paying with</span>
-                  <div class="flex gap-[8px] items-center px-[12px] w-full">
-                    <div class="flex items-center justify-center size-[40px] rounded-[8px] border border-[#e5e6ea] bg-white shrink-0 overflow-hidden">
-                      <img v-if="reviewPay.img" :src="reviewPay.img" :alt="reviewPay.name" class="w-[26px] h-auto object-contain" />
-                      <span v-else class="w-[22px] h-[22px] flex items-center justify-center" v-html="reviewPay.icon" />
+            <div class="flex flex-col gap-[12px] items-start w-full">
+              <!-- Amount info -->
+              <div class="flex flex-col gap-[4px] items-start p-[4px] rounded-[8px] border border-[#e5e6ea] bg-[#f2f2f4] w-full">
+                <div class="flex flex-col bg-white rounded-[4px] w-full overflow-hidden">
+                  <!-- Amount to pay -->
+                  <div class="flex items-start justify-between px-[12px] py-[8px] border-b border-[#e5e6ea] w-full">
+                    <span class="rv-label">Amount to pay</span>
+                    <span class="rv-money">{{ amountToPayText }}</span>
+                  </div>
+                  <!-- Funding method: HitPay Balance -->
+                  <div class="flex flex-col gap-[2px] items-start py-[8px] border-b border-[#e5e6ea] w-full">
+                    <span class="px-[12px] rv-label">Funding method</span>
+                    <div class="flex gap-[8px] items-center px-[12px] w-full">
+                      <span class="flex items-center justify-center size-[40px] rounded-[8px] border border-[#e5e6ea] bg-white shrink-0">
+                        <img :src="reviewLogogram" width="25.1072" height="25.0747" alt="HitPay" />
+                      </span>
+                      <span class="flex flex-1 flex-col gap-[2px] items-start min-w-px">
+                        <span class="font-medium text-[12px] text-[#03102f] leading-[1.5]">HitPay Balance</span>
+                        <span class="font-normal text-[12px] text-[#61667c] leading-[1.5]">Available: {{ balanceAvailableText }}</span>
+                      </span>
                     </div>
-                    <div class="flex flex-1 flex-col gap-[2px] items-start min-w-px">
-                      <span class="font-medium text-[12px] text-[#03102f] leading-[1.5]">{{ reviewPay.name }}</span>
-                      <span class="font-normal text-[12px] text-[#61667c] leading-[1.5]">Fee = {{ reviewPay.fee }}</span>
-                    </div>
-                    <button type="button" class="flex gap-[6px] h-[28px] items-center justify-center min-w-[36px] px-[8px] rounded-[8px] transition-colors duration-150 hover:bg-[#f0f1f5]" @click="payModalOpen = true">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.5 6.5A5 5 0 0 0 4 4.6M3.5 9.5A5 5 0 0 0 12 11.4" stroke="#2465de" stroke-width="1.3" stroke-linecap="round" /><path d="M13 3.2v3.3h-3.3M3 12.8V9.5h3.3" stroke="#2465de" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                      <span class="font-medium text-[12px] text-[#2465de] leading-[1.5]">Change</span>
-                    </button>
+                  </div>
+                  <!-- Total fees (opens the breakdown) -->
+                  <button type="button" class="flex items-center justify-between px-[12px] py-[8px] border-b border-[#e5e6ea] w-full text-left transition-colors duration-150 hover:bg-[#f8f9fc]" @click="totalFeesModalOpen = true">
+                    <span class="rv-label">Total fees</span>
+                    <span class="flex items-center gap-[2px]">
+                      <span class="rv-money">{{ totalFeesText }}</span>
+                      <img :src="reviewChevronRight" width="16" height="16" alt="" />
+                    </span>
+                  </button>
+                  <!-- Transfer type -->
+                  <div class="flex items-start justify-between px-[12px] py-[8px] border-b border-[#e5e6ea] w-full">
+                    <span class="rv-label">Transfer type</span>
+                    <span class="font-medium text-[14px] text-[#03102f] leading-[1.5]">LOCAL</span>
+                  </div>
+                  <!-- Transfer on -->
+                  <div class="flex items-start justify-between px-[12px] py-[8px] w-full">
+                    <span class="rv-label">Transfer on</span>
+                    <span class="font-medium text-[12px] text-[#03102f] leading-[1.5]">Immediately</span>
                   </div>
                 </div>
-                <!-- Total fees -->
-                <button type="button" class="flex items-center justify-between px-[12px] py-[8px] border-b border-[#e5e6ea] w-full text-left transition-colors duration-150 hover:bg-[#f8f9fc]" @click="totalFeesModalOpen = true">
-                  <span class="font-medium text-[12px] text-[#61667c] leading-[1.5]">Total fees</span>
-                  <span class="flex items-center gap-[2px]">
-                    <span class="font-semibold text-[14px] text-[#03102f] leading-[1.4]" style="font-family: 'Reddit Mono', ui-monospace, monospace;">{{ totalFeesText }}</span>
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 4l4 4-4 4" stroke="#61667c" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                <!-- You will pay -->
+                <div class="flex gap-[8px] items-center px-[12px] py-[8px] rounded-[4px] bg-[#03102f] w-full">
+                  <span class="flex-1 font-medium text-[12px] text-[#cbcdd4] leading-[1.5]">You will pay</span>
+                  <span class="flex gap-[8px] items-start">
+                    <span class="pt-[4px] font-medium text-[12px] text-[#cbcdd4] leading-[1.5]">{{ currency }}</span>
+                    <span class="font-medium text-[24px] text-white leading-[1.35]" style="font-family: 'Reddit Mono', ui-monospace, monospace;">{{ youWillPayText }}</span>
                   </span>
-                </button>
-                <!-- Transfer Type -->
-                <div class="flex items-center justify-between px-[12px] py-[8px] w-full">
-                  <span class="font-medium text-[12px] text-[#61667c] leading-[1.5]">Transfer Type</span>
-                  <span class="font-medium text-[14px] text-[#03102f] leading-[1.5]">LOCAL</span>
                 </div>
               </div>
-              <!-- You will pay -->
-              <div class="flex gap-[8px] items-center px-[12px] py-[8px] rounded-[4px] bg-[#03102f] w-full">
-                <span class="flex-1 font-medium text-[12px] text-[#cbcdd4] leading-[1.5]">You will pay</span>
-                <span class="flex gap-[8px] items-baseline">
-                  <span class="font-medium text-[12px] text-[#cbcdd4] leading-[1.5]">{{ currency }}</span>
-                  <span class="text-[24px] text-white leading-[1.35]" style="font-family: 'Reddit Mono', ui-monospace, monospace;">{{ youWillPayText }}</span>
-                </span>
-              </div>
-            </div>
 
-            <div class="h-px w-full bg-[#e5e6ea]" />
+              <span class="rv-separator" aria-hidden="true" />
 
-            <!-- Beneficiary -->
-            <div class="flex flex-col gap-[12px] items-start w-full">
-              <div v-for="r in beneficiaryRows" :key="r.label" class="flex gap-[16px] items-start w-full">
+              <!-- Bill + recipient details -->
+              <div v-for="r in reviewDetailRows" :key="r.label" class="flex gap-[16px] items-start w-full">
                 <span class="w-[160px] shrink-0 font-normal text-[14px] text-[#61667c] leading-[1.5]">{{ r.label }}</span>
                 <span class="flex-1 min-w-px font-normal text-[14px] text-[#03102f] leading-[1.5]">{{ r.value }}</span>
               </div>
-            </div>
 
-            <!-- Invoice details -->
-            <div class="flex flex-col gap-[12px] items-start w-full">
-              <p class="font-medium text-[14px] text-[#03102f] leading-[1.5]">Invoice details</p>
-              <div v-for="r in reviewInvoiceRows" :key="r.label" class="flex gap-[16px] items-start w-full">
-                <span class="w-[160px] shrink-0 font-normal text-[14px] text-[#61667c] leading-[1.5]">{{ r.label }}</span>
-                <span class="flex-1 min-w-px font-normal text-[14px] text-[#03102f] leading-[1.5]">{{ r.value }}</span>
-              </div>
+              <span class="rv-separator" aria-hidden="true" />
             </div>
           </div>
 
-          <!-- footer -->
-          <div class="shrink-0 border-t border-[#e5e6ea] flex items-center justify-between px-[40px] py-[16px]">
+          <!-- footer: Back · Pay Bill (+ ^ menu: Save as draft) -->
+          <div class="relative shrink-0 border-t border-[#e5e6ea] flex items-center justify-between px-[40px] py-[16px]">
             <button
               type="button"
               class="flex h-[36px] items-center justify-center min-w-[100px] px-[12px] rounded-[8px] border border-[#f2f2f4]"
@@ -623,19 +567,44 @@
             >
               <span class="font-medium text-[14px] text-[#61667c] leading-[1.5]" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.08);">Back</span>
             </button>
-            <div class="relative flex shrink-0">
+            <div class="relative flex shrink-0 rounded-[8px] overflow-hidden border border-[#2465de]" style="box-shadow: 0px 1.5px 0px 0px #1d5fd9;">
               <button
                 type="button"
-                class="flex h-[36px] items-center justify-center min-w-[100px] pl-[12px] pr-[52px] rounded-[8px] border border-[#2465de]"
-                style="background: linear-gradient(to bottom, #4179e2, #1f5bcc); box-shadow: 0px 1.5px 0px 0px #1d5fd9;"
+                class="flex h-[34px] items-center justify-center min-w-[60px] pl-[12px] pr-[12px] transition-[filter] duration-150 hover:brightness-110"
+                style="background: linear-gradient(to bottom, #4179e2, #1f5bcc);"
                 @click="goToPayment"
               >
-                <span class="font-medium text-[14px] text-white leading-[1.5]" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.12);">Pay Now</span>
+                <span class="font-medium text-[14px] text-white leading-[1.5]" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.12);">Pay Bill</span>
               </button>
-              <span class="absolute right-0 top-0 flex h-[36px] w-[40px] items-center justify-center border-l border-[#2465de] rounded-r-[8px]" style="background: linear-gradient(to bottom, #4179e2, #1f5bcc);">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 7l4 4 4-4" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
-              </span>
+              <button
+                type="button"
+                class="flex h-[34px] w-[40px] items-center justify-center border-l border-[#2465de] transition-[filter] duration-150 hover:brightness-110"
+                style="background: linear-gradient(to bottom, #4179e2, #1f5bcc);"
+                aria-label="More pay options"
+                :aria-expanded="payMenuOpen"
+                @click="payMenuOpen = !payMenuOpen"
+              >
+                <img :src="chevronUpWhite" width="18" height="18" alt="" class="transition-transform duration-200" :class="payMenuOpen ? 'rotate-180' : ''" />
+              </button>
             </div>
+
+            <!-- Pay menu (opens upward above the button) -->
+            <div v-if="payMenuOpen" class="fixed inset-0 z-10" @click="payMenuOpen = false" />
+            <Transition name="pay-menu">
+              <div
+                v-if="payMenuOpen"
+                class="absolute right-[40px] bottom-[57px] z-20 w-[162px] rounded-[8px] bg-white overflow-hidden"
+                style="box-shadow: 0px 1px 3px 0px rgba(0,0,0,0.1), 0px 3px 22px 0px rgba(38,42,50,0.09);"
+                role="menu"
+              >
+                <div class="flex flex-col p-[4px]">
+                  <button type="button" role="menuitem" class="flex items-center gap-[8px] p-[8px] rounded-[4px] w-full text-left hover:bg-[#f5f6f9] transition-colors duration-100" @click="saveAsDraft">
+                    <img :src="saveIcon" width="16" height="16" alt="" class="shrink-0" />
+                    <span class="flex-1 text-[12px] text-[#03102f] leading-[1.5]">Save as draft</span>
+                  </button>
+                </div>
+              </div>
+            </Transition>
           </div>
         </div>
         </div>
@@ -646,7 +615,34 @@
       <!-- Payment view (full width) — swaps with the whole split view -->
       <div v-else key="payment" class="flex flex-col flex-1 min-h-0 w-full">
           <div class="flex-1 min-h-0 overflow-y-auto flex items-start justify-center w-full px-[24px] py-[32px]">
+            <!-- Pay with HitPay Balance (Figma BillPay 16166:179722) -->
             <div
+              v-if="reviewPayId === 'balance'"
+              class="w-[470px] max-w-full bg-white rounded-[8px] flex flex-col items-center gap-[16px] p-[24px]"
+              style="filter: drop-shadow(0px 3px 11px rgba(38,42,50,0.09));"
+            >
+              <p class="w-full text-center text-[16px] font-medium text-[#03102f] leading-[1.4]">Pay bill to {{ payeeName }}</p>
+              <div class="flex flex-col items-center gap-[2px] w-full p-[12px] rounded-[8px] bg-[#f8f9fc] text-center">
+                <span class="text-[14px] font-medium text-[#61667c] leading-[1.5]">Amount</span>
+                <span class="text-[24px] font-medium text-[#03102f] leading-[1.35] whitespace-nowrap" style="font-family: 'Reddit Mono', ui-monospace, monospace;">{{ currency }} {{ youWillPayText }}</span>
+              </div>
+              <div class="flex items-start gap-[12px] w-full min-h-[36px] p-[8px] rounded-[8px] border border-[#e5e6ea] bg-[#fcfcfd]" style="filter: drop-shadow(0px 3px 11px rgba(38,42,50,0.03));">
+                <span class="relative flex items-center justify-center size-[40px] shrink-0 rounded-[8px] border border-[#e5e6ea] bg-white">
+                  <img :src="payLogogram" width="20.026" height="20" alt="HitPay" />
+                </span>
+                <span class="flex flex-1 min-w-0 flex-col justify-center gap-[4px]">
+                  <span class="text-[12px] text-[#03102f] leading-[1.5]">HitPay balance</span>
+                  <span class="text-[12px] text-[#61667c] leading-[1.5]">Available: {{ balanceAvailableText }} → After: {{ balanceAfterText }}</span>
+                </span>
+                <span class="flex items-center justify-center min-h-[24px] min-w-[32px] px-[8px] py-[2px] rounded-[24px] border border-[#80acfe] bg-white shrink-0 text-[12px] font-medium text-[#2465de] leading-[1.5]">Instant</span>
+              </div>
+              <p class="w-full text-center text-[12px] text-[#61667c] leading-[1.5]">
+                This deducts <span class="text-[#03102f]">{{ currency }} {{ youWillPayText }}</span> from your HitPay balance now and sends the payment. You’ll confirm with 2FA.
+              </p>
+            </div>
+
+            <div
+              v-else
               class="w-[476px] max-w-full bg-white rounded-[12px] border border-[#e5e6ea] flex flex-col gap-[20px] p-[24px]"
               style="box-shadow: 0px 3px 22px 0px rgba(38,42,50,0.09);"
             >
@@ -801,7 +797,16 @@
               <span class="font-medium text-[14px] text-[#61667c] leading-[1.5]" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.08);">Back</span>
             </button>
             <button
-              v-if="reviewPayId === 'bank'"
+              v-if="reviewPayId === 'balance'"
+              type="button"
+              class="flex h-[36px] items-center justify-center min-w-[100px] px-[16px] rounded-[8px] border border-[#2465de] transition-[filter] duration-150 hover:brightness-110"
+              style="background: linear-gradient(to bottom, #4179e2, #1f5bcc); box-shadow: 0px 1.5px 0px 0px #1d5fd9;"
+              @click="twoFaOpen = true"
+            >
+              <span class="font-medium text-[14px] text-white leading-[1.5]" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.12);">Confirm payment</span>
+            </button>
+            <button
+              v-else-if="reviewPayId === 'bank'"
               type="button"
               class="flex h-[36px] items-center justify-center min-w-[100px] px-[12px] rounded-[8px] border border-[#2465de]"
               style="background: linear-gradient(to bottom, #4179e2, #1f5bcc); box-shadow: 0px 1.5px 0px 0px #1d5fd9;"
@@ -823,6 +828,7 @@
 
       </Transition>
     </div>
+
 
     <!-- Add payment information drawer — slides in from the right -->
     <Transition name="drawer">
@@ -902,6 +908,9 @@
       </div>
     </Transition>
 
+    <!-- 2FA before the HitPay Balance payment goes out (Figma BillPay 16017:11375) -->
+    <TwoFactorModal :open="twoFaOpen" @close="twoFaOpen = false" @submit="onTwoFaSubmit" />
+
     <!-- Change payment method modal -->
     <PaymentMethodModal v-model="payModalOpen" :current="reviewPayId" @confirm="onPayConfirm" />
 
@@ -914,17 +923,22 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { addPaidBill } from '../../composables/useBills.js'
 import PaymentMethodModal from '../modals/PaymentMethodModal.vue'
 import TotalFeesModal from '../modals/TotalFeesModal.vue'
+import TwoFactorModal from '../modals/TwoFactorModal.vue'
 import HitPayPasswordModal from '../modals/HitPayPasswordModal.vue'
-import invoice from '../../assets/images/billreview/invoice.png'
-import zoomIn from '../../assets/images/billreview/zoom-in.svg'
-import zoomOut from '../../assets/images/billreview/zoom-out.svg'
+import { flowStep, flowAiOpen as aiOpen, flowShowPaper } from '../../composables/useUploadBillFlow.js'
+import reviewLogogram from '../../assets/icons/upload-bill/review-logogram.svg'
+import reviewChevronRight from '../../assets/icons/upload-bill/review-chevron-right.svg'
+import chevronUpWhite from '../../assets/icons/upload-bill/chevron-up-white.svg'
+import saveIcon from '../../assets/icons/upload-bill/save.svg'
+import payLogogram from '../../assets/icons/upload-bill/pay-logogram.svg'
 import paynow from '../../assets/images/billreview/paynow.svg'
 
-const zoom = ref(100)
+
 
 // Right-pane step transition direction ('step-rise' | 'step-forward' | 'step-back')
 const stepName = ref('step-rise')
@@ -932,17 +946,20 @@ const stepName = ref('step-rise')
 const layoutName = ref('step-forward')
 
 // Stage machine: scanning → (7s) → vendors → (confirm) → form → (Next) → review
-const stage = ref('scanning')
+// `?stage=review` enters straight at Review (coming from the full-screen Upload bills page)
+const enteredAtReview = useRoute().query.stage === 'review'
+const stage = ref(enteredAtReview ? 'review' : 'scanning')
 let scanTimer
 onMounted(() => { scanTimer = setTimeout(() => { if (stage.value === 'scanning') { stepName.value = 'step-rise'; stage.value = 'vendors' } }, 7000) })
 onBeforeUnmount(() => { clearTimeout(scanTimer); clearTimeout(copyTimer) })
 
 // Stepper reflects the current stage
-const steps = computed(() => [
-  { label: 'Bill details', state: stage.value === 'review' || stage.value === 'payment' ? 'done' : 'current' },
-  { label: 'Review', state: stage.value === 'payment' ? 'done' : stage.value === 'review' ? 'current' : 'upcoming' },
-  { label: 'Payment', state: stage.value === 'payment' ? 'current' : 'upcoming' },
-])
+// Header stepper index: 0 Bill details · 1 Review · 2 Payment
+const stepIndex = computed(() => (stage.value === 'payment' ? 2 : stage.value === 'review' ? 1 : 0))
+// Drive the shared flow header
+watch(stepIndex, (i) => { flowStep.value = i }, { immediate: true })
+// Shared invoice pane: on for Review, off for the full-width Payment view
+watch(stage, (st) => { flowShowPaper.value = st !== 'payment' }, { immediate: true })
 
 const vendors = [
   { id: 'orion', initial: 'S', name: 'Orion Venture', meta: 'DBS Bank ****1234 • Tax ID: 1291283493910' },
@@ -952,12 +969,42 @@ const selected = ref('orion')
 function confirmVendor() { stepName.value = 'step-rise'; stage.value = 'form' }
 function cancelToVendors() { stepName.value = 'step-rise'; stage.value = 'vendors' }
 function goToReview() { stepName.value = 'step-forward'; stage.value = 'review' }
-function backToForm() { stepName.value = 'step-back'; stage.value = 'form' }
+function backToForm() {
+  if (enteredAtReview) { router.push('/bills/new'); return }
+  stepName.value = 'step-back'; stage.value = 'form'
+}
 function goToPayment() { layoutName.value = 'step-forward'; stage.value = 'payment' }
 function backToReview() { layoutName.value = 'step-back'; stage.value = 'review' }
 
 const router = useRouter()
 function closePayment() { router.push('/bills') }
+
+// HitPay Balance: Confirm payment → 2FA → payment sent → the paid bill's detail page
+const twoFaOpen = ref(false)
+function onTwoFaSubmit() {
+  twoFaOpen.value = false
+  const ddmmyyyy = (v) => { const m = String(v).match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m ? `${m[3]}-${m[2]}-${m[1]}` : v }
+  const now = new Date()
+  const stamp = `${now.getDate()} ${now.toLocaleString('en-US', { month: 'short' })} ${now.getFullYear()} at ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+  const paid = addPaidBill({
+    recipient: payeeName,
+    invoice: invForm.number,
+    amount: `SGD ${money(billAmount.value)}`,
+    due: ddmmyyyy(invForm.dueDate),
+    invoiceDate: invForm.invoiceDate,
+    category: invForm.category,
+    description: invForm.description || 'For cleaning shoes payment',
+    recipientCurrency: 'SGD',
+    fees: [
+      { label: 'HitPay Balance fee', amount: reviewPay.value.feeAmount },
+      { label: 'HitPay fee', amount: HITPAY_FEE },
+      { label: 'Transfer fee', amount: TRANSFER_FEE },
+    ],
+    paidOn: `${now.getDate()} ${now.toLocaleString('en-US', { month: 'short' })} ${now.getFullYear()}`,
+    stepDates: [stamp, stamp, stamp, stamp],
+  })
+  router.push({ path: '/bills/view', query: { id: paid.id } })
+}
 
 // Bank transfer beneficiary details (copyable)
 const bankRows = [
@@ -1010,7 +1057,7 @@ const qrModules = (() => {
 
 // Review summary details
 const beneficiaryRows = [
-  { label: 'Recipient', value: 'Alex Turner' },
+  { label: 'Recipient', value: 'eBase LLC' },
   { label: 'Account number', value: '621788432' },
   { label: 'Bank', value: 'HSBC UK BANK PLC' },
 ]
@@ -1021,6 +1068,29 @@ const reviewInvoiceRows = computed(() => [
   { label: 'Category', value: invForm.category },
   { label: 'Description', value: invForm.description || 'For cleaning shoes payment' },
 ])
+// Review details in the design's order: invoice → recipient → bank → category → description
+const reviewDetailRows = computed(() => [
+  { label: 'Invoice number', value: invForm.number },
+  { label: 'Invoice date', value: invForm.invoiceDate },
+  { label: 'Due date', value: invForm.dueDate },
+  { label: 'Recipient', value: 'eBase LLC' },
+  { label: 'Bank', value: 'HSBC UK BANK PLC' },
+  { label: 'Account number', value: '621788432' },
+  { label: 'Category', value: invForm.category },
+  { label: 'Description', value: invForm.description || 'For cleaning shoes payment' },
+])
+const BALANCE_AVAILABLE = 1000
+const balanceAvailableText = 'SGD 1,000.00' // = BALANCE_AVAILABLE (money() is declared further down)
+// Balance after this payment (Payment step: "Available → After")
+const balanceAfterText = computed(() => `SGD ${money(BALANCE_AVAILABLE - (billAmount.value + totalFeesAmount.value))}`)
+const payeeName = 'eBase LLC'
+
+// Pay Bill split menu
+const payMenuOpen = ref(false)
+function saveAsDraft() {
+  payMenuOpen.value = false
+  router.push('/bills')
+}
 
 // Full vendor directory (used by the Search vendor view)
 const vendorList = [
@@ -1114,10 +1184,11 @@ const payMethod = ref('swift')
 
 // Review "Paying with" — payment method chosen via PaymentMethodModal
 const payModalOpen = ref(false)
-const reviewPayId = ref('paynow')
+const reviewPayId = ref('balance') // Bill Pay is funded from HitPay Balance only
 const bankGlyph = '<svg viewBox="0 0 24 24" fill="none" width="100%" height="100%"><path d="M3 9.5L12 4l9 5.5" stroke="#03102f" stroke-width="1.6" stroke-linejoin="round"/><path d="M5 10.5v7M9 10.5v7M15 10.5v7M19 10.5v7" stroke="#03102f" stroke-width="1.6" stroke-linecap="round"/><path d="M3.5 20.5h17" stroke="#03102f" stroke-width="1.6" stroke-linecap="round"/></svg>'
 const cardGlyph = '<svg viewBox="0 0 24 24" fill="none" width="100%" height="100%"><rect x="3" y="5.5" width="18" height="13" rx="2.5" stroke="#03102f" stroke-width="1.6"/><path d="M3.5 9.5h17" stroke="#03102f" stroke-width="1.6"/><path d="M6.5 14.5h4" stroke="#03102f" stroke-width="1.6" stroke-linecap="round"/></svg>'
 const reviewPayOptions = {
+  balance: { name: 'HitPay Balance', feeAmount: 3, img: reviewLogogram },
   paynow: { name: 'PayNow', feeAmount: 3.5, img: paynow },
   bank: { name: 'Bank transfer', feeAmount: 3.5, icon: bankGlyph },
   cards: { name: 'Cards', feeAmount: 20, icon: cardGlyph },
@@ -1225,6 +1296,37 @@ const payPasswordVisible = ref(false)
 </script>
 
 <style scoped>
+/* Review (Figma 16166:179148) */
+.rv-label { font-size: 12px; font-weight: 500; line-height: 1.5; color: #61667c; white-space: nowrap; }
+.rv-money { font-family: 'Reddit Mono', ui-monospace, monospace; font-size: 14px; font-weight: 600; line-height: 1.4; color: #03102f; white-space: nowrap; }
+/* Separator: 16px tall with a centred 1px #e5e6ea line */
+.rv-separator { display: block; width: 100%; height: 16px; background: linear-gradient(#e5e6ea, #e5e6ea) center / 100% 1px no-repeat; }
+.pay-menu-enter-active { transition: opacity 140ms ease-out, transform 140ms ease-out; transform-origin: bottom right; }
+.pay-menu-leave-active { transition: opacity 100ms ease-in; }
+.pay-menu-enter-from { opacity: 0; transform: translateY(4px) scale(0.98); }
+.pay-menu-leave-to { opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .pay-menu-enter-active, .pay-menu-leave-active { transition: none; }
+  .pay-menu-enter-from { transform: none; }
+}
+/* Zoom buttons (secondary 28px) — same as the Bill details step */
+.zoom-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid #f2f2f4;
+  background: linear-gradient(to bottom, #ffffff, #f2f2f2);
+  box-shadow: 0px 1.5px 0px 0px #e5e5e5;
+  transition: filter 150ms ease;
+}
+.zoom-btn:hover:not(:disabled) { filter: brightness(0.96); }
+.zoom-btn:active:not(:disabled) { transform: translateY(1px); }
+.zoom-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+
 .skeleton {
   position: relative;
   overflow: hidden;

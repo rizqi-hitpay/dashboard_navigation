@@ -19,7 +19,7 @@
               @mouseleave="onEmailChipLeave"
               @click="copyForwardingEmail"
             >
-              <img :src="mailForwardIcon" width="14" height="14" alt="" class="shrink-0" />
+              <img :src="mailForwardIcon" width="16" height="16" alt="" class="shrink-0" />
               <span class="text-[12px] font-normal text-[#61667c] leading-[1.5] whitespace-nowrap">{{ forwardingEmail }}</span>
             </div>
             <a
@@ -29,7 +29,85 @@
             >Settings</a>
           </div>
         </div>
+
+        <!-- Header actions (list state only) -->
+        <div v-if="!isEmpty" class="flex gap-[8px] items-center self-stretch shrink-0">
+          <button
+            type="button"
+            class="flex items-center justify-center h-[36px] px-[12px] py-[8px] rounded-[8px] border border-[#f2f2f4] transition-[filter] duration-150 hover:brightness-95 active:translate-y-[1px]"
+            style="background: linear-gradient(to bottom, #ffffff, #f2f2f2); box-shadow: 0px 1.5px 0px 0px #e5e5e5;"
+          >
+            <span class="font-medium text-[14px] text-[#61667c] leading-[1.5] whitespace-nowrap" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.08);">Export Transaction</span>
+          </button>
+          <button
+            type="button"
+            class="relative flex items-center justify-center h-[36px] min-w-[36px] overflow-hidden px-[12px] py-[8px] rounded-[8px] border border-[#2465de] transition-[filter] duration-150 hover:brightness-110 active:translate-y-[1px]"
+            style="background: linear-gradient(to bottom, #4179e2, #1f5bcc); box-shadow: 0px 1.5px 0px 0px #1d5fd9;"
+            @click="$router.push('/bills/new')"
+          >
+            <span class="font-medium text-[14px] text-white leading-[1.5] whitespace-nowrap" style="text-shadow: 0px 1px 1px rgba(0,0,0,0.12);">Upload Bill</span>
+          </button>
+        </div>
       </div>
+
+      <!-- Row "More" dropdown (same pattern as the Cards ⋯ menu), anchored below-right of the ⋮ button -->
+      <Teleport to="body">
+        <div v-if="rowMenu" class="fixed inset-0 z-40" @click="rowMenu = null" />
+        <Transition name="row-menu">
+          <div
+            v-if="rowMenu"
+            role="menu"
+            class="fixed z-50 rounded-[8px] bg-white overflow-hidden"
+            style="box-shadow: 0px 1px 3px 0px rgba(0,0,0,0.1), 0px 3px 22px 0px rgba(38,42,50,0.09);"
+            :style="{ left: rowMenu.left + 'px', top: rowMenu.top + 'px', width: rowMenu.width + 'px' }"
+            @keydown.esc="rowMenu = null"
+          >
+            <template v-for="(group, gi) in rowMenu.groups" :key="gi">
+              <div v-if="gi > 0" class="h-px w-full bg-[#e5e6ea]" />
+              <div class="flex flex-col p-[4px] w-full">
+                <!-- Dropdown Title (Figma: Dropdown Menu/Default/Dropdown Title) -->
+                <p v-if="gi === 0 && rowMenu.title" class="px-[8px] py-[4px] text-[10px] font-medium uppercase tracking-[0.3px] leading-[18px] text-[#61667c] whitespace-nowrap">{{ rowMenu.title }}</p>
+                <button
+                  v-for="item in group"
+                  :key="item.label"
+                  type="button"
+                  role="menuitem"
+                  class="flex items-center gap-[8px] p-[8px] rounded-[4px] w-full text-left transition-colors duration-100"
+                  :class="item.danger ? 'hover:bg-[#fdf2f3]' : 'hover:bg-[#f5f6f9]'"
+                  @click="onMenuItem(item)"
+                >
+                  <img v-if="item.icon" :src="item.icon" width="16" height="16" alt="" class="shrink-0" />
+                  <span class="flex-1 min-w-px text-[12px] font-normal leading-[1.5]" :class="item.danger ? 'text-[#dc3545]' : 'text-[#03102f]'">
+                    {{ item.label }}
+                    <span v-if="item.sub" class="block text-[#61667c]">{{ item.sub }}</span>
+                  </span>
+                </button>
+              </div>
+            </template>
+          </div>
+        </Transition>
+      </Teleport>
+
+      <!-- Row-action tooltip — Tooltip/Dark (teleported above the hovered button, arrow points down) -->
+      <Teleport to="body">
+        <!-- Anchoring uses the CSS `translate` property so the motion's `transform` slide composes with it -->
+        <Transition name="action-tooltip">
+          <div
+            v-if="actionTip"
+            :key="actionTip.id"
+            class="fixed z-50 pointer-events-none"
+            :style="{ left: actionTip.left + 'px', top: actionTip.top + 'px', translate: '-50% -100%' }"
+          >
+            <div
+              class="relative flex items-center justify-center px-[8px] py-[4px] rounded-[4px] bg-[#343848]"
+              style="box-shadow: 0px 1px 3px 0px rgba(0,0,0,0.1), 0px 3px 22px 0px rgba(38,42,50,0.09);"
+            >
+              <img :src="tooltipArrowDarkIcon" width="12" height="7.33333" alt="" class="absolute left-1/2 -translate-x-1/2 bottom-[-7px] rotate-180" />
+              <p class="text-[12px] font-medium text-[#cbcdd4] leading-[1.5] whitespace-nowrap text-center">{{ actionTip.label }}</p>
+            </div>
+          </div>
+        </Transition>
+      </Teleport>
 
       <!-- Copy tooltip (teleported: anchored above the mail forwarder) -->
       <Teleport to="body">
@@ -321,98 +399,119 @@
 
       </div>
 
-      <!-- Non-empty state: bills history table -->
-      <div v-else key="filled" class="flex flex-1 flex-col gap-[16px] items-start w-full px-[24px] py-[12px]">
+      <!-- Non-empty state: overview + bills table (Figma 13:7237) -->
+      <div v-else key="filled" class="flex flex-1 flex-col items-start w-full px-[24px] pt-[12px] pb-[12px]">
+
+        <!-- Overview cards -->
+        <div class="flex gap-[16px] items-start shrink-0">
+          <div
+            v-for="card in overviewCards"
+            :key="card.label"
+            class="bg-white border border-[#e5e6ea] rounded-[8px] flex flex-col gap-px shrink-0"
+          >
+            <div class="flex gap-[8px] items-center min-w-[250px] pl-[12px] pr-[16px] py-[8px] border-b border-[#e5e6ea]">
+              <img :src="card.icon" width="18" height="18" alt="" class="shrink-0" />
+              <p class="flex-1 min-w-px text-[12px] font-normal text-[#03102f] leading-[1.5]">{{ card.label }}</p>
+            </div>
+            <div class="flex items-center px-[16px] py-[12px] w-full">
+              <p class="flex-1 min-w-px text-[18px] font-medium text-[#03102f] leading-[1.35] truncate" style="font-family: 'Reddit Mono', ui-monospace, monospace;">{{ card.value }}</p>
+            </div>
+          </div>
+        </div>
 
         <!-- Table card -->
-        <div class="w-full rounded-[12px] border border-[#e5e6ea] overflow-hidden bg-white">
+        <div class="mt-[24px] w-full rounded-[8px] border border-[#e5e6ea] overflow-hidden bg-white">
 
-          <!-- Toolbar: tabs + actions -->
-          <div class="flex items-center justify-between gap-[8px] h-[44px] pl-[12px] pr-[12px] border-b border-[#e5e6ea]">
-            <div class="flex items-center gap-[4px]">
+          <!-- Toolbar: segmented filter + actions -->
+          <div class="flex items-center justify-between gap-[8px] h-[44px] px-[12px] border-b-[0.5px] border-[#cbcdd4]">
+            <div class="flex items-start gap-[4px]">
               <button
                 v-for="t in tabs"
                 :key="t"
                 type="button"
-                class="h-[26px] px-[12px] rounded-[6px] text-[13px] font-medium whitespace-nowrap transition-colors duration-150"
-                :class="activeTab === t ? 'bg-[#f0f1f5] text-[#03102f]' : 'text-[#61667c] hover:bg-[#f6f7f9]'"
+                class="min-w-[48px] px-[8px] py-[4px] rounded-[8px] text-[12px] leading-[1.5] whitespace-nowrap transition-colors duration-150"
+                :class="activeTab === t ? 'bg-[#e5e6ea] text-[#03102f] font-medium' : 'text-[#61667c] font-normal hover:bg-[#f2f2f4]'"
                 @click="activeTab = t"
               >{{ t }}</button>
             </div>
             <div class="flex items-center gap-[8px] shrink-0">
-              <button
-                type="button"
-                class="flex items-center justify-center size-[28px] rounded-[8px] border border-[#f2f2f4] transition-[filter] duration-150 hover:brightness-95 active:translate-y-[1px]"
-                style="background: linear-gradient(to bottom, #ffffff, #f2f2f2); box-shadow: 0px 1.5px 0px 0px #e5e5e5;"
-                aria-label="Search"
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="#61667c" stroke-width="1.4" /><path d="M10.5 10.5L14 14" stroke="#61667c" stroke-width="1.4" stroke-linecap="round" /></svg>
+              <button type="button" class="tool-btn" aria-label="Search">
+                <img :src="searchIcon" width="16" height="16" alt="" />
               </button>
-              <button
-                type="button"
-                class="flex items-center justify-center size-[28px] rounded-[8px] border border-[#f2f2f4] transition-[filter] duration-150 hover:brightness-95 active:translate-y-[1px]"
-                style="background: linear-gradient(to bottom, #ffffff, #f2f2f2); box-shadow: 0px 1.5px 0px 0px #e5e5e5;"
-                aria-label="Filter"
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2.5 4h11M4.5 8h7M6.5 12h3" stroke="#61667c" stroke-width="1.4" stroke-linecap="round" /></svg>
+              <button type="button" class="tool-btn" aria-label="Filter">
+                <img :src="filterIcon" width="16" height="16" alt="" />
               </button>
             </div>
           </div>
 
           <!-- Table -->
           <div class="w-full overflow-x-auto">
-            <table class="w-full border-collapse min-w-[900px]">
+            <table class="w-full border-collapse min-w-[1000px] table-fixed">
+              <colgroup>
+                <col style="width: 21%" />
+                <col style="width: 21%" />
+                <col style="width: 21%" />
+                <col style="width: 14%" />
+                <col style="width: 17%" />
+                <col style="width: 76px" />
+              </colgroup>
               <thead>
                 <tr>
                   <th
-                    v-for="(col, ci) in columns"
+                    v-for="col in columns"
                     :key="col.key"
                     class="bg-[#fcfcfd] border-b border-[#e5e6ea] px-[12px] py-[8px] text-left align-middle"
-                    :class="ci < columns.length - 1 ? 'border-r border-[#e5e6ea]' : ''"
+                    :class="col.key !== 'status' ? 'border-r' : ''"
                   >
                     <div class="flex items-center gap-[8px]">
                       <span class="flex-1 text-[10px] font-medium uppercase tracking-[0.3px] leading-[18px] text-[#03102f] whitespace-nowrap">{{ col.label }}</span>
-                      <svg v-if="col.sortable" class="shrink-0" width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 4v8M5 9l3 3 3-3" stroke="#8093b8" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                      <img v-if="col.sortable" :src="arrowDownIcon" width="14" height="14" alt="" class="shrink-0" />
                     </div>
                   </th>
+                  <th class="bg-[#fcfcfd] border-b-[0.5px] border-[#cbcdd4]" aria-label="Actions" />
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="b in filteredBills" :key="b.id" class="group hover:bg-[#f8f9fc] transition-colors duration-150 cursor-pointer [&:last-child>td]:border-b-0" @click="viewBill(b)">
-                  <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-r border-[#e5e6ea] text-[13px] text-[#03102f] whitespace-nowrap">{{ b.recipient }}</td>
-                  <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-r border-[#e5e6ea] text-[13px] text-[#03102f] whitespace-nowrap">{{ b.invoice }}</td>
-                  <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-r border-[#e5e6ea] text-[13px] text-[#03102f] whitespace-nowrap" style="font-family: 'Reddit Mono', ui-monospace, monospace; font-weight: 500;">{{ b.amount }}</td>
-                  <td
-                    class="h-[44px] px-[12px] py-[8px] align-middle border-b border-r border-[#e5e6ea] text-[13px] whitespace-nowrap"
-                    :class="b.status === 'Overdue' ? 'text-[#bd8400]' : 'text-[#03102f]'"
-                    style="font-family: 'Reddit Mono', ui-monospace, monospace;"
-                  >{{ b.due }}</td>
-                  <td class="h-[44px] px-[12px] py-[8px] align-middle border-b border-[#e5e6ea]">
-                    <!-- Need approval: pill swaps to an Approve & Fund split button on row hover.
-                         Fixed-height flex wrapper so the swap never changes the row height. -->
-                    <!-- 27px = the td's exact content height (44 − 16 padding − 1 border), so the row stays 44px.
-                         The button is always in the layout (invisible when idle) so it reserves its width and
-                         the column never resizes; the pill overlays it when the row isn't hovered. -->
-                    <div v-if="b.status === 'Need approval'" class="relative flex items-center h-[27px]">
-                      <span
-                        class="invisible group-hover:visible inline-flex items-center h-[28px] rounded-[8px] border border-[#2465de] overflow-hidden"
-                        style="box-shadow: 0px 1.5px 0px 0px #1d5fd9;"
-                      >
-                        <button type="button" class="h-full pl-[12px] pr-[8px] text-[13px] font-medium text-white whitespace-nowrap" style="background: linear-gradient(to bottom, #4179e2, #1f5bcc); text-shadow: 0px 1px 1px rgba(0,0,0,0.12);" @click.stop>Approve &amp; Fund</button>
-                        <button type="button" class="h-full w-[24px] flex items-center justify-center border-l border-[rgba(255,255,255,0.25)]" style="background: linear-gradient(to bottom, #4179e2, #1f5bcc);" aria-label="More approve options" @click.stop>
-                          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 6.5l3 3 3-3" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                        </button>
-                      </span>
-                      <span
-                        class="group-hover:hidden absolute left-0 inline-flex items-center px-[10px] py-[3px] rounded-full text-[12px] font-medium whitespace-nowrap"
-                        :style="{ background: statusStyle(b.status).bg, color: statusStyle(b.status).text }"
-                      >{{ b.status }}</span>
+                <tr
+                  v-for="b in filteredBills"
+                  :key="b.id"
+                  class="bill-row cursor-pointer [&:last-child>td]:border-b-0"
+                  @click="viewBill(b)"
+                >
+                  <td class="cell border-r">{{ b.recipient }}</td>
+                  <td class="cell border-r">{{ b.invoice }}</td>
+                  <td class="cell border-r font-semibold" style="font-family: 'Reddit Mono', ui-monospace, monospace;">{{ b.amount }}</td>
+                  <td class="cell border-r" style="font-family: 'Reddit Mono', ui-monospace, monospace;">
+                    <div class="flex items-center gap-[4px]">
+                      <span class="flex-1 min-w-px truncate leading-[1.4]" :class="b.status === 'Overdue' ? 'text-[#bd8400]' : 'text-[#03102f]'">{{ formatDue(b.due) }}</span>
+                      <img v-if="b.status === 'Overdue'" :src="alertIcon" width="14" height="14" alt="Overdue" class="shrink-0" />
                     </div>
+                  </td>
+                  <td class="cell">
                     <span
-                      v-else
-                      class="inline-flex items-center px-[10px] py-[3px] rounded-full text-[12px] font-medium whitespace-nowrap"
-                      :style="{ background: statusStyle(b.status).bg, color: statusStyle(b.status).text }"
-                    >{{ b.status }}</span>
+                      class="inline-flex items-center justify-center min-h-[24px] min-w-[32px] px-[8px] py-[2px] rounded-[24px] text-[12px] font-medium leading-[1.5] whitespace-nowrap"
+                      :style="{ background: chipStyle(b.status).bg, color: chipStyle(b.status).text }"
+                    >{{ chipLabel(b.status) }}</span>
+                  </td>
+                  <td class="h-[44px] px-[4px] py-[8px] border-b border-[#e5e6ea] align-middle">
+                    <div class="flex items-center justify-end gap-[4px]">
+                      <button
+                        v-for="a in rowActions(b.status)"
+                        :key="a.key"
+                        type="button"
+                        class="act-btn"
+                        :class="{ 'act-btn--open': isMenuOpen(b, a) }"
+                        :style="{ borderColor: a.border }"
+                        :aria-label="a.label"
+                        :aria-haspopup="menuFor(a, b) ? 'menu' : undefined"
+                        :aria-expanded="menuFor(a, b) ? isMenuOpen(b, a) : undefined"
+                        @mouseenter="!isMenuOpen(b, a) && showActionTip($event, a.label)"
+                        @mouseleave="actionTip = null"
+                        @click.stop="onRowAction($event, a, b)"
+                      >
+                        <img :src="a.icon" width="16" height="16" alt="" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               </tbody>
@@ -421,34 +520,23 @@
         </div>
 
         <!-- Pagination -->
-        <div class="flex items-center w-full shrink-0">
-          <div class="flex-1" />
-          <div class="flex items-center gap-[2px]">
-            <button type="button" class="flex items-center gap-[4px] h-[32px] px-[10px] rounded-[8px] text-[13px] font-medium text-[#61667c] hover:bg-[#f0f1f5] transition-colors duration-150" @click="page = Math.max(1, page - 1)">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 4l-4 4 4 4" stroke="#61667c" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        <div class="relative flex items-center justify-center w-full h-[36px] mt-[24px] px-[12px] shrink-0">
+          <div class="flex items-start gap-[20px]">
+            <button type="button" class="flex items-center gap-[2px] h-[36px] px-[2px] rounded-[4px] text-[13px] leading-[1.5] text-[#61667c] hover:text-[#03102f] transition-colors duration-150" @click="page = Math.max(1, page - 1)">
+              <img :src="chevronLeftIcon" width="14" height="14" alt="" />
               Prev
             </button>
-            <template v-for="p in pages" :key="p">
-              <span v-if="p === '…'" class="flex items-center justify-center min-w-[32px] h-[32px] text-[13px] text-[#8093b8]">…</span>
-              <button
-                v-else
-                type="button"
-                class="flex items-center justify-center min-w-[32px] h-[32px] px-[8px] rounded-[8px] text-[13px] font-medium transition-colors duration-150"
-                :class="page === p ? 'bg-[#eceef2] text-[#03102f]' : 'text-[#61667c] hover:bg-[#f0f1f5]'"
-                @click="page = p"
-              >{{ p }}</button>
-            </template>
-            <button type="button" class="flex items-center gap-[4px] h-[32px] px-[10px] rounded-[8px] text-[13px] font-medium text-[#61667c] hover:bg-[#f0f1f5] transition-colors duration-150" @click="page = Math.min(15, page + 1)">
+            <button type="button" class="flex items-center gap-[2px] h-[36px] px-[2px] rounded-[4px] text-[13px] leading-[1.5] text-[#61667c] hover:text-[#03102f] transition-colors duration-150" @click="page = page + 1">
               Next
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="#61667c" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              <img :src="chevronRightIcon" width="14" height="14" alt="" />
             </button>
           </div>
-          <div class="flex-1 flex justify-end">
-            <div class="flex items-center gap-[6px] h-[36px] px-[12px] rounded-[8px] border border-[#e5e6ea] bg-white" style="box-shadow: 0px 1px 3px rgba(0,0,0,0.04), 0px 1.5px 1.5px rgba(0,0,0,0.09);">
-              <span class="text-[13px] text-[#61667c] leading-[1.5]">Item per page:</span>
-              <span class="text-[13px] font-medium text-[#03102f] leading-[1.5]">{{ perPage }}</span>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6.5l4 4 4-4" stroke="#61667c" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          <div class="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-[8px] h-[36px] w-[167px] px-[8px] rounded-[8px] border border-[#e5e6ea] bg-white cursor-pointer">
+            <div class="flex flex-1 min-w-px items-center gap-[4px] text-[14px] leading-[20px] whitespace-nowrap">
+              <span class="text-[#9295a5] tracking-[0.15px]">Item per page:</span>
+              <span class="flex-1 min-w-px font-medium text-[#03102f] tracking-[0.1px]">{{ perPage }}</span>
             </div>
+            <img :src="chevronDownIcon" width="18" height="18" alt="" class="shrink-0" />
           </div>
         </div>
       </div>
@@ -478,10 +566,30 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { bills, statusStyle } from '../../composables/useBills.js'
-import mailForwardIcon from '../../assets/icons/icon-mail-forward.svg'
+import { bills } from '../../composables/useBills.js'
+import mailForwardIcon from '../../assets/icons/bills-list/mail-forward.svg'
+import dotPaidIcon from '../../assets/icons/bills-list/dot-paid.svg'
+import dotNeedApprovalIcon from '../../assets/icons/bills-list/dot-need-approval.svg' // Purple/500 #b14aed
+import searchIcon from '../../assets/icons/bills-list/search.svg'
+import filterIcon from '../../assets/icons/bills-list/filter.svg'
+import arrowDownIcon from '../../assets/icons/bills-list/arrow-down.svg'
+import alertIcon from '../../assets/icons/bills-list/alert.svg'
+import pencilIcon from '../../assets/icons/bills-list/pencil.svg'
+import checkIcon from '../../assets/icons/bills-list/check.svg'
+import telegramIcon from '../../assets/icons/bills-list/telegram.svg'
+import downloadIcon from '../../assets/icons/bills-list/download.svg'
+import tooltipArrowDarkIcon from '../../assets/icons/bills-list/tooltip-arrow-dark.svg'
+import dotsIcon from '../../assets/icons/bills-list/dots-vertical.svg'
+import documentIcon from '../../assets/icons/icon-document.svg'
+import menuPencilIcon from '../../assets/icons/icon-pencil.svg'
+import calendarIcon from '../../assets/icons/icon-calendar.svg'
+import menuDownloadIcon from '../../assets/icons/icon-download.svg'
+import xRedIcon from '../../assets/icons/icon-x-red.svg'
+import chevronLeftIcon from '../../assets/icons/bills-list/chevron-left.svg'
+import chevronRightIcon from '../../assets/icons/bills-list/chevron-right.svg'
+import chevronDownIcon from '../../assets/icons/bills-list/chevron-down.svg'
 import ellipse37 from '../../assets/images/billpay/ellipse37.svg'
 import ellipse38 from '../../assets/images/billpay/ellipse38.png'
 import image from '../../assets/images/billpay/image.svg'
@@ -509,27 +617,164 @@ const steps = [
   { title: 'Pay or schedule', desc: 'Pay instantly or set future date' },
 ]
 
-// Preview switcher: true = empty/onboarding state (current), false = bills list
-const isEmpty = ref(true)
+// Preview switcher: true = empty/onboarding state, false = bills list (default)
+const isEmpty = ref(false)
+
+// Overview cards (mock totals from the design)
+const overviewCards = [
+  { label: 'Paid bills', value: 'SGD 11,170.00', icon: dotPaidIcon },
+  { label: 'Need approval', value: 'SGD 1,870.00', icon: dotNeedApprovalIcon },
+]
 
 // Filter tabs
-const tabs = ['All', 'Draft', 'Need Approval', 'Scheduled', 'Completed']
+const tabs = ['All', 'Draft', 'Need approval', 'Scheduled', 'Completed']
 const activeTab = ref('All')
 
-// Table columns (first four are sortable)
+// Table columns (first four are sortable); a trailing actions column is rendered separately
 const columns = [
-  { key: 'recipient', label: 'Recipient', sortable: true },
+  { key: 'recipient', label: 'Recepient', sortable: true },
   { key: 'invoice', label: '# Invoice', sortable: true },
   { key: 'amount', label: 'Amount', sortable: true },
   { key: 'due', label: 'Due date', sortable: true },
   { key: 'status', label: 'Status', sortable: false },
 ]
 
-// Tab → matching status (visual filtering)
-const tabStatus = { Draft: 'Draft', 'Need Approval': 'Need approval', Scheduled: 'Scheduled', Completed: 'Completed' }
+// Status chips (design tokens). Pending + Overdue bills are shown as "Need approval"
+// (Overdue keeps the amber due date + warning icon).
+const chipColors = {
+  Pending: { bg: '#fff9ec', text: '#bd8400' },
+  Scheduled: { bg: '#fff9ec', text: '#bd8400' },
+  Failed: { bg: '#f9e9e9', text: '#c20a1c' },
+  Rejected: { bg: '#f9e9e9', text: '#c20a1c' },
+  Cancel: { bg: '#f9e9e9', text: '#c20a1c' },
+  'Need approval': { bg: '#f7edfd', text: '#7d1ab7' },
+  Draft: { bg: '#f2f2f4', text: '#484d61' },
+  Processing: { bg: '#e5eeff', text: '#2465de' },
+  Completed: { bg: '#e6f9f0', text: '#238b5b' },
+}
+const AWAITING_APPROVAL = ['Pending', 'Overdue', 'Need approval']
+const chipLabel = (status) => (AWAITING_APPROVAL.includes(status) ? 'Need approval' : status)
+const chipStyle = (status) => chipColors[chipLabel(status)] || chipColors.Draft
+
+// "2025-08-15" → "Aug 15"
+function formatDue(due) {
+  const d = new Date(due + 'T00:00:00')
+  if (Number.isNaN(d.getTime())) return due
+  return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })
+}
+
+// Row quick actions per status
+const BORDER = { grey: '#cbcdd4', blue: '#2465de' }
+const ACT = {
+  edit: { key: 'edit', label: 'Edit', icon: pencilIcon, border: BORDER.grey },
+  more: { key: 'more', label: 'More', icon: dotsIcon, border: BORDER.grey },
+  approve: { key: 'approve', label: 'Approve', icon: checkIcon, border: BORDER.blue },
+  send: { key: 'send', label: 'Send Payment Confirmation', icon: telegramIcon, border: BORDER.blue },
+  download: { key: 'download', label: 'Download Payment Confirmation', icon: downloadIcon, border: BORDER.grey },
+}
+const actionsByStatus = {
+  Overdue: [ACT.approve, ACT.more],
+  Pending: [ACT.approve, ACT.more],
+  Draft: [ACT.edit, ACT.more],
+  'Need approval': [ACT.approve, ACT.more],
+  Scheduled: [ACT.more],
+  Processing: [ACT.send, ACT.download],
+  Completed: [ACT.send, ACT.download],
+}
+const rowActions = (status) => actionsByStatus[status] || []
+
+// Action tooltip (anchored above the hovered button)
+const actionTip = ref(null)
+function showActionTip(e, label) {
+  const r = e.currentTarget.getBoundingClientRect()
+  actionTip.value = { id: `${label}@${r.left},${r.top}`, label, left: r.left + r.width / 2, top: r.top - 8 }
+}
+
+// "More" dropdown items per status, grouped (destructive group last, below a divider)
+const MENU = {
+  view: { key: 'view', label: 'View details', icon: documentIcon },
+  edit: { key: 'edit', label: 'Edit bill', icon: menuPencilIcon },
+  reschedule: { key: 'reschedule', label: 'Reschedule', icon: calendarIcon },
+  invoice: { key: 'invoice', label: 'Download invoice', icon: menuDownloadIcon },
+  cancel: { key: 'cancel', label: 'Cancel bill', icon: xRedIcon, danger: true },
+  reject: { key: 'reject', label: 'Reject', icon: xRedIcon, danger: true },
+  cancelSchedule: { key: 'cancel', label: 'Cancel payment', icon: xRedIcon, danger: true },
+  deleteDraft: { key: 'delete', label: 'Delete draft', icon: xRedIcon, danger: true },
+}
+const menuByStatus = {
+  Overdue: [[MENU.view, MENU.edit, MENU.invoice], [MENU.reject]],
+  Pending: [[MENU.view, MENU.edit, MENU.invoice], [MENU.reject]],
+  Draft: [[MENU.view], [MENU.deleteDraft]],
+  'Need approval': [[MENU.view, MENU.edit, MENU.invoice], [MENU.reject]],
+  Scheduled: [[MENU.view, MENU.edit, MENU.reschedule], [MENU.cancelSchedule]],
+}
+
+// Approve dropdown (Figma 15866:228559) — text-only, 162px
+const approveMenu = {
+  width: 162,
+  groups: [
+    [{ key: 'review', label: 'Review' }, { key: 'approve', label: 'Approve' }],
+    [{ key: 'reject', label: 'Reject', danger: true }],
+  ],
+}
+// Send Payment Confirmation dropdown (Figma 15866:228523) — titled, two-line items, 190px
+const sendMenu = {
+  width: 190,
+  title: 'Payment confirmation',
+  groups: [[
+    { key: 'send-full', label: 'Full version', sub: '(Perfect for record keeping)' },
+    { key: 'send-simple', label: 'Simplified version', sub: '(Share with recipients)' },
+  ]],
+}
+
+// Which dropdown (if any) a row-action button opens
+function menuFor(action, bill) {
+  if (action.key === 'approve') return approveMenu
+  if (action.key === 'send') return sendMenu
+  if (action.key === 'more') return { width: 180, groups: menuByStatus[bill.status] || [[MENU.view]] }
+  return null
+}
+
+const rowMenu = ref(null)
+const isMenuOpen = (bill, action) => rowMenu.value?.billId === bill.id && rowMenu.value?.actionKey === action.key
+function onRowAction(e, action, bill) {
+  actionTip.value = null
+  const menu = menuFor(action, bill)
+  if (!menu) return
+  if (isMenuOpen(bill, action)) { rowMenu.value = null; return }
+  const r = e.currentTarget.getBoundingClientRect()
+  rowMenu.value = {
+    ...menu,
+    billId: bill.id,
+    actionKey: action.key,
+    bill,
+    left: r.right - menu.width,
+    top: r.bottom + 4,
+  }
+}
+function onMenuItem(item) {
+  const bill = rowMenu.value?.bill
+  rowMenu.value = null
+  if ((item.key === 'view' || item.key === 'review') && bill) viewBill(bill)
+}
+
+// Close the menu if the page scrolls (it's fixed-positioned to the button)
+function closeRowMenu() { rowMenu.value = null }
+function onKeydown(e) { if (e.key === 'Escape') closeRowMenu() }
+onMounted(() => {
+  window.addEventListener('scroll', closeRowMenu, true)
+  window.addEventListener('keydown', onKeydown)
+})
+onUnmounted(() => {
+  window.removeEventListener('scroll', closeRowMenu, true)
+  window.removeEventListener('keydown', onKeydown)
+})
+
+// Tab → matching statuses (visual filtering)
+const tabStatus = { Draft: ['Draft'], 'Need approval': AWAITING_APPROVAL, Scheduled: ['Scheduled'], Completed: ['Completed'] }
 const filteredBills = computed(() => {
   if (activeTab.value === 'All') return bills
-  return bills.filter((b) => b.status === tabStatus[activeTab.value])
+  return bills.filter((b) => tabStatus[activeTab.value].includes(b.status))
 })
 
 // Email forwarding chip: hover tooltip (anchored above the chip) + click to copy
@@ -562,12 +807,82 @@ function viewBill(b) {
 }
 
 // Pagination (visual)
-const pages = [1, 2, 3, 4, '…', 15]
-const page = ref(2)
+const page = ref(1)
 const perPage = 10
 </script>
 
 <style scoped>
+/* Table body cell (Figma Table Row/Cell) */
+.cell {
+  height: 44px;
+  padding: 8px 12px;
+  vertical-align: middle;
+  border-bottom: 1px solid #e5e6ea;
+  border-color: #e5e6ea;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #03102f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bill-row td { transition: background-color 150ms ease; }
+.bill-row:hover td { background-color: #f8f9fc; }
+
+/* Toolbar search/filter (Button/Secondary 28px) */
+.tool-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid #f2f2f4;
+  background: linear-gradient(to bottom, #ffffff, #f2f2f2);
+  box-shadow: 0px 1.5px 0px 0px #e5e5e5;
+  transition: filter 150ms ease;
+}
+.tool-btn:hover { filter: brightness(0.95); }
+.tool-btn:active { transform: translateY(1px); }
+
+/* Row quick-action (outline 28px icon button; border color per action) */
+.act-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  border: 1px solid;
+  background: #ffffff;
+  transition: background-color 150ms ease;
+}
+.act-btn:hover,
+.act-btn--open { background: #f5f6f9; }
+
+/* Row-action tooltip motion (Motion guideline · Hint tooltip): fast in (140ms ease-out)
+   with a 4px rise from below, even faster out (100ms, opacity only). */
+.action-tooltip-enter-active { transition: opacity 140ms ease-out, transform 140ms ease-out; }
+.action-tooltip-leave-active { transition: opacity 100ms ease-in; }
+.action-tooltip-enter-from { opacity: 0; transform: translateY(4px); }
+.action-tooltip-leave-to { opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .action-tooltip-enter-active, .action-tooltip-leave-active { transition: none; }
+  .action-tooltip-enter-from { transform: none; }
+}
+
+/* Row "More" dropdown motion — matches the Cards ⋯ menu */
+.row-menu-enter-active { transition: opacity 140ms ease-out, transform 140ms ease-out; transform-origin: top right; }
+.row-menu-leave-active { transition: opacity 100ms ease-in; transform-origin: top right; }
+.row-menu-enter-from { opacity: 0; transform: scale(0.96) translateY(-2px); }
+.row-menu-leave-to { opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .row-menu-enter-active, .row-menu-leave-active { transition: none; }
+  .row-menu-enter-from { transform: none; }
+}
+.act-btn:active { transform: translateY(1px); }
+
 /* Down-pointing arrow centered under the tooltip body */
 .email-tooltip__arrow {
   position: absolute;

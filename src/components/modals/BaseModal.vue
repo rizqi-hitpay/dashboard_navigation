@@ -6,8 +6,8 @@
         <div class="absolute inset-0" style="background: rgba(3,16,47,0.4); backdrop-filter: blur(6px);" @click="emit('close')" />
         <div
           ref="cardEl"
-          class="hp-modal__card relative bg-white rounded-[16px] max-w-full flex flex-col overflow-hidden"
-          :style="{ width: width + 'px', boxShadow: '0px 3px 22px 0px rgba(38,42,50,0.09)' }"
+          class="hp-modal__card relative bg-white max-w-full flex flex-col overflow-hidden"
+          :style="{ width: width + 'px', borderRadius: radius + 'px', boxShadow: '0px 3px 22px 0px rgba(38,42,50,0.09)' }"
           role="dialog"
           aria-modal="true"
         >
@@ -31,6 +31,8 @@ import { ref } from 'vue'
 defineProps({
   open: { type: Boolean, default: false },
   width: { type: Number, default: 480 },
+  // Card corner radius (px) — 16 for standard modals; larger viewers (e.g. Compare invoice) use 8
+  radius: { type: Number, default: 16 },
   // Changing this key cross-fades the default slot and animates the card size
   stepKey: { type: [String, Number], default: undefined },
 })

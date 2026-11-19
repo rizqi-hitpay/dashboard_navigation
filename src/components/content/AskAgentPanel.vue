@@ -1,8 +1,16 @@
 <template>
-  <div class="flex flex-col h-full bg-white" style="width: 360px;">
+  <!-- `context` tailors the panel to the page it opens on. 'dashboard' (default) is the
+       Overview/Analytics sidekick; 'upload-bill' is the Upload bills page (Figma 61:36631):
+       bordered + shadowed, no Setup guide — an empty conversation ready for bill questions. -->
+  <div
+    class="flex flex-col h-full bg-white"
+    :style="contextual
+      ? 'width: 360px; border: 1px solid #f2f2f4; box-shadow: 0px 1px 1px 0px rgba(0,0,0,0.08), 0px 3px 22px 0px rgba(38,42,50,0.08);'
+      : 'width: 360px;'"
+  >
 
     <!-- ── Head: 44px ── -->
-    <div class="flex items-center shrink-0" style="height: 44px; padding: 12px 16px; border-bottom: 1px solid #e5e6ea;">
+    <div class="flex items-center shrink-0" :style="{ height: '44px', padding: '12px 16px', borderBottom: `1px solid ${contextual ? '#f2f2f4' : '#e5e6ea'}` }">
       <!-- Conversation selector -->
       <button class="flex items-center gap-2 text-[13px] text-[#03102f] hover:opacity-70 transition-opacity">
         {{ activeTab === 'chat' ? 'Live Chat' : 'Setup guide' }}
@@ -49,7 +57,7 @@
     </div>
 
     <!-- ── Main: conversation started from another surface (Figma: 4876:39358) ── -->
-    <div v-if="activeTab === 'ai' && conversation" ref="chatScrollRef" class="flex-1 overflow-y-auto flex flex-col">
+    <div v-if="activeTab === 'ai' && conversation && !contextual" ref="chatScrollRef" class="flex-1 overflow-y-auto flex flex-col">
       <div :key="conversation.id" class="mt-auto flex flex-col gap-[8px] px-[12px] pt-[24px] pb-[12px]">
         <!-- Me -->
         <div class="chat-in flex justify-end pl-[12px]">
@@ -102,7 +110,7 @@
     </div>
 
     <!-- ── Main: suggested prompts before a conversation (Figma Analytics-with-AI: 36:3813) ── -->
-    <div v-else-if="activeTab === 'ai' && starter" class="flex-1 overflow-y-auto flex flex-col">
+    <div v-else-if="activeTab === 'ai' && starter && !contextual" class="flex-1 overflow-y-auto flex flex-col">
       <div :key="starter.id" class="mt-auto flex flex-col gap-[8px] px-[12px] pt-[24px] pb-[12px]">
         <div class="chat-in p-[8px]">
           <p class="text-[13px] text-[#03102f] leading-[1.5]">You can start with this</p>
@@ -121,6 +129,9 @@
         </div>
       </div>
     </div>
+
+    <!-- ── Main: contextual page (Upload bills) — empty conversation, no Setup guide (Figma 61:36644) ── -->
+    <div v-else-if="activeTab === 'ai' && contextual" class="flex-1 overflow-y-auto" />
 
     <!-- ── Main: scrollable, To-do vertically centered ── -->
     <div v-else-if="activeTab === 'ai'" class="flex-1 overflow-y-auto flex flex-col items-center justify-center">
@@ -251,27 +262,34 @@
     <!-- ── Chat Input ── -->
     <div class="shrink-0" style="padding: 8px; position: relative;">
       <!-- Animated gradient glow blob -->
-      <div class="chat-glow" :class="{ 'chat-glow--hidden': isFocused }" />
+      <div class="chat-glow" :class="{ 'chat-glow--hidden': isFocused, 'chat-glow--contextual': contextual }" />
       <div
         class="flex items-center bg-white"
-        style="position: relative; z-index: 1; border: 1px solid #e5e6ea; border-radius: 16px; padding: 12px; gap: 12px; min-height: 52px;"
+        :style="contextual
+          ? 'position: relative; z-index: 1; border: 1.5px solid rgba(0,0,0,0.05); border-radius: 16px; padding: 12px; gap: 12px; min-height: 52px;'
+          : 'position: relative; z-index: 1; border: 1px solid #e5e6ea; border-radius: 16px; padding: 12px; gap: 12px; min-height: 52px;'"
       >
         <input
           v-model="chatInput"
           class="flex-1 outline-none bg-transparent"
           style="font-size: 14px; color: #03102f;"
           ref="chatInputRef"
-          :placeholder="starter?.placeholder || 'Ask anything...'"
+          :placeholder="contextual ? 'Ask me anything' : (starter?.placeholder || 'Ask anything...')"
           @keydown.enter="sendMessage"
           @focus="isFocused = true"
           @blur="isFocused = false"
         />
+        <!-- Send: Figma secondary round button (white→#f2f2f2, 1.5px drop) in the contextual panel -->
         <button
           class="shrink-0 flex items-center justify-center rounded-full"
-          style="width: 28px; height: 28px; border: 1px solid #f2f2f4; background: white;"
+          :style="contextual
+            ? 'width: 28px; height: 28px; border: 1px solid #f2f2f4; background: linear-gradient(to bottom, #ffffff, #f2f2f2); box-shadow: 0px 1.5px 0px 0px #e5e5e5;'
+            : 'width: 28px; height: 28px; border: 1px solid #f2f2f4; background: white;'"
+          aria-label="Send"
           @click="sendMessage"
         >
-          <svg width="10" height="12" viewBox="0 0 10 12" fill="none">
+          <img v-if="contextual" :src="arrowTopIcon" width="16" height="16" alt="" />
+          <svg v-else width="10" height="12" viewBox="0 0 10 12" fill="none">
             <path d="M5 11V1M1 5l4-4 4 4" stroke="#61667c" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
@@ -297,8 +315,14 @@ import tabSparkleIcon     from '../../assets/icons/icon-tab-sparkle.svg'        
 import tabSparkleLineIcon from '../../assets/icons/icon-tab-sparkle-line.svg'   // inactive (line, grey)
 import tabChatIcon        from '../../assets/icons/icon-tab-chat.svg'           // inactive (grey)
 import tabChatActiveIcon  from '../../assets/icons/icon-tab-chat-active.svg'    // active (dark)
+import arrowTopIcon       from '../../assets/icons/upload-bill/arrow-top.svg'   // contextual send
 
+const props = defineProps({
+  // Page the panel is opened from: 'dashboard' (default) | 'upload-bill'
+  context: { type: String, default: 'dashboard' },
+})
 defineEmits(['close'])
+const contextual = computed(() => props.context === 'upload-bill')
 
 const router = useRouter()
 const route = useRoute()
@@ -329,7 +353,7 @@ function sendMessage() {
   const text = chatInput.value.trim()
   if (!text) return
   chatInput.value = ''
-  if (starter.value || conversation.value) askAgent(text)
+  if (!contextual.value && (starter.value || conversation.value)) askAgent(text)
 }
 
 // Starter: show suggested prompts and focus the input, ready to type
@@ -456,6 +480,17 @@ input::placeholder {
 }
 
 .chat-glow--hidden {
+  opacity: 0;
+}
+
+/* Contextual panel glow (Figma Chat Input · Blur): purple→cyan radial, 40%, 18px blur */
+.chat-glow--contextual {
+  inset: 16px 8px;
+  background: radial-gradient(ellipse 110% 160% at 20% 18%, #a062f7 0%, #9c86f8 25%, #98aaf9 50%, #90f2fa 100%);
+  filter: blur(18px);
+  opacity: 0.4;
+}
+.chat-glow--contextual.chat-glow--hidden {
   opacity: 0;
 }
 

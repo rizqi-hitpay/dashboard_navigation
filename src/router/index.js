@@ -1,7 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import OverviewContent from '../components/content/OverviewContent.vue'
 import BillsPage from '../components/pages/BillsPage.vue'
-import AddBillPage from '../components/pages/AddBillPage.vue'
+import UploadBillPage from '../components/pages/UploadBillPage.vue'
+import UploadBillFlow from '../components/layout/UploadBillFlow.vue'
 import BillDetailsPage from '../components/pages/BillDetailsPage.vue'
 import BillViewPage from '../components/pages/BillViewPage.vue'
 import VendorsPage from '../components/pages/VendorsPage.vue'
@@ -32,8 +33,18 @@ import PlaceholderPage from '../components/pages/PlaceholderPage.vue'
 const routes = [
   { path: '/', name: 'overview', component: OverviewContent },
   { path: '/bills', name: 'bills', component: BillsPage },
-  { path: '/bills/new', name: 'bill-new', component: AddBillPage },
-  { path: '/bills/details', name: 'bill-details', component: BillDetailsPage },
+  // Upload bills — full-screen flow. UploadBillFlow owns the header + AI dock; the steps
+  // render inside it (absolute child paths keep the URLs) and animate between each other.
+  {
+    path: '/upload-bill',
+    component: UploadBillFlow,
+    meta: { fullPage: true },
+    children: [
+      { path: '', redirect: '/bills/new' },
+      { path: '/bills/new', name: 'bill-new', component: UploadBillPage },     // Bill details
+      { path: '/bills/details', name: 'bill-details', component: BillDetailsPage }, // Review + Payment
+    ],
+  },
   { path: '/bills/view', name: 'bill-view', component: BillViewPage },
   { path: '/vendors', name: 'vendors', component: VendorsPage },
   { path: '/vendors/details', name: 'vendor-details', component: VendorDetailsPage },
