@@ -25,7 +25,7 @@ export function detectChartType(prompt) {
   if (/\bbar\b|\bcolumn\b|\bhistogram\b/.test(p)) return 'bar'
   if (/\bpie\b|\bdonut\b|\bdoughnut\b/.test(p)) return 'donut'
   if (/breakdown|share|split|mix|proportion|percentage/.test(p)) return 'donut'
-  if (/\btop\b|recent|transactions|customers/.test(p)) return 'table'
+  if (/\btop\b|best[- ]selling|recent|transactions|customers/.test(p)) return 'table'
   if (/trend|over time|monthly|growth|per month|this year/.test(p)) return 'line'
   if (/compare|by payment method|per day|daily|weekly/.test(p)) return 'bar'
   return pick(CHART_TYPES)
