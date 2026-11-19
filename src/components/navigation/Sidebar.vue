@@ -63,7 +63,7 @@
 
 <script setup>
 import { ref, watch, useTemplateRef } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import SidebarMenuItem from './SidebarMenuItem.vue'
 import PlusMenu from './PlusMenu.vue'
 import { settingsOpen } from '../../composables/useSettingsPanel.js'
@@ -75,7 +75,6 @@ import plusIcon from '../../assets/icons/icon-plus.svg'
 import gridIcon from '../../assets/icons/icon-grid.svg'
 import transactionIcon from '../../assets/icons/icon-transaction.svg'
 import pieChartIcon from '../../assets/icons/icon-pie-chart.svg'
-import chartIcon from '../../assets/icons/icon-chart.svg'
 import bankIcon from '../../assets/icons/icon-bank.svg'
 import virtualAccountIcon from '../../assets/icons/icon-virtual-account.svg'
 import usersIcon from '../../assets/icons/icon-users.svg'
@@ -96,6 +95,13 @@ const plusOpen = ref(false)
 const plusBtnRef = useTemplateRef('plusBtnRef')
 
 watch(plusOpen, (open) => { sidebarPinned.value = open })
+
+// Opening Reports or Analytics directly (URL, AI panel "Add to analytics")
+// highlights the parent so its submenu shows
+const route = useRoute()
+watch(() => route.path, (path) => {
+  if (/^\/(reports|analytics)(\/|$)/.test(path)) activeItem.value = 'Reports & Analytics'
+}, { immediate: true })
 
 watch(activeItem, (val) => {
   if (val === 'Settings') {
@@ -131,6 +137,12 @@ const recurringBillingSubmenu = [
   { label: 'Subscription' },
 ]
 
+// Figma Analytics-with-AI: 114:15953
+const reportsSubmenu = [
+  { label: 'Reports', url: '/reports' },
+  { label: 'Analytics', url: '/analytics', showBetaChip: true },
+]
+
 const payoutsSubmenu = [
   { label: 'Payouts' },
   { label: 'Wallet Balances' },
@@ -141,8 +153,7 @@ const sections = [
     items: [
       { icon: gridIcon, label: 'Overview', url: '/' },
       { icon: transactionIcon, label: 'Transactions' },
-      { icon: pieChartIcon, label: 'Reports' },
-      { icon: chartIcon, label: 'Analytics', showBetaChip: true },
+      { icon: pieChartIcon, label: 'Reports & Analytics', submenuItems: reportsSubmenu },
       { icon: bankIcon, label: 'Payouts & Balances', submenuItems: payoutsSubmenu },
       { icon: virtualAccountIcon, label: 'Virtual Accounts', showNew: true },
       { icon: usersIcon, label: 'Customer' },

@@ -75,6 +75,7 @@
             >{{ item.label }}</span>
             <div class="flex items-center gap-1 shrink-0">
               <NavBadge v-if="item.showBeta" variant="beta" />
+              <NavBadge v-if="item.showBetaChip" variant="beta-chip" />
               <NavBadge v-if="item.showCount" variant="count" :text="item.countText || '9+'" />
               <NavBadge v-if="item.showWarning" variant="warning" />
             </div>
