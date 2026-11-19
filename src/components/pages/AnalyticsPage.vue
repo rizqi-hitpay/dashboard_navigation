@@ -118,7 +118,7 @@
       <!-- Empty state (Figma: 4873:38226) -->
       <div v-if="!analyticsCharts.length" class="flex flex-1 flex-col w-full min-h-[655px] px-[24px] py-[12px]">
         <div class="flex flex-1 flex-col items-center bg-[#fcfcfd] py-[40px] px-[16px]">
-          <div class="flex flex-col items-center gap-[24px] w-full max-w-[500px]">
+          <div class="flex flex-col items-center gap-[24px] w-full max-w-[512px]">
 
             <!-- Chart illustration (Figma: 4873:38622) -->
             <div class="analytics-illus relative shrink-0" aria-hidden="true">
@@ -187,37 +187,34 @@
               </div>
             </div>
 
-            <!-- Title + description (Figma: 4873:38335) -->
-            <div class="flex flex-col gap-[8px] w-full text-center">
-              <p class="stagger font-medium text-[18px] text-[#03102f] leading-[1.35]" :style="stagger(0)">Add your first chart</p>
-              <p class="stagger text-[16px] text-[#61667c] leading-[1.4]" :style="stagger(1)">
-                Ask the AI Assistant in your own words, then add the answer here. You can rearrange charts and edit them later.
-              </p>
-            </div>
-
-            <!-- Primary CTA (Figma Analytics-with-AI: 33:3125) -->
-            <VerificationButton
-              variant="primary"
-              :icon="aiChatWhiteIcon"
-              class="stagger"
-              :style="stagger(2)"
-              @click="openAgentStarter({ prompts, placeholder: 'Create a line chart of my....' })"
-            >Ask AI Assistant</VerificationButton>
-
-            <p class="stagger text-[14px] text-[#61667c] leading-[1.5] text-center whitespace-nowrap" :style="stagger(3)">Or start with this</p>
-
-            <!-- Suggested prompts (Figma: 4873:38338) -->
-            <div class="flex flex-col items-center gap-[8px]">
+            <!-- Add chart or table: prompts + AI input (Figma Analytics-with-AI: 114:11090) -->
+            <div class="flex flex-col items-center gap-[24px] w-full px-[16px]">
               <button
-                v-for="(prompt, i) in prompts"
-                :key="prompt"
                 type="button"
-                class="stagger flex items-center justify-center px-[12px] py-[4px] rounded-[40px] border border-[#e5e6ea] bg-white hover:bg-[#f6f7f9] transition-colors duration-150"
-                :style="stagger(4 + i)"
-                @click="askAgent(prompt)"
+                class="stagger group flex flex-col items-center gap-[8px]"
+                :style="stagger(0)"
+                @click="openAgentStarter({ prompts, placeholder: 'Create a line chart of my....' })"
               >
-                <span class="text-[13px] text-[#03102f] leading-[1.5] text-center whitespace-nowrap">{{ prompt }}</span>
+                <span class="flex items-center justify-center size-[44px] rounded-[40px] bg-[#e5eeff] group-hover:bg-[#ccdefe] transition-colors duration-150">
+                  <img :src="plusBlue20Icon" width="20" height="20" alt="" class="block" />
+                </span>
+                <span class="text-[16px] font-medium text-[#03102f] leading-[1.4] whitespace-nowrap">Add chart or table</span>
               </button>
+
+              <div class="flex flex-col gap-[8px] w-full">
+                <button
+                  v-for="(prompt, i) in prompts"
+                  :key="prompt"
+                  type="button"
+                  class="stagger flex items-center w-full px-[12px] py-[4px] rounded-[40px] border border-[#e5e6ea] bg-white text-left hover:bg-[#f6f7f9] hover:border-[#cbcdd4] transition-colors duration-150"
+                  :style="stagger(1 + i)"
+                  @click="askAgent(prompt)"
+                >
+                  <span class="flex-1 min-w-0 text-[12px] text-[#61667c] leading-[1.5]">{{ prompt }}</span>
+                </button>
+              </div>
+
+              <AnalyticsPromptInput class="stagger w-full" :style="stagger(4)" @submit="askAgent" />
             </div>
 
           </div>
@@ -237,7 +234,8 @@ import AnalyticsAddTile from '../analytics/AnalyticsAddTile.vue'
 import trendUpIcon from '../../assets/icons/icon-trend-up-green.svg'
 import infoIcon from '../../assets/icons/icon-information.svg'
 import tipArrowLight from '../../assets/icons/tooltip-arrow-light.svg'
-import aiChatWhiteIcon from '../../assets/icons/icon-ai-chat-white.svg'
+import plusBlue20Icon from '../../assets/icons/icon-plus-blue-20.svg'
+import AnalyticsPromptInput from '../analytics/AnalyticsPromptInput.vue'
 import exportIcon from '../../assets/icons/icon-export.svg'
 import plusWhiteIcon from '../../assets/icons/icon-plus-white.svg'
 import { exportDashboardPng, exportDashboardPdf } from '../analytics/chartExport.js'
