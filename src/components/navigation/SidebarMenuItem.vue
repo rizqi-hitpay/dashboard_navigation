@@ -1,81 +1,69 @@
 <template>
-  <div>
+  <div class="flex flex-col w-full">
+    <!-- Sidebar v4 menu row (Figma 6416:16678 — "-> Sidebar/Menu") -->
     <div
-      ref="rowRef"
-      class="flex items-center py-1 rounded-lg cursor-pointer transition-colors duration-150 group"
-      :class="[
-        active ? 'bg-white border border-[#f2f2f4]' : 'hover:bg-[rgba(0,39,113,0.04)]',
-        sidebarExpanded ? 'gap-2 px-2' : 'justify-center px-0',
-      ]"
-      :style="active ? { boxShadow: '0px 1.5px 1.5px 0px rgba(0,0,0,0.04), 0px 1px 10px 0px rgba(0,0,0,0.06)' } : {}"
+      class="menu-row flex items-center gap-2 px-2 py-1 rounded-lg cursor-pointer transition-colors duration-150"
+      :class="active ? 'menu-row--active' : ''"
       @click="toggle"
-      @mouseenter="hovered = true"
-      @mouseleave="hovered = false"
     >
       <img
         :src="icon"
         :alt="label"
-        class="shrink-0"
-        :class="iconSizeClass"
-        :style="{ color: active ? '#2364dd' : '#4c689c', filter: iconFilter }"
+        width="14"
+        height="14"
+        class="shrink-0 size-[14px]"
+        :style="iconTint ? { filter: TINT_61667C } : null"
       />
-      <template v-if="sidebarExpanded">
-        <span
-          class="flex-1 truncate"
-          :class="[
-            labelSizeClass,
-            active ? 'text-[#03102f] font-medium' : 'text-[#03102f]'
-          ]"
-        >{{ label }}</span>
+      <span
+        class="flex-1 min-w-0 truncate text-[12px] leading-[1.5] transition-colors duration-150"
+        :class="active ? 'text-[#03102f]' : 'text-[#61667c] menu-row__label'"
+      >{{ label }}</span>
 
-        <div class="flex items-center gap-1 shrink-0">
-          <NavBadge v-if="showNew" variant="new" />
-          <NavBadge v-if="showCount" variant="count" :text="countText" />
-          <NavBadge v-if="showBeta" variant="beta" />
-          <NavBadge v-if="showBetaChip" variant="beta-chip" />
-          <NavBadge v-if="showNewChip" variant="new-chip" />
-          <NavBadge v-if="showWarning" variant="warning" />
-          <img
-            v-if="expandable"
-            :src="chevronIcon"
-            alt="expand"
-            class="w-[18px] h-[18px] transition-transform duration-200"
-            :style="{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)', filter: 'invert(39%) sepia(21%) saturate(657%) hue-rotate(185deg) brightness(88%) contrast(84%)' }"
-          />
-        </div>
-      </template>
+      <div v-if="hasTrailing" class="flex items-center gap-1 shrink-0">
+        <NavBadge v-if="showNew" variant="new" />
+        <NavBadge v-if="showCount" variant="count" :text="countText" />
+        <NavBadge v-if="showBeta || showBetaChip" variant="beta-warning" />
+        <NavBadge v-if="showNewChip" variant="new-chip" />
+        <NavBadge v-if="showWarning" variant="warning" />
+        <img
+          v-if="expandable"
+          :src="chevronIcon"
+          alt="expand"
+          class="w-[14px] h-[14px] transition-transform duration-200"
+          :style="{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)', filter: TINT_61667C }"
+        />
+      </div>
     </div>
 
     <!-- Submenu — reveals when the parent is active (animated accordion) -->
     <div
-      v-if="sidebarExpanded && submenuItems.length"
+      v-if="submenuItems.length"
       class="grid transition-[grid-template-rows] duration-200 ease-out"
       :style="{ gridTemplateRows: submenuOpen ? '1fr' : '0fr' }"
     >
       <div class="overflow-hidden">
-        <div class="flex flex-col gap-0.5 pt-0.5">
+        <div class="flex flex-col">
           <div
             v-for="item in submenuItems"
             :key="item.label"
-            class="group/sub relative flex items-center gap-4 pl-8 pr-2 py-1 rounded cursor-pointer transition-colors duration-150"
-            :class="activeSub === item.label ? '' : 'hover:bg-[rgba(0,39,113,0.04)]'"
+            class="sub-row relative flex items-center gap-2 pl-[28px] pr-2 py-1 rounded-lg cursor-pointer transition-colors duration-150"
+            :class="activeSub === item.label ? 'sub-row--active' : ''"
             @click.stop="selectSub(item)"
           >
-            <span
+            <img
               v-if="activeSub === item.label"
-              class="absolute left-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-[18px] h-[18px]"
-            >
-              <span class="w-1.5 h-1.5 rounded-full bg-[#2364dd]" />
-            </span>
+              :src="dotIcon"
+              alt=""
+              width="14"
+              height="14"
+              class="absolute left-2 top-1/2 -translate-y-1/2 size-[14px]"
+            />
             <span
-              class="flex-1 truncate text-[13px] transition-colors duration-150"
-              :class="activeSub === item.label
-                ? 'text-[#03102f] font-medium'
-                : 'text-[#61667c] group-hover/sub:text-[#03102f]'"
+              class="flex-1 min-w-0 truncate text-[12px] leading-[1.5] transition-colors duration-150 sub-row__label"
+              :class="activeSub === item.label ? 'text-[#03102f]' : 'text-[#61667c]'"
             >{{ item.label }}</span>
-            <div class="flex items-center gap-1 shrink-0">
-              <NavBadge v-if="item.showBeta" variant="beta" />
-              <NavBadge v-if="item.showBetaChip" variant="beta-chip" />
+            <div v-if="item.showBeta || item.showBetaChip || item.showCount || item.showWarning" class="flex items-center gap-1 shrink-0">
+              <NavBadge v-if="item.showBeta || item.showBetaChip" variant="beta-warning" />
               <NavBadge v-if="item.showCount" variant="count" :text="item.countText || '9+'" />
               <NavBadge v-if="item.showWarning" variant="warning" />
             </div>
@@ -83,22 +71,23 @@
         </div>
       </div>
     </div>
-
-    <!-- Collapsed-mode hover tooltip -->
-    <NavTooltip :label="label" :anchor="rowRef" :visible="!sidebarExpanded && hovered" />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, useTemplateRef } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import NavBadge from './NavBadge.vue'
-import NavTooltip from './NavTooltip.vue'
 import chevronIcon from '../../assets/icons/icon-chevron-right.svg'
-import { sidebarExpanded } from '../../composables/useSidebarCollapsed.js'
+import dotIcon from '../../assets/icons/sidebar-v4/dot.svg'
+
+// Recolours a black / currentColor <img> icon to text/400 #61667c. Figma's own
+// sidebar-v4 assets already ship in #61667c, so they opt out via iconTint=false.
+const TINT_61667C = 'brightness(0) saturate(100%) invert(41%) sepia(9%) saturate(860%) hue-rotate(191deg) brightness(92%) contrast(86%)'
 
 const props = defineProps({
   icon: { type: String, required: true },
+  iconTint: { type: Boolean, default: true },
   label: { type: String, required: true },
   url: { type: String, default: '' },
   active: { type: Boolean, default: false },
@@ -112,15 +101,17 @@ const props = defineProps({
   showBetaChip: { type: Boolean, default: false },
   showNewChip: { type: Boolean, default: false },
   showWarning: { type: Boolean, default: false },
-  iconSize: { type: String, default: 'sm' },
 })
 
 const router = useRouter()
 const isOpen = ref(props.defaultOpen)
-const hovered = ref(false)
-const rowRef = useTemplateRef('rowRef')
 
-// Chevron items (e.g. Settings) toggle on click; submenu items reveal when active.
+const hasTrailing = computed(() =>
+  props.showNew || props.showCount || props.showBeta || props.showBetaChip ||
+  props.showNewChip || props.showWarning || props.expandable
+)
+
+// Chevron items toggle on click; submenu items reveal when the parent is active.
 const submenuOpen = computed(() => (props.expandable ? isOpen.value : props.active))
 
 // Track the active sub-item locally (defaults to the flagged item, else the first).
@@ -134,7 +125,7 @@ function slug(s) {
 }
 
 // Keep the active sub-item in sync with the route, so arriving via other
-// entry points (e.g. the bills toolbar gear → /settings) highlights correctly.
+// entry points highlights correctly.
 const route = useRoute()
 watch(
   () => route.path,
@@ -159,13 +150,22 @@ function selectSub(item) {
   activeSub.value = item.label
   router.push(item.url || '/' + slug(item.label))
 }
-
-const iconSizeClass = computed(() => props.iconSize === 'md' ? 'w-[18px] h-[18px]' : 'w-[15px] h-[15px]')
-const labelSizeClass = computed(() => props.iconSize === 'md' ? 'text-[14px]' : 'text-[13px]')
-
-const iconFilter = computed(() =>
-  props.active
-    ? 'invert(27%) sepia(90%) saturate(1285%) hue-rotate(200deg) brightness(95%) contrast(97%)'
-    : 'invert(39%) sepia(21%) saturate(657%) hue-rotate(185deg) brightness(88%) contrast(84%)'
-)
 </script>
+
+<style scoped>
+/* Default → Hover: dark-blue/50tr fill, text/500 label.
+   Active: same fill + grey/100 1px stroke (inset so rows don't shift). */
+.menu-row:hover,
+.menu-row--active,
+.sub-row:hover,
+.sub-row--active {
+  background: rgba(0, 39, 113, 0.04);
+}
+.menu-row--active {
+  box-shadow: inset 0 0 0 1px #f2f2f4;
+}
+.menu-row:hover .menu-row__label,
+.sub-row:hover .sub-row__label {
+  color: #03102f;
+}
+</style>

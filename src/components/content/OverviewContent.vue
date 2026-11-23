@@ -1,13 +1,17 @@
 <template>
-  <div class="h-full overflow-y-auto bg-white" style="padding: 24px 28px;">
+  <!-- Content container "Inner" (Figma 6416:17039): 4px top -->
+  <div class="h-full overflow-y-auto bg-white pt-1">
 
-    <!-- Page header -->
-    <div class="flex items-center justify-between shrink-0 mb-5">
-      <h1 class="text-[18px] font-medium text-[#03102f]">Overview</h1>
+    <!-- "Top Title": 24px sides, 12px vertical, Title/Medium -->
+    <div class="flex items-center gap-8 px-6 py-3">
+      <h1 class="text-[18px] font-medium leading-[1.35] text-[#03102f]">Overview</h1>
     </div>
 
+    <!-- "Content": 24px sides, 20px top/bottom, rows 32px apart, columns 24px -->
+    <div class="flex flex-col gap-8 px-6 pt-5 pb-5">
+
     <!-- Stat cards row -->
-    <div class="grid grid-cols-4 gap-3 shrink-0 mb-5">
+    <div class="grid grid-cols-4 gap-6 shrink-0">
       <OverviewCard
         v-for="card in statCards"
         :key="card.label"
@@ -19,7 +23,7 @@
     </div>
 
     <!-- Transactions + Sales chart row -->
-    <div class="grid grid-cols-2 gap-4 mb-4">
+    <div class="grid grid-cols-2 gap-6">
       <!-- Recent Transactions -->
       <RecentTransactionsTable :rows="recentTransactions" />
 
@@ -28,7 +32,7 @@
     </div>
 
     <!-- Donut charts row -->
-    <div class="grid grid-cols-2 gap-4 mb-4">
+    <div class="grid grid-cols-2 gap-6">
       <DonutChartCard
         title="Sales by Payment Methods"
         :segments="paymentMethodSegments"
@@ -46,7 +50,7 @@
     </div>
 
     <!-- Recent Payouts table -->
-    <div class="mb-5">
+    <div>
       <RecentPayoutsTable :rows="recentPayouts" />
     </div>
 
@@ -69,6 +73,7 @@
       </div>
     </div>
 
+    </div>
   </div>
 </template>
 

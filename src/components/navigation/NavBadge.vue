@@ -11,6 +11,10 @@
   <span v-else-if="variant === 'beta-chip'" class="inline-flex items-center justify-center min-w-[36px] px-1 rounded-[24px] text-[12px] font-medium text-[#0495a9] bg-[#edfbfd] leading-[1.5] shrink-0">
     Beta
   </span>
+  <!-- Sidebar v4 "Chip" (Figma 6416:22655): warning/50 fill, warning/700 text -->
+  <span v-else-if="variant === 'beta-warning'" class="inline-flex items-center justify-center min-w-[32px] px-1 rounded-[24px] text-[11px] font-medium text-[#bd8400] bg-[#fff9ec] leading-[1.5] shrink-0">
+    Beta
+  </span>
   <span v-else-if="variant === 'new-chip'" class="inline-flex items-center justify-center min-w-[36px] px-1 rounded-[24px] text-[12px] font-medium text-[#7d1ab7] bg-[#f7edfd] leading-[1.5] shrink-0">
     New
   </span>

@@ -1,130 +1,37 @@
 <template>
-  <div class="flex flex-col flex-1 min-h-0 overflow-hidden">
-    <!-- Title bar -->
-    <div
-      class="flex items-center shrink-0"
-      :class="sidebarExpanded ? 'justify-between' : 'justify-center'"
-      :style="{
-        minHeight: '48px',
-        borderBottom: '1px solid #f0f1f5',
-        padding: sidebarExpanded ? '8px 16px' : '0',
-      }"
-    >
-      <span v-if="sidebarExpanded" class="text-[14px] font-medium text-[#03102f]">Payments</span>
-      <div class="relative">
-        <button
-          ref="plusBtnRef"
-          class="flex items-center justify-center w-6 h-6 rounded border border-[#e5e6ea] transition-colors duration-150"
-          :class="plusOpen ? 'bg-[rgba(0,39,113,0.08)]' : 'hover:bg-[#f0f1f5]'"
-          @click="plusOpen = !plusOpen"
-        >
-          <img
-            :src="plusIcon" alt="add" class="w-4 h-4 transition-transform duration-200"
-            :style="{
-              transform: plusOpen ? 'rotate(45deg)' : 'rotate(0deg)',
-              filter: 'invert(27%) sepia(90%) saturate(1285%) hue-rotate(200deg) brightness(95%) contrast(97%)'
-            }"
-          />
-        </button>
-        <PlusMenu v-model="plusOpen" :items="plusItems" :anchor="plusBtnRef" />
-      </div>
-    </div>
-
-    <!-- Scrollable menu -->
-    <div class="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
-      <template v-for="section in sections" :key="section.header || 'main'">
-        <template v-if="section.header">
-          <div v-if="sidebarExpanded" class="pt-3 pb-1 px-2">
-            <span class="text-[10px] font-medium tracking-widest uppercase" :style="{ color: section.headerColor }">{{ section.header }}</span>
-          </div>
-          <div v-else class="py-2">
-            <div class="h-px w-full bg-[#e5e6ea]" />
-          </div>
-        </template>
-        <SidebarMenuItem
-          v-for="item in section.items"
-          :key="item.label"
-          :icon="item.icon"
-          :label="item.label"
-          :url="item.url"
-          :active="activeItem === item.label"
-          :expandable="item.expandable && !(item.label === 'Labs' && labsFewApps)"
-          :default-open="item.defaultOpen"
-          :show-new="item.showNew"
-          :show-beta-chip="item.showBetaChip"
-          :submenu-items="item.submenuItems || []"
-          @click="activeItem = item.label"
-        />
-      </template>
-    </div>
-
-  </div>
+  <SidebarSections :sections="sections" :active-key="activeItem" @select="activeItem = $event.label" />
 </template>
 
 <script setup>
-import { ref, watch, useTemplateRef } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import SidebarMenuItem from './SidebarMenuItem.vue'
-import PlusMenu from './PlusMenu.vue'
-import { settingsOpen } from '../../composables/useSettingsPanel.js'
-import { sidebarExpanded, sidebarPinned, sidebarCollapsed } from '../../composables/useSidebarCollapsed.js'
+// Payments main menu (Figma 6416:16684)
+import { watch } from 'vue'
+import { useRoute } from 'vue-router'
+import SidebarSections from './SidebarSections.vue'
 import { activeItems } from '../../composables/useSidebarActiveItem.js'
-import { labsFewApps } from '../../composables/useLabsPreview.js'
 
-import plusIcon from '../../assets/icons/icon-plus.svg'
-import gridIcon from '../../assets/icons/icon-grid.svg'
-import transactionIcon from '../../assets/icons/icon-transaction.svg'
-import pieChartIcon from '../../assets/icons/icon-pie-chart.svg'
-import bankIcon from '../../assets/icons/icon-bank.svg'
-import virtualAccountIcon from '../../assets/icons/icon-virtual-account.svg'
-import usersIcon from '../../assets/icons/icon-users.svg'
-import productIcon from '../../assets/icons/icon-product.svg'
-import discountIcon from '../../assets/icons/icon-discount.svg'
-import bankCardIcon from '../../assets/icons/icon-bank-card.svg'
-import linkIcon from '../../assets/icons/icon-link.svg'
-import receiptIcon from '../../assets/icons/icon-receipt.svg'
-import repeatIcon from '../../assets/icons/icon-repeat.svg'
-import qrCodeIcon from '../../assets/icons/icon-qr-code.svg'
-import codeIcon from '../../assets/icons/icon-code.svg'
-import puzzleIcon from '../../assets/icons/icon-puzzle.svg'
-import labIcon from '../../assets/icons/icon-lab.svg'
-import settingIcon from '../../assets/icons/icon-setting.svg'
-const router = useRouter()
+import gridIcon from '../../assets/icons/sidebar-v4/grid.svg'
+import transactionIcon from '../../assets/icons/sidebar-v4/transaction.svg'
+import pieChartIcon from '../../assets/icons/sidebar-v4/pie-chart.svg'
+import bankIcon from '../../assets/icons/sidebar-v4/bank.svg'
+import usersIcon from '../../assets/icons/sidebar-v4/users.svg'
+import productIcon from '../../assets/icons/sidebar-v4/product.svg'
+import linkIcon from '../../assets/icons/sidebar-v4/link.svg'
+import receiptIcon from '../../assets/icons/sidebar-v4/receipt.svg'
+import repeatIcon from '../../assets/icons/sidebar-v4/repeat.svg'
+import qrCodeIcon from '../../assets/icons/sidebar-v4/qr-code.svg'
+import codeIcon from '../../assets/icons/sidebar-v4/code.svg'
+import puzzleIcon from '../../assets/icons/sidebar-v4/puzzle.svg'
+import bankCardIcon from '../../assets/icons/sidebar-v4/bank-card.svg'
+import giftIcon from '../../assets/icons/sidebar-v4/gift.svg'
+
 const activeItem = activeItems.payments
-const plusOpen = ref(false)
-const plusBtnRef = useTemplateRef('plusBtnRef')
-
-watch(plusOpen, (open) => { sidebarPinned.value = open })
 
 // Opening Reports or Analytics directly (URL, AI panel "Add to analytics")
 // highlights the parent so its submenu shows
 const route = useRoute()
 watch(() => route.path, (path) => {
-  if (/^\/(reports|analytics)(\/|$)/.test(path)) activeItem.value = 'Reports & Analytics'
+  if (/^\/(reports|analytics)(\/|$)/.test(path)) activeItem.value = 'Reports'
 }, { immediate: true })
-
-watch(activeItem, (val) => {
-  if (val === 'Settings') {
-    if (sidebarCollapsed.value) sidebarCollapsed.value = false
-    settingsOpen.value = true
-    activeItem.value = null
-  }
-  // Labs drills down like Settings — the sidebar swaps by route. In the
-  // 2-apps preview the Payments sidebar stays, so Labs keeps its highlight
-  if (val === 'Labs') {
-    if (sidebarCollapsed.value) sidebarCollapsed.value = false
-    router.push('/labs')
-    if (!labsFewApps.value) activeItem.value = null
-  }
-})
-
-const plusItems = [
-  { label: 'Payment Link', shortcut: ['c', 'l'] },
-  { label: 'Invoice',       shortcut: ['c', 'i'] },
-  { label: 'Repeating Invoice', shortcut: ['c', 'r'] },
-  { label: 'Plan',          shortcut: ['c', 'p'] },
-  { label: 'Subscription',  shortcut: ['c', 's'] },
-]
 
 const invoicingSubmenu = [
   { label: 'All Invoices' },
@@ -140,7 +47,7 @@ const recurringBillingSubmenu = [
 // Figma Analytics-with-AI: 114:15953
 const reportsSubmenu = [
   { label: 'Reports', url: '/reports' },
-  { label: 'Analytics', url: '/analytics', showBetaChip: true },
+  { label: 'Analytics', url: '/analytics', showBeta: true },
 ]
 
 const payoutsSubmenu = [
@@ -148,39 +55,37 @@ const payoutsSubmenu = [
   { label: 'Wallet Balances' },
 ]
 
+// Icons are Figma's own sidebar-v4 assets (already text/400), so no tint
+const v4 = (items) => items.map((i) => ({ ...i, iconTint: false }))
+
 const sections = [
   {
-    items: [
+    items: v4([
       { icon: gridIcon, label: 'Overview', url: '/' },
       { icon: transactionIcon, label: 'Transactions' },
-      { icon: pieChartIcon, label: 'Reports & Analytics', submenuItems: reportsSubmenu },
+      { icon: pieChartIcon, label: 'Reports', submenuItems: reportsSubmenu },
       { icon: bankIcon, label: 'Payouts & Balances', submenuItems: payoutsSubmenu },
-      { icon: virtualAccountIcon, label: 'Virtual Accounts', showNew: true },
       { icon: usersIcon, label: 'Customer' },
       { icon: productIcon, label: 'Products' },
-      { icon: discountIcon, label: 'Discounts' },
-    ],
+    ]),
   },
   {
-    header: 'No-code Tools',
-    headerColor: '#8093b8',
-    items: [
+    header: 'No-code tools',
+    items: v4([
       { icon: linkIcon, label: 'Payment Links' },
       { icon: receiptIcon, label: 'Invoicing', submenuItems: invoicingSubmenu },
       { icon: repeatIcon, label: 'Recurring Billing', submenuItems: recurringBillingSubmenu },
       { icon: qrCodeIcon, label: 'Static QRs' },
-    ],
+    ]),
   },
   {
     header: 'Others',
-    headerColor: '#a6b3cd',
-    items: [
+    items: v4([
       { icon: codeIcon, label: 'Developers' },
       { icon: puzzleIcon, label: 'Integrations' },
-      { icon: labIcon, label: 'Labs', expandable: true },
       { icon: bankCardIcon, label: 'Payment Methods' },
-      { icon: settingIcon, label: 'Settings', expandable: true },
-    ],
+      { icon: giftIcon, label: 'Refer and earn' },
+    ]),
   },
 ]
 </script>

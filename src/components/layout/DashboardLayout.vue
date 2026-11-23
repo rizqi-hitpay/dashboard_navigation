@@ -4,14 +4,21 @@
   <ClaimsRoleBar v-if="showClaimsRoleBar" />
 
   <div class="flex flex-1 min-h-0 overflow-hidden">
-    <!-- Left nav rail: 81px -->
-    <NavRail />
+    <!-- Sidebar v4: one 220px sidebar for every product (Figma 6416:16678).
+         Desktop only, mobile uses the drawer. Studio has no sidebar (Figma: 20:8569) -->
+    <div
+      v-if="activeProduct !== 3"
+      class="hidden md:flex w-[220px] h-full shrink-0"
+    >
+      <AppSidebar />
+    </div>
 
-    <!-- Content area: full-bleed on mobile; 8px padding top/right/bottom + 4px card gap on desktop -->
-    <div class="flex flex-1 overflow-hidden min-w-0 gap-0 p-0 md:py-[8px] md:pr-[8px]">
+    <!-- Content area: sits flush against the sidebar, full height -->
+    <div class="relative z-[1] flex flex-1 overflow-hidden min-w-0">
 
-      <!-- Main card: full-screen on mobile (no rounding/border/shadow), floating card on desktop -->
-      <div class="flex flex-col md:flex-row flex-1 overflow-hidden min-w-0 relative md:rounded-[20px] border-0 md:border md:border-[#E5E6EA] md:shadow-[0px_3px_22px_0px_rgba(37,41,49,0.08)]">
+      <!-- Content container (Figma 6416:17038): white, square, 1px grey/150 stroke,
+           shadow cast left over the sidebar. Full-screen with no chrome on mobile -->
+      <div class="content-container flex flex-col md:flex-row flex-1 overflow-hidden min-w-0 relative bg-white">
 
         <!-- Mobile-only top bar: hamburger opens the nav drawer below -->
         <MobileTopBar class="flex md:hidden" @menu="mobileNavOpen = true" />
@@ -19,28 +26,10 @@
         <!-- Finance requires the shared passcode -->
         <FinanceGate v-if="financeLocked" />
 
-        <template v-else>
-          <!-- Persistent sidebar shell: desktop only, mobile uses the drawer.
-               Studio's initial state has no sidebar (Figma: 20:8569) -->
-          <div
-            v-if="activeProduct !== 3"
-            class="bg-[#fcfcfd] hidden md:flex flex-col h-full shrink-0 overflow-hidden"
-            :style="{
-              width: sidebarCollapsed ? '56px' : '220px',
-              transition: 'width 250ms cubic-bezier(0.4, 0, 0.2, 1)',
-            }"
-          >
-            <Transition :name="sidebarTransition" mode="out-in">
-              <component :is="sidebarComponent" :key="sidebarKey" />
-            </Transition>
-            <SidebarAccountWidget />
-          </div>
-
-          <!-- Main content -->
-          <main class="flex-1 bg-white overflow-hidden min-w-0 min-h-0" style="box-shadow: 0px 3px 22px 0px rgba(38,42,50,0.08), 0px 1px 1px 0px rgba(0,0,0,0.08);">
-            <router-view />
-          </main>
-        </template>
+        <!-- Main content -->
+        <main v-else class="flex-1 bg-white overflow-hidden min-w-0 min-h-0">
+          <router-view />
+        </main>
       </div>
 
       <!-- Mobile nav drawer: reuses the current sidebar (product nav / settings) -->
@@ -58,21 +47,18 @@
             class="fixed left-0 top-0 h-full w-[240px] z-50 bg-[#fcfcfd] flex flex-col md:hidden"
             style="box-shadow: 4px 0px 24px 0px rgba(3,16,47,0.12);"
           >
-            <component :is="sidebarComponent" :key="sidebarKey" />
-            <SidebarAccountWidget />
+            <AppSidebar />
           </div>
         </Transition>
       </Teleport>
 
-      <!-- Sidekick: own card, 4px gap to the main card, slides in by width -->
+      <!-- Sidekick: docks flush to the right of the content container, slides in by width -->
       <div
-        class="shrink-0 overflow-hidden rounded-[20px]"
-        :class="agentPanelOpen ? 'border border-[#e5e6ea]' : ''"
+        class="shrink-0 overflow-hidden bg-white"
+        :class="agentPanelOpen ? 'border-l border-[#e5e6ea]' : ''"
         :style="{
           width: agentPanelOpen ? '360px' : '0px',
-          marginLeft: agentPanelOpen ? '4px' : '0px',
-          transition: 'width 280ms cubic-bezier(0.4, 0, 0.2, 1), margin-left 280ms cubic-bezier(0.4, 0, 0.2, 1)',
-          boxShadow: agentPanelOpen ? '0px 3px 22px 0px rgba(37,41,49,0.08)' : 'none',
+          transition: 'width 280ms cubic-bezier(0.4, 0, 0.2, 1)',
         }"
       >
         <AskAgentPanel @close="agentPanelOpen = false" />
@@ -89,24 +75,16 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import NavRail from '../navigation/NavRail.vue'
+import AppSidebar from '../navigation/AppSidebar.vue'
 import MobileTopBar from '../navigation/MobileTopBar.vue'
 import VideoIntroModal from '../modals/VideoIntroModal.vue'
 import { introModalOpen } from '../../composables/useIntroModal.js'
-import Sidebar from '../navigation/Sidebar.vue'
-import CommerceSidebar from '../navigation/CommerceSidebar.vue'
-import FinanceSidebar from '../navigation/FinanceSidebar.vue'
-import SettingsSidebar from '../navigation/SettingsSidebar.vue'
-import SidebarAccountWidget from '../navigation/SidebarAccountWidget.vue'
 import { activeProduct } from '../../composables/useNav.js'
 import { agentPanelOpen } from '../../composables/useAgentPanel.js'
-import { sidebarCollapsed } from '../../composables/useSidebarCollapsed.js'
 import { settingsOpen } from '../../composables/useSettingsPanel.js'
 import AskAgentPanel from '../content/AskAgentPanel.vue'
 import FinanceGate from './FinanceGate.vue'
 import { financeUnlocked } from '../../composables/useFinanceAuth.js'
-import LabsSidebar from '../navigation/LabsSidebar.vue'
-import { labsFewApps } from '../../composables/useLabsPreview.js'
 import ClaimsRoleBar from './ClaimsRoleBar.vue'
 
 // Finance (product 2) is gated behind the shared passcode
@@ -121,12 +99,6 @@ watch(() => route.fullPath, () => { mobileNavOpen.value = false })
 // Employee/Admin switcher only matters on the Claims pages
 const showClaimsRoleBar = computed(() => route.path.startsWith('/claims') && !financeLocked.value)
 
-// Direction-aware sidebar transition
-const sidebarTransition = ref('sidebar')
-watch(settingsOpen, (open) => {
-  sidebarTransition.value = open ? 'settings' : 'sidebar'
-})
-
 // Reset settings when switching products. Studio has no sidebar, so entering
 // it routes to its page and leaving it returns to Overview.
 watch(activeProduct, (product, prev) => {
@@ -134,53 +106,16 @@ watch(activeProduct, (product, prev) => {
   if (product === 3 && !route.path.startsWith('/studio')) router.push('/studio')
   if (prev === 3 && product !== 3 && route.path.startsWith('/studio')) router.push('/')
 })
-
-// Labs lives under Payments and swaps the sidebar by route (like a drill-down).
-// With only 2 apps in the catalog there are no categories to browse, so the
-// Payments sidebar stays put (Figma: 1:17127)
-const onLabsRoute = computed(
-  () => route.path.startsWith('/labs') && activeProduct.value === 0 && !labsFewApps.value,
-)
-
-const sidebarComponent = computed(() => {
-  if (settingsOpen.value) return SettingsSidebar
-  if (activeProduct.value === 1) return CommerceSidebar
-  if (activeProduct.value === 2) return FinanceSidebar
-  if (onLabsRoute.value) return LabsSidebar
-  return Sidebar
-})
-
-const sidebarKey = computed(() => {
-  if (settingsOpen.value) return 'settings'
-  if (onLabsRoute.value) return 'labs'
-  return activeProduct.value
-})
 </script>
 
 <style scoped>
-/* Enter: slide in from left + fade — ease-out for instant responsiveness feel */
-.sidebar-enter-active {
-  transition: opacity 180ms ease-out, transform 180ms ease-out;
-  will-change: opacity, transform;
+/* Content container — desktop chrome only */
+@media (min-width: 768px) {
+  .content-container {
+    border: 1px solid #e5e6ea;
+    box-shadow: 0px 3px 22px 0px rgba(38, 42, 50, 0.08), 0px 1px 1px 0px rgba(0, 0, 0, 0.08);
+  }
 }
-.sidebar-leave-active {
-  transition: opacity 130ms ease, transform 130ms ease;
-  will-change: opacity, transform;
-}
-.sidebar-enter-from { opacity: 0; transform: translateX(-14px); }
-.sidebar-leave-to   { opacity: 0; transform: translateX(14px); }
-
-/* Settings drill-down: enter from right, leave to left */
-.settings-enter-active {
-  transition: opacity 180ms ease-out, transform 180ms ease-out;
-  will-change: opacity, transform;
-}
-.settings-leave-active {
-  transition: opacity 130ms ease, transform 130ms ease;
-  will-change: opacity, transform;
-}
-.settings-enter-from { opacity: 0; transform: translateX(14px); }
-.settings-leave-to   { opacity: 0; transform: translateX(-14px); }
 
 /* Mobile nav drawer */
 .mobile-drawer-backdrop-enter-active,
