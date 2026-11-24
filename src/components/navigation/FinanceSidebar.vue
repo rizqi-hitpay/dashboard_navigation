@@ -9,7 +9,7 @@ import SidebarSections from './SidebarSections.vue'
 import { activeItems } from '../../composables/useSidebarActiveItem.js'
 import { claimsRole } from '../../composables/useClaimsRole.js'
 
-import dollarPaperIcon from '../../assets/icons/icon-dollar-paper.svg'
+import gridIcon from '../../assets/icons/sidebar-v4/grid.svg'
 import paperRollIcon from '../../assets/icons/icon-paper-roll.svg'
 import groupIcon from '../../assets/icons/icon-group.svg'
 import settingIcon from '../../assets/icons/icon-setting.svg'
@@ -32,7 +32,8 @@ function handleItemClick(item) {
 const sections = computed(() => [
   {
     items: [
-      { icon: dollarPaperIcon, label: 'Fee invoice' },
+      // Finance home — its own Overview page is coming (placeholder until then)
+      { icon: gridIcon, label: 'Overview', url: '/finance/overview', iconTint: false },
     ],
   },
   {

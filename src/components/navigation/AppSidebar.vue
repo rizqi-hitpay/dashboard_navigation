@@ -84,7 +84,8 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { activeItems } from '../../composables/useSidebarActiveItem.js'
 import Sidebar from './Sidebar.vue'
 import CommerceSidebar from './CommerceSidebar.vue'
 import FinanceSidebar from './FinanceSidebar.vue'
@@ -95,6 +96,7 @@ import { activeProduct } from '../../composables/useNav.js'
 import { agentPanelOpen } from '../../composables/useAgentPanel.js'
 import { settingsOpen } from '../../composables/useSettingsPanel.js'
 import { labsFewApps } from '../../composables/useLabsPreview.js'
+import { financePreview } from '../../composables/useFinancePreview.js'
 
 import logogram from '../../assets/icons/sidebar-v4/logogram.svg'
 import logotext from '../../assets/icons/sidebar-v4/logotext.svg'
@@ -112,17 +114,32 @@ import moneyLineSvg from '../../assets/icons/icon-money-line.svg?raw'
 import bag2BulkSvg from '../../assets/icons/icon-bag-2-bulk.svg?raw'
 import note2BulkSvg from '../../assets/icons/icon-note-2-bulk.svg?raw'
 
-function selectProduct(i) {
-  settingsOpen.value = false
-  activeProduct.value = i
+// Each product's top menu item — switching products opens it
+const PRODUCT_HOME = {
+  0: { key: 'payments', label: 'Overview', url: '/' },
+  1: { key: 'commerce', label: 'Web POS', url: '/web-pos' },
+  2: { key: 'finance', label: 'Overview', url: '/finance/overview' },
 }
 
-const productItems = computed(() => [
-  { label: 'Payments', active: activeProduct.value === 0, iconActive: moneyBulk, svg: moneyLineSvg, onClick: () => selectProduct(0) },
-  { label: 'Commerce', active: activeProduct.value === 1, icon: bag2, svgActive: bag2BulkSvg, onClick: () => selectProduct(1) },
-  { label: 'Finance', active: activeProduct.value === 2, icon: note2, svgActive: note2BulkSvg, onClick: () => selectProduct(2) },
-  { label: 'AI Assistant', active: agentPanelOpen.value, aiIcon: true, onClick: () => { agentPanelOpen.value = !agentPanelOpen.value } },
-])
+const router = useRouter()
+
+function selectProduct(i) {
+  settingsOpen.value = false
+  if (activeProduct.value === i) return
+  activeProduct.value = i
+  const home = PRODUCT_HOME[i]
+  activeItems[home.key].value = home.label
+  router.push(home.url)
+}
+
+const productItems = computed(() => {
+  const payments = { label: 'Payments', active: activeProduct.value === 0, iconActive: moneyBulk, svg: moneyLineSvg, onClick: () => selectProduct(0) }
+  const commerce = { label: 'Commerce', active: activeProduct.value === 1, icon: bag2, svgActive: bag2BulkSvg, onClick: () => selectProduct(1) }
+  const finance = { label: 'Finance', active: activeProduct.value === 2, icon: note2, svgActive: note2BulkSvg, onClick: () => selectProduct(2) }
+  const ai = { label: 'AI Assistant', active: agentPanelOpen.value, aiIcon: true, onClick: () => { agentPanelOpen.value = !agentPanelOpen.value } }
+  // Finance preview puts Finance on top
+  return financePreview.value ? [finance, payments, commerce, ai] : [payments, commerce, finance, ai]
+})
 
 // Labs lives under Payments and swaps the menu by route (like a drill-down).
 // With only 2 apps in the catalog the Payments menu stays put (Figma: 1:17127)

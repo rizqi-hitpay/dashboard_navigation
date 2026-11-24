@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { financePreview, FINANCE_HOME } from '../composables/useFinancePreview.js'
 import OverviewContent from '../components/content/OverviewContent.vue'
 import BillsPage from '../components/pages/BillsPage.vue'
 import AddBillPage from '../components/pages/AddBillPage.vue'
@@ -31,7 +32,15 @@ import ReportsPage from '../components/pages/ReportsPage.vue'
 import PlaceholderPage from '../components/pages/PlaceholderPage.vue'
 
 const routes = [
-  { path: '/', name: 'overview', component: OverviewContent },
+  // Finance preview landing: Finance on top + open (see useFinancePreview.js)
+  { path: '/finance', redirect: FINANCE_HOME },
+  {
+    path: '/',
+    name: 'overview',
+    component: OverviewContent,
+    // The Finance preview has no Payments Overview as home, so it lands on Finance
+    beforeEnter: (to, from) => (financePreview.value && !from.name ? FINANCE_HOME : true),
+  },
   { path: '/bills', name: 'bills', component: BillsPage },
   { path: '/bills/new', name: 'bill-new', component: AddBillPage },
   { path: '/bills/details', name: 'bill-details', component: BillDetailsPage },
