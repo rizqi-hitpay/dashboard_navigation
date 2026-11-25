@@ -85,10 +85,14 @@ import { settingsOpen } from '../../composables/useSettingsPanel.js'
 import AskAgentPanel from '../content/AskAgentPanel.vue'
 import FinanceGate from './FinanceGate.vue'
 import { financeUnlocked } from '../../composables/useFinanceAuth.js'
+import { financePreview } from '../../composables/useFinancePreview.js'
 import ClaimsRoleBar from './ClaimsRoleBar.vue'
 
-// Finance (product 2) is gated behind the shared passcode
-const financeLocked = computed(() => activeProduct.value === 2 && !financeUnlocked.value)
+// Finance (product 2) is gated behind the shared passcode — skipped for now in
+// the /finance preview so finance users land straight in
+const financeLocked = computed(
+  () => activeProduct.value === 2 && !financeUnlocked.value && !financePreview.value,
+)
 
 // Mobile nav drawer (hamburger in MobileTopBar) — auto-closes on navigation
 const mobileNavOpen = ref(false)
