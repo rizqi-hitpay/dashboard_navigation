@@ -32,7 +32,7 @@ function handleItemClick(item) {
 const sections = computed(() => [
   {
     items: [
-      // Finance home — its own Overview page is coming (placeholder until then)
+      // Finance home (Figma 6429:16657)
       { icon: gridIcon, label: 'Overview', url: '/finance/overview', iconTint: false },
     ],
   },

@@ -30,10 +30,12 @@ import VirtualAccountsPage from '../components/pages/VirtualAccountsPage.vue'
 import AnalyticsPage from '../components/pages/AnalyticsPage.vue'
 import ReportsPage from '../components/pages/ReportsPage.vue'
 import PlaceholderPage from '../components/pages/PlaceholderPage.vue'
+import FinanceOverviewPage from '../components/pages/FinanceOverviewPage.vue'
 
 const routes = [
   // Finance preview landing: Finance on top + open (see useFinancePreview.js)
   { path: '/finance', redirect: FINANCE_HOME },
+  { path: '/finance/overview', name: 'finance-overview', component: FinanceOverviewPage },
   {
     path: '/',
     name: 'overview',
