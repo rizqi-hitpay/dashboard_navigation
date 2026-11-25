@@ -30,7 +30,7 @@ const activeItem = activeItems.commerce
 const sections = [
   {
     items: [
-      { icon: counterIcon, label: 'Web POS' },
+      { icon: counterIcon, label: 'Web POS', url: '/web-pos' },
       { icon: clipboardIcon, label: 'Orders' },
       { icon: pieChartIcon, label: 'Reports' },
       { icon: usersIcon, label: 'Customer' },

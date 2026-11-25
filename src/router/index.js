@@ -31,6 +31,7 @@ import AnalyticsPage from '../components/pages/AnalyticsPage.vue'
 import ReportsPage from '../components/pages/ReportsPage.vue'
 import PlaceholderPage from '../components/pages/PlaceholderPage.vue'
 import FinanceOverviewPage from '../components/pages/FinanceOverviewPage.vue'
+import WebPosPage from '../components/pages/WebPosPage.vue'
 
 const routes = [
   // Finance preview landing: Finance on top + open (see useFinancePreview.js)
@@ -68,6 +69,7 @@ const routes = [
   // Settings menus without real content yet → per-menu empty state
   { path: '/settings/:slug', name: 'settings-empty', component: SettingsEmptyStatePage },
   { path: '/virtual-accounts', name: 'virtual-accounts', component: VirtualAccountsPage },
+  { path: '/web-pos', name: 'web-pos', component: WebPosPage },
   { path: '/reports', name: 'reports', component: ReportsPage },
   { path: '/analytics', name: 'analytics', component: AnalyticsPage },
   { path: '/studio', name: 'studio', component: StudioPage },
